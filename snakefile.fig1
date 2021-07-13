@@ -1,0 +1,141 @@
+# vim: syntax=python
+
+rule fig1_distribution_analysis:
+    input:
+        mut="input/{celltype}___mut___{qualtype}.rda",
+        perm="input/{celltype}___perm___{qualtype}.rda"
+    output:
+        fullrda="analysis/fig1/distribution_analysis/{celltype}___{qualtype}.FULL.rda",
+        rda="analysis/fig1/distribution_analysis/{celltype}___{qualtype}.rda"
+    log:
+        "analysis/fig1/distribution_analysis/{celltype}___{qualtype}.log"
+    benchmark:
+        "analysis/fig1/distribution_analysis/{celltype}___{qualtype}.benchmark.txt"
+    shell:
+        """
+        /n/data1/hms/dbmi/park/jluquette/glia/scripts/bedenrich.r \
+            10000 \
+            {input.mut} \
+            {input.perm} \
+            {output.fullrda} \
+            {output.rda} \
+            /n/data1/hms/dbmi/park/jluquette/pta/gtex/gene_classes.sorted.bed > {log} 2>&1
+        """
+
+
+rule fig1_distribution_collapsed:
+    input:
+        rda="analysis/fig1/distribution_analysis/{celltype}___{qualtype}.FULL.rda"
+    output:
+        fullrda="analysis/fig1/distribution_analysis/{celltype}___{qualtype}.FULL.COLLAPSED.rda",
+        rda="analysis/fig1/distribution_analysis/{celltype}___{qualtype}.COLLAPSED.rda"
+    params:
+        "Exonic=cds,utr3,utr5",
+        "Intronic=intron",
+        "Intergenic=intergenic,downstream,upstream",
+        "Other=other",
+        "Outside=outside"
+    log:
+        "analysis/fig1/distribution_analysis/{celltype}___{qualtype}.COLLAPSED.log"
+    script:
+        "scripts/collapse_enrichment.R"
+    
+
+rule fig1_distribution_plot:
+    input:
+        nmut="analysis/fig1/distribution_analysis/neuron___{qualtype}.FULL.{collapsed}rda",
+        ni="analysis/fig1/distribution_analysis/neuron___indel_A.FULL.{collapsed}rda",
+        gmut="analysis/fig1/distribution_analysis/oligo___{qualtype}.FULL.{collapsed}rda",
+        gi="analysis/fig1/distribution_analysis/oligo___indel_A.FULL.{collapsed}rda"
+    output:
+        svg="plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}svg",
+        pdf="plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}pdf",
+        tsv="plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}tsv"
+    log:
+        "plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}log"
+    script:
+        "scripts/barplot_enrich_2x2.R"
+
+
+rule fig1_mut_burden_analysis:
+    input:
+        muts="analysis/tables/{celltype}___allmut___{qualtype}.csv",
+        germline="analysis/tables/{celltype}___germline_control___{qualtype}.csv",
+        callable="input/{celltype}___callable___{qualtype}.tsv",
+        meta="input/{celltype}___meta___{qualtype}.csv"
+    output:
+        csv="analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
+    log:
+        "analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.log"
+    params:
+        # listing all command line args as params (in intended sequence):
+        # allows script to automatically recognize snakemake integration.
+        # XXX: i didn't realize params would not translate placeholders
+        # like {input.muts}.. this lambda wildcards workaround is quite
+        # horrible and maybe not worth it.
+        "--metadata", lambda wildcards, input: input[3],
+        "--min-sc-dp",
+        # hardcoded params: we used DP>5 for SNVs and DP>=10 for indels
+        lambda wildcards: 10 if wildcards.qualtype == 'indel_A' else 6,
+        lambda wildcards, input: input[0],
+        lambda wildcards, input: input[1],
+        lambda wildcards, input: input[2],
+        lambda wildcards, output: output[0]
+    script:
+        "/n/data1/hms/dbmi/park/jluquette/pta/scan-snv2/scripts/mutburden.R"
+
+rule fig1_aging_rate_analysis:
+    input:
+        neuron="analysis/fig1/aging_rate_analysis/neuron___mutburden___{qualtype}.csv",
+        oligo="analysis/fig1/aging_rate_analysis/oligo___mutburden___{qualtype}.csv"
+    output:
+        svg='plots/fig1/aging_rate_analysis/{qualtype}.svg',
+        pdf='plots/fig1/aging_rate_analysis/{qualtype}.pdf',
+        tsv='plots/fig1/aging_rate_analysis/{qualtype}_burdens.csv',
+        tsv2='plots/fig1/aging_rate_analysis/{qualtype}_model.csv'
+    log:
+        'plots/fig1/aging_rate_analysis/{qualtype}.log'
+    script:
+        "scripts/plot_aging.R"
+
+
+rule fig1_indel_size_analysis:
+    input:
+        "input/neuron___mut___indel_A.rda",
+        "input/oligo___mut___indel_A.rda"
+    output:
+        "plots/fig1/indel_size_analysis/indel_size.svg",
+        "plots/fig1/indel_size_analysis/indel_size.pdf"
+    log:
+        "plots/fig1/indel_size_analysis/indel_size.log"
+    script:
+        "scripts/plot_indel_sizes.R"
+
+
+rule fig1_run_snpeff:
+    input:
+        vcf="analysis/vcfs/{celltype}___mut___{qualtype}.vcf"
+    output:
+        vcf="analysis/fig1/snpeff_analysis/{celltype}___snpeff___{qualtype}.vcf"
+    log:
+        "analysis/fig1/snpeff_analysis/{celltype}___snpeff___{qualtype}.run_snpeff.log"
+    shell:
+        """
+        /n/data1/hms/dbmi/park/jluquette/glia/snpeff/run_one.sh \
+            {input.vcf} {output.vcf} > {log} 2>&1
+        """
+
+rule fig1_snpeff_analysis:
+    input:
+        "analysis/fig1/snpeff_analysis/neuron___snpeff___A.vcf",
+        "analysis/fig1/snpeff_analysis/neuron___snpeff___indel_A.vcf",
+        "analysis/fig1/snpeff_analysis/oligo___snpeff___A.vcf",
+        "analysis/fig1/snpeff_analysis/oligo___snpeff___indel_A.vcf"
+    output:
+        svg="plots/fig1/snpeff_analysis/snpeff_analysis.svg",
+        pdf="plots/fig1/snpeff_analysis/snpeff_analysis.pdf",
+        tsv="plots/fig1/snpeff_analysis/snpeff_analysis.tsv"
+    log:
+        "plots/fig1/snpeff_analysis/snpeff_analysis.log"
+    script:
+        "scripts/plot_snpeff.R"

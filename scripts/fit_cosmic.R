@@ -1,0 +1,96 @@
+#!/usr/bin/env Rscript
+
+# detect script being run by snakemake
+# if so, make a mock commandArgs function
+if ('snakemake' %in% ls()) {
+    logfile <- snakemake@log[[1]]
+    con <- file(logfile, 'w')
+    sink(con, type='output')
+    sink(con, type='message')
+
+    commandArgs <- function(...) unlist(c(
+        snakemake@params[1], snakemake@input[1:3], snakemake@output[1:2]
+    ))
+    cat('Got command line arguments from snakemake:\n')
+    print(commandArgs())
+}
+
+args <- commandArgs(trailingOnly=TRUE)
+if (length(args) != 6) {
+    cat('muttype must be either SNV or Indel\n')
+    stop("usage: analyze_cosmic_aging.R muttype mutations.csv mutburden.csv cosmic.csv out.mutmat.csv out.expo.csv")
+}
+
+muttype <- args[1]
+inmuts <- args[2]
+inmutburden <- args[3]
+incosmic <- args[4]
+out.mutmat.csv <- args[5]
+out.expo.csv <- args[6]
+
+if (muttype != 'SNV' & muttype != 'Indel')
+    stop(paste('muttype must be either SNV or Indel, got', muttype))
+if (file.exists(out.mutmat.csv))
+    stop(paste('output file', out.mutmat.csv, 'already exists, please delete it first'))
+if (file.exists(out.expo.csv))
+    stop(paste('output file', out.expo.csv, 'already exists, please delete it first'))
+
+library(data.table)
+library(scan2)       # for df.to.sbs96
+library(pracma)      # for lsqnonneg
+
+# Given a list of mutation dataframes, calculate exposure to the supplied
+# COSMIC database (which may have been subsetted to contain only spectra
+# passing stability thresholds).
+# COSMIC format: column 1 is the mutation type. Need to remove it before
+# fitting.
+exposure <- function(x, cosmic=cosmic) {
+    setNames(lsqnonneg(as.matrix(cosmic), x)$x, colnames(cosmic))
+}
+
+
+muts <- fread(inmuts)
+mutburden <- fread(inmutburden)  # allows extrapolation to genome-wide numbers
+cosmic <- fread(incosmic)
+
+
+# nsom=0 will unfortunately get extrapolated to 0
+mutburden[, correction.factor := ifelse(nsom == 0, 0, genome.burden / nsom)]
+
+# Get the finalized mutation matrix M, which involves mapping mutations to
+# SBS96 or ID83 channels and multiplying by the genome-wide burden correction factor.
+# M is [96|83] x (1 + #samples), sample order is the same as mutburden
+samples <- mutburden[['sample']]
+if (muttype == 'SNV') {
+    M <- sapply(samples, function(s)
+        df.to.sbs96(muts[sample==s,], eps=0, fraction=FALSE))
+} else {
+    # plot.indel returns the ID83 signature vector
+    M <- sapply(samples, function(s)
+        plot.indel(iclass=muts[sample==s, muttype], make.plot=FALSE))
+}
+head(M)
+
+M <- M[,mutburden[['sample']]]  # reorder to match mutburden
+M <- t(t(M) * mutburden[['correction.factor']])
+
+# sanity check to ensure matching orders
+if (!all(rownames(M) == cosmic[,1]))
+    stop('mutations and COSMIC signatures are not in the same order')
+
+str(M)
+
+head(cosmic)
+str(as.matrix(cosmic[,-1]))
+# make sure not to pass mutation type columns
+E <- apply(M, 2, exposure, cosmic=as.matrix(cosmic[,-1]))
+# data.tables don't use rownames
+E <- data.table(Sig=rownames(E), E)
+head(E)
+
+fwrite(M, file=out.mutmat.csv)
+fwrite(E, file=out.expo.csv)
+
+if ('snakemake' %in% ls()) {
+    sink()
+}

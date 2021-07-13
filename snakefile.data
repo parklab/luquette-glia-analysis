@@ -1,0 +1,92 @@
+# vim: syntax=python
+# Manage copying and performing trivial format conversions of local data
+# and downloading external datasets.
+
+
+# manifest is a pandas data table of all input files + metadata
+# # for now, we assume the concatenation of all metadata produces
+# # a unique ID for each file.
+def make_local_mapping(manifest, namesep="___"):
+    manifest_size = len(manifest.index)
+    local_name = manifest['celltype'] + namesep + manifest['filetype'] + namesep + manifest['qualtype'] + '.' + manifest['fileext']
+    out_to_in = dict(zip(local_name, manifest['filepath']))
+    dict_size = len(out_to_in)
+    # make sure each line in maniest has one line in the dict -
+    # equivalent to making sure the metadata concatenation is unique
+    if manifest_size != dict_size:
+        raise RuntimeError('metadata in input manifest does not uniquely identify files')
+    
+    return(out_to_in)
+
+
+input_copy_mapping = make_local_mapping(manifest)
+rule copy_inputs:
+    input:
+        lambda wildcards: input_copy_mapping[wildcards.celltype + "___" + wildcards.filetype + "___" + wildcards.qualtype + "." + wildcards.fileext]
+    output:
+        "input/{celltype}___{filetype}___{qualtype}.{fileext}"
+    shell:
+        """
+        cp -n {input} {output}
+        """
+
+
+rule tables_rda_to_csv:
+    input:
+        "input/{celltype}___{filetype}___{qualtype}.rda",
+    output:
+        "analysis/tables/{celltype}___{filetype}___{qualtype}.csv",
+    log:
+        "analysis/tables/{celltype}___{filetype}___{qualtype}.log"
+    script:
+        "scripts/rda_to_csv.R"
+
+
+rule rda_to_vcf:
+    input:
+        "input/{celltype}___mut___{qualtype}.rda"
+    output:
+        "analysis/vcfs/{celltype}___mut___{qualtype}.vcf"
+    log:
+        "analysis/vcfs/{celltype}___mut___{qualtype}.rda_to_vcf.log"
+    script:
+        "scripts/rda_to_vcf.R"
+
+
+rule download_roadmap_narrowpeak:
+    input:
+    output:
+        "data/roadmap/narrowPeak/{eid}-{mark}.narrowPeak"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output} \
+            "https://egg2.wustl.edu/roadmap/data/byFileType/peaks/consolidated/narrowPeak/{wildcards.eid}-{wildcards.mark}.narrowPeak.gz"
+        """
+
+
+rule download_roadmap_bigwig:
+    input:
+    output:
+        "data/roadmap/bigwig/{eid}-{mark}.fc.signal.bigwig"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output} \
+            "https://egg2.wustl.edu/roadmap/data/byFileType/signal/consolidated/macs2signal/foldChange/{wildcards.eid}-{wildcards.mark}.fc.signal.bigwig"
+        """
+
+
+rule download_encode_replichip_bigwig:
+    input:
+    output:
+        "data/encode/replichip/bigwig/{enc_id}.bigwig"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output} \
+            "https://www.encodeproject.org/files/{wildcards.enc_id}/@@download/{wildcards.enc_id}.bigWig"
+        """

@@ -1,0 +1,131 @@
+# vim: syntax=python
+#
+#
+# Inputs:
+#    Pandas table file
+#    -----------------
+#    Pandas table files must be formatted as CSVs with
+#    1 comma separated header line naming each metadata column.
+#       - one column MUST be named "file" and contain the full path to
+#         the file
+#       - metadata columns in output tables will retain order from
+#         the input tables.
+#
+#    - (mutation, permutation) sets
+#       * metadata (k-tuple per set)
+#
+#    - bigwig signal files
+#       * metadata (n-tuple per file)
+#
+#    Config dict
+#    -----------
+#    - [list] numbers of bins to split signal into
+#    - [dict] BEDs tiling the genome into windows, used to average
+#             bigwig signals. (binsize, filepath) dict
+#    - output directory
+# Outputs:
+#    - [list] qbeds with both quantile determinations and raw signal
+#    - [list] FULL and SUMMARY mutenrich outputs
+#    - [list] integrated table over all combinations of (mut sets, qbeds)
+
+import pandas as pd
+
+def read_manifest(filename):
+    manifest = pd.read_csv(filename)
+    files = list(manifest['file'])
+    m_nofiles = manifest.loc[:, manifest.columns != 'file'].astype(str)
+    metadata = list(m_nofiles.columns)
+    classes = m_nofiles.agg('___'.join, axis=1)
+    manifest['__class__'] = classes
+    tmp = pd.concat([ "'" + m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] + "'" \
+        for i in range(0, m_nofiles.shape[1]) ], axis=1)
+    metatags = list(tmp.agg(' '.join, axis=1))
+    manifest['__metatags__'] = metatags
+    return(manifest, files, metadata, list(classes), metatags)
+
+
+mut_manifest, mut_files, mut_metadata, mut_classes, mut_metatags = \
+    read_manifest(config['MUT_MANIFEST'])
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+    print(mut_manifest)
+
+
+signal_manifest, signal_files, signal_metadata, signal_classes, signal_metatags = \
+    read_manifest(config['SIGNAL_MANIFEST'])
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+    print(signal_manifest)
+
+outroot = config['output_dir'] + "/quantile"
+
+rule all:
+    input:
+        expand(outroot+ '/{mutclass}/{nquantiles}quantiles.csv',
+            mutclass=mut_classes,
+            nquantiles=config['quantiles'])
+        
+
+# Final output rule
+rule enrichment_table:
+    input:
+        expand(outroot + "/{{mutclass}}/qbedenrich/tiled_{binsize}binsize_{{nquantiles}}quantiles.SUMMARY.rda",
+            binsize=config['tiles'].keys())
+    output:
+        outroot + '/{mutclass}/{nquantiles}quantiles.csv'
+    log:
+        outroot + '/{mutclass}/{nquantiles}quantiles.log'
+    resources:
+        mem=4000
+    script:
+        "scripts/make_enrichment_table.R"
+
+
+rule enrichment_qbed_analysis:
+    input:
+        mut=lambda wildcards: mut_manifest.loc[mut_manifest['__class__'] == wildcards.mutclass, 'file'],
+        perm=lambda wildcards: config['mut_to_perm'][wildcards.mutclass],
+        qbeds=expand(outroot + "/qbed/{signalclass}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
+            signalclass=signal_classes)
+    output:
+        full=outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.FULL.rda",
+        summary=outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.SUMMARY.rda",
+    params:
+        nbootstraps=10000
+    resources:
+        mem=10000
+    log:
+        summary=outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log",
+    script:
+        "scripts/qbedenrich.R"
+
+
+# dummy1 and dummy2 are not used, they're only here to require that they
+# be created before running this workflow.
+
+rule make_qbed_from_bigwig:
+    input:
+        dummy1=config['MUT_MANIFEST'],
+        dummy2=config['SIGNAL_MANIFEST'],
+        tiles=lambda wildcards: config['tiles'][wildcards.binsize],
+        bigwig=lambda wildcards: signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, 'file']
+    output:
+        qbed=outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.qbed",
+        tmp1=temp(outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.tmp1"),
+        tmp2=temp(outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.tmp2")
+    params:
+        metatags=lambda wildcards: "'BINSIZE=" + wildcards.binsize + "' " + \
+              list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, '__metatags__'])[0]
+    log:
+        outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.log",
+    resources:
+        mem=4000
+    shell:
+        """
+        scripts/make_qbed_from_bigwig.sh \
+            {wildcards.nquantiles} \
+            {input.tiles} \
+            {input.bigwig} \
+            {output.qbed} \
+            {output.tmp1} \
+            {output.tmp2} \
+            {params.metatags} > {log} 2>&1
+        """

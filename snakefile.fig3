@@ -1,0 +1,39 @@
+# vim: syntax=python
+
+rule fig3_umap_plot:
+    input:
+        "input/any___sc{umap}seq___none.csv"
+    output:
+        "plots/fig3/sc{umap}seq/umap_plot.svg",
+        "plots/fig3/sc{umap}seq/umap_plot.pdf",
+        "plots/fig3/sc{umap}seq/umap_plot.jpeg"
+    log:
+        "plots/fig3/sc{umap}seq/umap_plot.log"
+    script:
+        "scripts/plot_umap.R"
+
+
+rule fig3_roadmap_grid_plot:
+    input:
+        'enrichment/roadmap/quantile/{celltype}___{qualtype}/{nquantiles}quantiles.csv'
+    output:
+        'plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.svg',
+        'plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.pdf',
+        'plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.csv'
+    log:
+        'plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.plot.log'
+    script:
+        "scripts/plot_roadmap_enrichment_grid.R"
+
+
+rule fig3_encode_replichip_grid_plot:
+    input:
+        'enrichment/encode/replichip/quantile/{celltype}___{qualtype}/{nquantiles}quantiles.csv'
+    output:
+        'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.svg',
+        'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.pdf',
+        'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.csv'
+    log:
+        'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.plot.log'
+    script:
+        "scripts/plot_encode_replichip_grid.R"

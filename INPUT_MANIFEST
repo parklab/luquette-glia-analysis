@@ -1,0 +1,52 @@
+# COPIES of all inputs so that we never accidentally overwrite them.
+# This file acts as both metadata and a source file for automatically
+# generating the input copy directories.
+celltype	filetype	qualtype	fileext	filepath
+# Metadata
+# Same metadata is used for SNVs and indels, but there is flexibility to change later
+neuron	meta	A	csv	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/metadata_pta_51neurons_no_outlier.csv
+neuron	meta	indel_A	csv	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/metadata_pta_51neurons_no_outlier.csv
+oligo	meta	A	csv	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/metadata_pta_31glia_no_outlier.csv
+oligo	meta	indel_A	csv	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/metadata_pta_31glia_no_outlier.csv
+# Unfiltered mutation table (e.g., no recurrence or clustering filters applied)
+neuron	allmut	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/calls_20210506_clus50bp_rec1donor_passABCDMMall.rda
+neuron	allmut	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/calls_indel_20210428_clus50bp_rec1donor_passABCDM.rda
+oligo	allmut	A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/calls_20210614_clus50bp_rec1donor_passABCDM.rda
+oligo	allmut	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/calls_indel_20210513_clus50bp_rec1donor_passAC.rda
+# Filtered mutation tables
+neuron	mut	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/nmut.rda
+neuron	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passAB/nmut.rda
+neuron	mut	ABM	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passABM/nmut.rda
+neuron	mut	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/ni.rda
+oligo	mut	A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passA/gmut.rda
+oligo	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passAB/gmut.rda
+oligo	mut	ABM	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passABM/gmut.rda
+oligo	mut	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passA/gi.rda
+# Permutation tables
+neuron	perm	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/perms_10000_mutsigaware_grl.minimized.rda
+neuron	perm	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passAB/perms_10000_mutsigaware_grl.minimized.rda
+neuron	perm	ABM	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passABM/perms_10000_mutsigaware_grl.minimized.rda
+neuron	perm	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/indel_perms_10000_mutsigaware_grl.minimized.rda
+oligo	perm	A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passA/perms_10000_mutsigaware_grl.minimized.rda
+oligo	perm	AB	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passAB/perms_10000_mutsigaware_grl.minimized.rda
+oligo	perm	ABM	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passABM/perms_10000_mutsigaware_grl.minimized.rda
+oligo	perm	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passA/indel_perms_10000_mutsigaware_grl.minimized.rda
+# Callable regions (dp=6 (SNVS) and dp=10 (indels)
+neuron	callable	A	tsv	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/callable_regions.txt
+neuron	callable	indel_A	tsv	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/callable_regions10.txt
+oligo	callable	A	tsv	/n/data1/hms/dbmi/park/jluquette/glia/callable_regions/callable_regions.txt
+oligo	callable	indel_A	tsv	/n/data1/hms/dbmi/park/jluquette/glia/callable_regions/callable_regions10.txt
+# hSNP calls (sensitivity estimation)
+neuron	germline_control	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/hsnps_20210506.rda
+neuron	germline_control	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/hindels_20210604.rda
+oligo	germline_control	A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/hsnps_20210603.rda
+oligo	germline_control	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/hindels_20210604.rda
+# FDR tuning (for comparing pre- and post-genotyping burden estimates)
+# skipping for now
+any	cosmic	indel_A	csv	/n/data1/hms/dbmi/park/jluquette/glia/COSMIC_ID_signatures.csv
+any	cosmic	A	csv	/n/data1/hms/dbmi/park/jluquette/glia/COSMIC_SBS.csv
+any	lysis_pta	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/lysis_test/lysis_sig_061921_original_25_neurons.rda
+# Seurat analysis of scATAC-seq. Just dragging in a very processed
+# data object; no intention (yet) to recapitulate any real analysis here.
+any	scatacseq	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/try1_manual_assignment_table_20210623.csv
+any	scrnaseq	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/snRNA_1465a_table.csv

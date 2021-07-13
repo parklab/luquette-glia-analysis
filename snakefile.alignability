@@ -1,0 +1,85 @@
+# vim: syntax=python
+#
+
+# The ultimate output of the alignability analysis: a set of tiles covering
+# the genome with poorly aligned regions removed.
+rule tile_genome:
+    input:
+        expand("alignability/data_digest/chr{chr}.rda",
+            chr=chrs)
+    output:
+        "alignability/genome_tiles/genome_tiles_{binsize}binsize.bed"
+    log:
+        "alignability/genome_tiles/genome_tiles_{binsize}binsize.log"
+    params:
+        binsize="{binsize}"
+    resources:
+        mem=40000
+    script:
+        "scripts/tile_genome_no_badbins.R"
+
+
+# this can be applied to any file, they're all identical in positions
+rule cut_position_column:
+    input:
+        lambda wildcards: topath('UMB4976_E1', wildcards.chr, 'chr')
+    output:
+        "alignability/data_columns/chr{chr}/positions.txt"
+    shell:
+        "cut -f1 {input} | cut -f2 -d: > {output}"
+
+
+# Really horrible hack because the files are not consistently named.
+# Some have a 'chr' prefix in front of chrom number and some don't.
+def topath(sample, chrom, chrprefix):
+    return(pathdict[sample] + "/callable_regions." + chrprefix + chrom + ".txt")
+
+rule cut_data_column:
+    input:
+        lambda wildcards: topath(wildcards.sample, wildcards.chr, '') if Path(topath(wildcards.sample, wildcards.chr, '')).is_file() else topath(wildcards.sample, wildcards.chr, 'chr')
+    output:
+        "alignability/data_columns/chr{chr}/{sample}.txt"
+    shell:
+        "cut -f2 {input} > {output}"
+
+
+rule digest_chrom:
+    input:
+        "alignability/data_columns/chr{chr}/positions.txt",
+        expand("alignability/data_columns/chr{{chr}}/{sample}.txt",
+            sample=pathdict.keys())
+    output:
+        "alignability/data_digest/chr{chr}.rda"
+    log:
+        "alignability/data_digest/chr{chr}.log"
+    params:
+        chrom="chr{chr}",
+        base_tile_size="100"
+    script:
+        "scripts/digest_chrom_depth.R"
+
+
+rule plot_digest:
+    input:
+        "alignability/data_digest/chr{chr}.rda"
+    output:
+        "alignability/data_plots/chr{chr}.{resolution}.svg",
+        "alignability/data_plots/chr{chr}.{resolution}.pdf"
+    params:
+        "{resolution}"
+    script:
+        "scripts/plot_chrom_depth.R"
+
+
+rule plot_bin_classes:
+    input:
+        expand("alignability/data_digest/chr{chr}.rda", chr=chrs)
+    output:
+        expand("alignability/plots/chromosome_bin_classes_heatmap.{output}",
+            output=['svg', 'pdf', 'jpeg']),
+        expand("alignability/plots/chromosome_bin_classes_barplot.{output}",
+            output=['svg', 'pdf'])
+    log:
+        "alignability/plots/chromosome_bin_classes.log"
+    script:
+        "scripts/plot_bin_classes.R"

@@ -1,0 +1,9 @@
+celltype,qualtype,file
+neuron,A,input/neuron___mut___A.rda
+neuron,AB,input/neuron___mut___AB.rda
+neuron,ABM,input/neuron___mut___ABM.rda
+neuron,indel_A,input/neuron___mut___indel_A.rda
+oligo,A,input/oligo___mut___A.rda
+oligo,AB,input/oligo___mut___AB.rda
+oligo,ABM,input/oligo___mut___ABM.rda
+oligo,indel_A,input/oligo___mut___indel_A.rda

@@ -1,0 +1,3 @@
+datasource,track,file
+ucsc_track,phastCons,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/ucsc/conservation/hg19.100way.phastCons.bw
+ucsc_track,phyloP100way,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/ucsc/conservation/hg19.100way.phyloP100way.bw

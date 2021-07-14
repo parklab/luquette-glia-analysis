@@ -24,4 +24,5 @@ snakemake $flags \
     -s Snakefile \
     --max-inventory-time 0 \
     -j 1000 \
+    --max-status-checks-per-second 0.1 \
     --drmaa ' -p park -A park_contrib --mem={resources.mem} -t 12:00:00 -o /n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/cluster-logs/slurm-%A.log'

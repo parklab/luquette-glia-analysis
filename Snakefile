@@ -146,22 +146,23 @@ rule all:
         expand("plots/fig3/scatacseq/umap_plot.{output}",
             output=[ 'svg', 'pdf', 'jpeg' ]),
         # 3c
-        #expand('plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            #celltype=celltypes_to_compute,
-            #qualtype=all_qualtypes,
-            #nquantiles=qsizes,
-            #output=[ 'svg', 'pdf' ]),
+        expand('plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            celltype=celltypes_to_compute,
+            qualtype=all_qualtypes,
+            nquantiles=qsizes,
+            output=[ 'svg', 'pdf' ]),
         # 3e
         expand('plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
             nquantiles=qsizes,
-            output=[ 'svg', 'pdf' ])
-        #expand("analysis/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}/{eid}-{mark}.fc.signal.tiled_{binsize}binsize_{nquantiles}quantiles.SUMMARY.rda",
-            #celltype=celltypes_to_compute,
-            #qualtype=all_qualtypes,
-            #eid=roadmap_eids, mark=roadmap_marks,
-            #binsize=binsizes, nquantiles=qsizes)
+            output=[ 'svg', 'pdf' ]),
+        # Just signals for now, not sure which figure (if any) will use them
+        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles.csv',
+            celltype=celltypes_to_compute,
+            qualtype=all_qualtypes,
+            nquantiles=qsizes,
+            datasource=[ 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ])
 
 
 include: "snakefile.data"
@@ -174,6 +175,10 @@ include: "snakefile.fig3"
 
 # Boilerplate code to use the enrichment module to automatically
 # run bigWig signal files through the enrichment pipeline.
+
+########################################################################
+# Roadmap epigenomics histones
+########################################################################
 enrichment_roadmap_config = dict(
     **{ 'output_dir': 'enrichment/roadmap',
         'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ENRICHMENT_ROADMAP.MANIFEST' },
@@ -185,3 +190,100 @@ module enrichment_roadmap:
     config: enrichment_roadmap_config
 
 use rule * from enrichment_roadmap as enrichment_roadmap_*
+
+
+
+########################################################################
+# ENCODE replication timing as measured by Repli-chip
+########################################################################
+enrichment_replichip_config = dict(
+    **{ 'output_dir': 'enrichment/encode_replichip',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ENCODE_REPLICHIP.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_replichip:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_replichip_config
+
+use rule * from enrichment_replichip as enrichment_replichip_*
+
+
+########################################################################
+# Conservation tracks from UCSC
+########################################################################
+enrichment_conservation_config = dict(
+    **{ 'output_dir': 'enrichment/conservation',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/CONSERVATION.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_conservation:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_conservation_config
+
+use rule * from enrichment_conservation as enrichment_conservation_*
+
+
+########################################################################
+# BOCA brain region ATAC-seq
+########################################################################
+enrichment_boca_config = dict(
+    **{ 'output_dir': 'enrichment/boca',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/BOCA.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_boca:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_boca_config
+
+use rule * from enrichment_boca as enrichment_boca_*
+
+
+########################################################################
+# Sequncing depth
+########################################################################
+enrichment_depth_config = dict(
+    **{ 'output_dir': 'enrichment/depth',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/DEPTH.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_depth:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_depth_config
+
+use rule * from enrichment_depth  as enrichment_depth_*
+
+
+########################################################################
+# Nott et al histone ChIP-seq and ATAC-seq
+########################################################################
+enrichment_nott_config = dict(
+    **{ 'output_dir': 'enrichment/nott',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/NOTT.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_nott:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_nott_config
+
+use rule * from enrichment_nott  as enrichment_nott_*
+
+
+########################################################################
+# Rizzardi et al brain DNA methylation
+########################################################################
+enrichment_rizzardi_config = dict(
+    **{ 'output_dir': 'enrichment/rizzardi',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/RIZZARDI.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_rizzardi:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_rizzardi_config
+
+use rule * from enrichment_rizzardi  as enrichment_rizzardi_*

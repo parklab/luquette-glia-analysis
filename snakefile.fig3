@@ -7,6 +7,8 @@ rule fig3_umap_plot:
         "plots/fig3/sc{umap}seq/umap_plot.svg",
         "plots/fig3/sc{umap}seq/umap_plot.pdf",
         "plots/fig3/sc{umap}seq/umap_plot.jpeg"
+    resources:
+        mem=24000
     log:
         "plots/fig3/sc{umap}seq/umap_plot.log"
     script:
@@ -20,6 +22,8 @@ rule fig3_roadmap_grid_plot:
         'plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.svg',
         'plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.pdf',
         'plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.csv'
+    resources:
+        mem=8000
     log:
         'plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.plot.log'
     script:
@@ -33,6 +37,8 @@ rule fig3_encode_replichip_grid_plot:
         'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.svg',
         'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.pdf',
         'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.csv'
+    resources:
+        mem=8000
     log:
         'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.plot.log'
     script:

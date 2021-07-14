@@ -7,6 +7,8 @@ rule fig1_distribution_analysis:
     output:
         fullrda="analysis/fig1/distribution_analysis/{celltype}___{qualtype}.FULL.rda",
         rda="analysis/fig1/distribution_analysis/{celltype}___{qualtype}.rda"
+    resources:
+        mem=8000
     log:
         "analysis/fig1/distribution_analysis/{celltype}___{qualtype}.log"
     benchmark:
@@ -35,6 +37,8 @@ rule fig1_distribution_collapsed:
         "Intergenic=intergenic,downstream,upstream",
         "Other=other",
         "Outside=outside"
+    resources:
+        mem=4000
     log:
         "analysis/fig1/distribution_analysis/{celltype}___{qualtype}.COLLAPSED.log"
     script:
@@ -51,6 +55,8 @@ rule fig1_distribution_plot:
         svg="plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}svg",
         pdf="plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}pdf",
         tsv="plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}tsv"
+    resources:
+        mem=4000
     log:
         "plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}log"
     script:
@@ -65,6 +71,8 @@ rule fig1_mut_burden_analysis:
         meta="input/{celltype}___meta___{qualtype}.csv"
     output:
         csv="analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
+    resources:
+        mem=4000
     log:
         "analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.log"
     params:
@@ -93,6 +101,8 @@ rule fig1_aging_rate_analysis:
         pdf='plots/fig1/aging_rate_analysis/{qualtype}.pdf',
         tsv='plots/fig1/aging_rate_analysis/{qualtype}_burdens.csv',
         tsv2='plots/fig1/aging_rate_analysis/{qualtype}_model.csv'
+    resources:
+        mem=4000
     log:
         'plots/fig1/aging_rate_analysis/{qualtype}.log'
     script:
@@ -106,6 +116,8 @@ rule fig1_indel_size_analysis:
     output:
         "plots/fig1/indel_size_analysis/indel_size.svg",
         "plots/fig1/indel_size_analysis/indel_size.pdf"
+    resources:
+        mem=4000
     log:
         "plots/fig1/indel_size_analysis/indel_size.log"
     script:
@@ -119,6 +131,8 @@ rule fig1_run_snpeff:
         vcf="analysis/fig1/snpeff_analysis/{celltype}___snpeff___{qualtype}.vcf"
     log:
         "analysis/fig1/snpeff_analysis/{celltype}___snpeff___{qualtype}.run_snpeff.log"
+    resources:
+        mem=8000
     shell:
         """
         /n/data1/hms/dbmi/park/jluquette/glia/snpeff/run_one.sh \
@@ -135,6 +149,8 @@ rule fig1_snpeff_analysis:
         svg="plots/fig1/snpeff_analysis/snpeff_analysis.svg",
         pdf="plots/fig1/snpeff_analysis/snpeff_analysis.pdf",
         tsv="plots/fig1/snpeff_analysis/snpeff_analysis.tsv"
+    resources:
+        mem=4000
     log:
         "plots/fig1/snpeff_analysis/snpeff_analysis.log"
     script:

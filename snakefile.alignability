@@ -25,6 +25,8 @@ rule cut_position_column:
         lambda wildcards: topath('UMB4976_E1', wildcards.chr, 'chr')
     output:
         "alignability/data_columns/chr{chr}/positions.txt"
+    resources:
+        mem=1000
     shell:
         "cut -f1 {input} | cut -f2 -d: > {output}"
 
@@ -39,6 +41,8 @@ rule cut_data_column:
         lambda wildcards: topath(wildcards.sample, wildcards.chr, '') if Path(topath(wildcards.sample, wildcards.chr, '')).is_file() else topath(wildcards.sample, wildcards.chr, 'chr')
     output:
         "alignability/data_columns/chr{chr}/{sample}.txt"
+    resources:
+        mem=1000
     shell:
         "cut -f2 {input} > {output}"
 
@@ -52,6 +56,8 @@ rule digest_chrom:
         "alignability/data_digest/chr{chr}.rda"
     log:
         "alignability/data_digest/chr{chr}.log"
+    resources:
+        mem=24000
     params:
         chrom="chr{chr}",
         base_tile_size="100"
@@ -65,6 +71,8 @@ rule plot_digest:
     output:
         "alignability/data_plots/chr{chr}.{resolution}.svg",
         "alignability/data_plots/chr{chr}.{resolution}.pdf"
+    resources:
+        mem=8000
     params:
         "{resolution}"
     script:
@@ -79,6 +87,8 @@ rule plot_bin_classes:
             output=['svg', 'pdf', 'jpeg']),
         expand("alignability/plots/chromosome_bin_classes_barplot.{output}",
             output=['svg', 'pdf'])
+    resources:
+        mem=40000
     log:
         "alignability/plots/chromosome_bin_classes.log"
     script:

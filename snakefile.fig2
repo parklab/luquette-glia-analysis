@@ -8,10 +8,13 @@ rule fig2_raw_snv_spectrum:
         "plots/fig2/raw_spectrum/snv_spectrum.svg",
         "plots/fig2/raw_spectrum/snv_spectrum.pdf",
         "plots/fig2/raw_spectrum/snv_spectrum.tsv"
+    resources:
+        mem=4000
     log:
         "plots/fig2/raw_spectrum/snv_spectrum.log"
     script:
         "scripts/plot_raw_snv.R"
+
 
 rule fig2_raw_indel_spectrum:
     input:
@@ -21,6 +24,8 @@ rule fig2_raw_indel_spectrum:
         "plots/fig2/raw_spectrum/indel_spectrum.svg",
         "plots/fig2/raw_spectrum/indel_spectrum.pdf",
         "plots/fig2/raw_spectrum/indel_spectrum.tsv"
+    resources:
+        mem=4000
     log:
         "plots/fig2/raw_spectrum/indel_spectrum.log"
     script:
@@ -40,6 +45,8 @@ rule fig2_make_cosmic_indel_table:
         cosmic="input/any___cosmic___indel_A.csv",
     output:
         "analysis/tables/cosmic_full___indel_A.csv"
+    resources:
+        mem=4000
     log:
         "analysis/tables/cosmic_full___indel_A.log"
     script:
@@ -52,6 +59,8 @@ rule fig2_make_cosmic_snv_table:
         lysis_sig="analysis/tables/any___lysis_pta___A.csv"
     output:
         "analysis/tables/cosmic_full___{qualtype}.csv"
+    resources:
+        mem=4000
     log:
         "analysis/tables/cosmic_full___{qualtype}.log"
     script:
@@ -68,6 +77,8 @@ rule fig2_cosmic_fit:
         "analysis/fig2/{cosmic}/{celltype}___expomat___{qualtype}.csv"
     params:
         muttype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV'
+    resources:
+        mem=4000
     log:
         "analysis/fig2/{cosmic}/{celltype}___cosmic_fit___{qualtype}.log"
     script:
@@ -83,6 +94,8 @@ rule fig2_score_cosmic_analysis:
         "analysis/fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv"
     log:
         "analysis/fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.log"
+    resources:
+        mem=8000
     params:
         celltype=lambda wildcards: 'Neuron' if wildcards.celltype == 'neuron' else 'Oligo',
         qualtype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV'
@@ -110,6 +123,8 @@ rule fig2_select_cosmic_sigs:
         num_cutoffs=lambda wildcards: 4 if wildcards.qualtype == 'indel_A' else 5,
         # currently not excluding any sigs by name
         #sigs_to_exclude=''
+    resources:
+        mem=8000
     log:
         "analysis/fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.log"
     script:
@@ -124,6 +139,8 @@ rule fig2_make_reduced_cosmic_table:
         "analysis/tables/cosmic_full___{qualtype}.csv"
     output:
         "analysis/tables/cosmic_reduced___{qualtype}.csv"
+    resources:
+        mem=4000
     log:
         "analysis/tables/cosmic_reduced___{qualtype}.log"
     script:
@@ -137,6 +154,8 @@ rule fig2_cosmic_barplots:
     output:
         "plots/fig2/cosmic_aging/{celltype}_barplots_{qualtype}.svg",
         "plots/fig2/cosmic_aging/{celltype}_barplots_{qualtype}.pdf"
+    resources:
+        mem=4000
     log:
         "plots/fig2/cosmic_aging/{celltype}_barplots_{qualtype}.log"
     script:
@@ -153,6 +172,8 @@ rule fig2_cosmic_vs_age_plots:
         "plots/fig2/cosmic_aging/scatterplots_{qualtype}.svg",
         "plots/fig2/cosmic_aging/scatterplots_{qualtype}.pdf",
         "plots/fig2/cosmic_aging/scatterplots_{qualtype}.csv"
+    resources:
+        mem=4000
     log:
         "plots/fig2/cosmic_aging/scatterplots_{qualtype}.log"
     script:

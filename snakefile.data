@@ -23,6 +23,8 @@ input_copy_mapping = make_local_mapping(manifest)
 rule copy_inputs:
     input:
         lambda wildcards: input_copy_mapping[wildcards.celltype + "___" + wildcards.filetype + "___" + wildcards.qualtype + "." + wildcards.fileext]
+    resources:
+        mem=1000
     output:
         "input/{celltype}___{filetype}___{qualtype}.{fileext}"
     shell:
@@ -36,6 +38,8 @@ rule tables_rda_to_csv:
         "input/{celltype}___{filetype}___{qualtype}.rda",
     output:
         "analysis/tables/{celltype}___{filetype}___{qualtype}.csv",
+    resources:
+        mem=4000
     log:
         "analysis/tables/{celltype}___{filetype}___{qualtype}.log"
     script:
@@ -47,6 +51,8 @@ rule rda_to_vcf:
         "input/{celltype}___mut___{qualtype}.rda"
     output:
         "analysis/vcfs/{celltype}___mut___{qualtype}.vcf"
+    resources:
+        mem=4000
     log:
         "analysis/vcfs/{celltype}___mut___{qualtype}.rda_to_vcf.log"
     script:

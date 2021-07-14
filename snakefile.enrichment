@@ -87,7 +87,7 @@ rule enrichment_qbed_analysis:
         nbootstraps=10000
     resources:
         # XXX: update me: so far, these RAM values work with my data.
-        mem=lambda wildcards: 32000 if wildcards.binsize == '1000' else 8000
+        mem=lambda wildcards: 32000 if wildcards.binsize == '1000' else 10000
     log:
         summary=outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log"
     benchmark:
@@ -164,7 +164,7 @@ rule make_qbed_from_bigwig:
     log:
         outroot + "/qbed/{signalclass}.log"
     resources:
-        mem=4000
+        mem=7000
     shell:
         """
         quantiles=({params[quantile_array]})

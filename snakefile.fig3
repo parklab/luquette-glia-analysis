@@ -32,7 +32,7 @@ rule fig3_roadmap_grid_plot:
 
 rule fig3_encode_replichip_grid_plot:
     input:
-        'enrichment/encode/replichip/quantile/{celltype}___{qualtype}/{nquantiles}quantiles.csv'
+        'enrichment/encode_replichip/quantile/{celltype}___{qualtype}/{nquantiles}quantiles.csv'
     output:
         'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.svg',
         'plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.pdf',

@@ -57,6 +57,7 @@ enrichment_config = {
     #'SIGNAL_MANIFEST': 'path/to/sig.csv',
 
     # These parameters should be constant
+    'qbed_from_bigwig_script': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/scripts/make_qbed_from_bigwig.sh',
     'MUT_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/MUTATION_MANIFEST',
     'quantiles': qsizes,
     # must match binsizes

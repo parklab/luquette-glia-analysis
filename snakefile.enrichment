@@ -37,7 +37,8 @@ def read_manifest(filename):
     metadata = list(m_nofiles.columns)
     classes = m_nofiles.agg('___'.join, axis=1)
     manifest['__class__'] = classes
-    tmp = pd.concat([ "'" + m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] + "'" \
+    #tmp = pd.concat([ "'" + m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] + "'" \
+    tmp = pd.concat([ m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] \
         for i in range(0, m_nofiles.shape[1]) ], axis=1)
     metatags = list(tmp.agg(' '.join, axis=1))
     manifest['__metatags__'] = metatags
@@ -46,23 +47,17 @@ def read_manifest(filename):
 
 mut_manifest, mut_files, mut_metadata, mut_classes, mut_metatags = \
     read_manifest(config['MUT_MANIFEST'])
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    print(mut_manifest)
+#with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+    #print(mut_manifest)
 
 
 signal_manifest, signal_files, signal_metadata, signal_classes, signal_metatags = \
     read_manifest(config['SIGNAL_MANIFEST'])
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    print(signal_manifest)
+#with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+    #print(signal_manifest)
 
 outroot = config['output_dir'] + "/quantile"
 
-rule all:
-    input:
-        expand(outroot+ '/{mutclass}/{nquantiles}quantiles.csv',
-            mutclass=mut_classes,
-            nquantiles=config['quantiles'])
-        
 
 # Final output rule
 rule enrichment_table:
@@ -91,16 +86,19 @@ rule enrichment_qbed_analysis:
     params:
         nbootstraps=10000
     resources:
-        mem=10000
+        # XXX: update me: so far, these RAM values work with my data.
+        mem=lambda wildcards: 32000 if wildcards.binsize == '1000' else 8000
     log:
-        summary=outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log",
+        summary=outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log"
+    benchmark:
+        outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.benchmark.txt"
     script:
         "scripts/qbedenrich.R"
 
 
 # dummy1 and dummy2 are not used, they're only here to require that they
 # be created before running this workflow.
-
+'''
 rule make_qbed_from_bigwig:
     input:
         dummy1=config['MUT_MANIFEST'],
@@ -112,15 +110,18 @@ rule make_qbed_from_bigwig:
         tmp1=temp(outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.tmp1"),
         tmp2=temp(outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.tmp2")
     params:
+        # can't figure out why this won't work in the shell command
+        #script=workflow.source_path('scripts/make_qbed_from_bigwig.sh'),
+        script=config['qbed_from_bigwig_script'],
         metatags=lambda wildcards: "'BINSIZE=" + wildcards.binsize + "' " + \
               list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, '__metatags__'])[0]
     log:
-        outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.log",
+        outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.log"
     resources:
         mem=4000
     shell:
         """
-        scripts/make_qbed_from_bigwig.sh \
+        {params.script} \
             {wildcards.nquantiles} \
             {input.tiles} \
             {input.bigwig} \
@@ -128,4 +129,63 @@ rule make_qbed_from_bigwig:
             {output.tmp1} \
             {output.tmp2} \
             {params.metatags} > {log} 2>&1
+        """
+'''
+
+
+rule make_qbed_from_bigwig:
+    input:
+        dummy1=config['MUT_MANIFEST'],
+        dummy2=config['SIGNAL_MANIFEST'],
+        tiles=lambda wildcards: config['tiles'].values(),
+        bigwig=lambda wildcards: signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, 'file']
+    output:
+        qbed=expand(outroot + "/qbed/{{signalclass}}.{binsize}binsize_{nquantiles}quantiles.qbed",
+            binsize=config['tiles'].keys(),
+            nquantiles=config['quantiles']),
+        tmp1=temp(outroot + "/qbed/{signalclass}.tmp1"),
+        tmp2=temp(outroot + "/qbed/{signalclass}.tmp2.sig") # must end in .sig
+    params:
+        # can't figure out why this won't work in the shell command
+        #script=workflow.source_path('scripts/make_qbed_from_bigwig.sh'),
+        # We manually roll up (quantile, binsize) pairs into a single rule
+        # because multiplying the number of input files by 16 (in this
+        # project) makes snakemake very slow.
+        script=config['qbed_from_bigwig_script'],
+        output_pre=outroot + "/qbed/{signalclass}",
+        quantile_array=" ".join([ str(x) for x in config['quantiles'] ]),
+        # tiles, binsizes and metatags must all be the same length
+        tile_array=" ".join([ "'" + f + "'" for f in config['tiles'].values() ]),
+        binsize_array=" ".join([ "'" + bs + "'" for bs in config['tiles'].keys() ]),
+        metatag_array=lambda wildcards: \
+            " ".join([ "'" + mt + "'"
+                       for mt in [ "BINSIZE=" + binsize + " " + list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, '__metatags__'])[0] \
+                            for binsize in config['tiles'].keys() ] ]),
+    log:
+        outroot + "/qbed/{signalclass}.log"
+    resources:
+        mem=4000
+    shell:
+        """
+        quantiles=({params[quantile_array]})
+        binsizes=({params[binsize_array]})
+        tiles=({params[tile_array]})
+        metatags=({params[metatag_array]})
+        for i in `seq 0 $((${{#tiles[@]}} - 1))`; do
+            tile=${{tiles[$i]}}
+            binsize=${{binsizes[$i]}}
+            metatag=${{metatags[$i]}}
+            echo "Averaging bigwig for tile=$tile, binsize=$binsize"
+            echo "bigWigAverageOverBed {input.bigwig} $tile {output.tmp2}"
+            bigWigAverageOverBed {input.bigwig} $tile {output.tmp2}
+            for q in "${{quantiles[@]}}"; do
+                outfile={params.output_pre}.${{binsize}}binsize_${{q}}quantiles.qbed
+                echo "q=$q, i=$i, tile=$tile, metatag=$metatag, outfile=$outfile"
+                if [ -f {output.tmp1} ]; then rm {output.tmp1}; fi
+                {params.script} $q $tile {output.tmp2} $outfile \
+                    dummy \
+                    {output.tmp1} \
+                    $metatag
+            done
+        done > {log} 2>&1
         """

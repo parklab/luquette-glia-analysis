@@ -19,7 +19,7 @@ outqbed=$4
 tmpout=$5
 tmpout2=$6
 shift 6
-metadata=("$@")
+metadata=("QUANTILES=$nquantiles" "$@")
 
 if [ "x$(echo $bigwig | grep -c '\.sig$')" == "x0" ]; then
     is_sig=FALSE
@@ -34,7 +34,7 @@ if [ "x$(echo $metadata | grep -c ';')" != "x0" ]; then
     exit
 fi
 
-metatags="#QBED_VERSION=1;QUANTILES=$nquantiles"
+metatags="#QBED_VERSION=1"
 for kv in "${metadata[@]}"; do
     if [ "x$(echo $kv|grep -c '=')" == "x0" ]; then
         echo "key-value pair '$kv' does not contain an = sign"
@@ -75,7 +75,7 @@ fi
 # Column 5 of the tile bed is 1 if the tile is considered analyzable
 # and 0 otherwise.
 echo "Converting to quantiles (n=$nquantiles)"
-Rscript -e 'library(data.table); keep <- fread("'$tilesbed'")[[5]]; score <- fread("'$tmpout'")[[5]]; score[keep == 0] <- NA; q <- findInterval(score, quantile(score, na.rm=T, probs=1:'$nquantiles'/'$nquantiles'), rightmost.closed=TRUE)+1; write(paste(q, score, sep="\t"), ncolumns=1, file="'$tmpout2'")'
+Rscript -e 'library(data.table); keep <- fread("'$tilesbed'")[[5]]; score <- fread("'$tmpout'")[[5]]; score[keep == 0] <- NA; q <- findInterval(score, quantile(score, na.rm=T, probs=1:'$nquantiles'/'$nquantiles'), rightmost.closed=TRUE)+1; cat("gc before writing\n"); print(gc()); write(paste(q, score, sep="\t"), ncolumns=1, file="'$tmpout2'"); cat("gc after writing\n"); print(gc())'
 
 # tilesbed has 5 columns, tmpout2 has 2
 echo "Writing qbed '$outqbed'.."

@@ -157,23 +157,30 @@ rule all:
             qualtype=all_qualtypes,
             nquantiles=qsizes,
             output=[ 'svg', 'pdf' ]),
-        # Just signals for now, not sure which figure (if any) will use them
-        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles.csv',
+        expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
             nquantiles=qsizes,
-            datasource=[ 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ])
+            datasource=[ 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
+            #datasource=[ 'rizzardi' ],
+            output=[ 'svg', 'pdf', 'csv' ])
+        # Just signals for now, not sure which figure (if any) will use them
+        #expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles.csv',
+            #celltype=celltypes_to_compute,
+            #qualtype=all_qualtypes,
+            #nquantiles=qsizes,
+            #datasource=[ 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ])
 
 
 include: "snakefile.data"
 include: "snakefile.alignability"
-#include: "snakefile.enrichment"
 include: "snakefile.fig1"
 include: "snakefile.fig2"
 include: "snakefile.fig3"
 
 
-# Boilerplate code to use the enrichment module to automatically
+# Below is several instances of
+# boilerplate code to use the enrichment module to automatically
 # run bigWig signal files through the enrichment pipeline.
 
 ########################################################################
@@ -181,7 +188,7 @@ include: "snakefile.fig3"
 ########################################################################
 enrichment_roadmap_config = dict(
     **{ 'output_dir': 'enrichment/roadmap',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ENRICHMENT_ROADMAP.MANIFEST' },
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_HISTONE.MANIFEST' },
     **enrichment_config
 )
 
@@ -191,6 +198,15 @@ module enrichment_roadmap:
 
 use rule * from enrichment_roadmap as enrichment_roadmap_*
 
+use rule enrichment_plot from enrichment_roadmap as enrichment_roadmap_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='mark'
+    output:
+        expand('plots/enrichment/roadmap/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/roadmap/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -208,6 +224,16 @@ module enrichment_replichip:
 
 use rule * from enrichment_replichip as enrichment_replichip_*
 
+use rule enrichment_plot from enrichment_replichip as enrichment_replichip_enrichment_plot with:
+    params:
+        ignore='BINSIZE=1000',
+        group='datasource'
+    output:
+        expand('plots/enrichment/replichip/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/replichip/quantile/{mutclass}.{nquantiles}quantiles.log'
+
 
 ########################################################################
 # Conservation tracks from UCSC
@@ -223,6 +249,23 @@ module enrichment_conservation:
     config: enrichment_conservation_config
 
 use rule * from enrichment_conservation as enrichment_conservation_*
+
+# Conservation tracks have bp resolution over the entire genome. This
+# causes bigWigAverageOverBed to consume unbelievably large amounts of
+# memory for large windows like 1MB.
+use rule make_qbed_from_bigwig from enrichment_conservation as enrichment_conservation_make_qbed_from_bigwig with:
+    resources:
+        mem=65000
+
+use rule enrichment_plot from enrichment_conservation as enrichment_conservation_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='track'
+    output:
+        expand('plots/enrichment/conservation/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -240,6 +283,22 @@ module enrichment_boca:
 
 use rule * from enrichment_boca as enrichment_boca_*
 
+# BOCA ATAC tracks are ~10-fold larger than most others, so give them a
+# bit more RAM.
+use rule make_qbed_from_bigwig from enrichment_boca as enrichment_boca_make_qbed_from_bigwig with:
+    resources:
+        mem=15000
+
+use rule enrichment_plot from enrichment_boca as enrichment_boca_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource,celltype,region'
+    output:
+        expand('plots/enrichment/boca/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/boca/quantile/{mutclass}.{nquantiles}quantiles.log'
+
 
 ########################################################################
 # Sequncing depth
@@ -255,6 +314,16 @@ module enrichment_depth:
     config: enrichment_depth_config
 
 use rule * from enrichment_depth  as enrichment_depth_*
+
+use rule enrichment_plot from enrichment_depth as enrichment_depth_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype'
+    output:
+        expand('plots/enrichment/depth/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/depth/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -272,6 +341,16 @@ module enrichment_nott:
 
 use rule * from enrichment_nott  as enrichment_nott_*
 
+use rule enrichment_plot from enrichment_nott as enrichment_nott_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype,mark'
+    output:
+        expand('plots/enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles.log'
+
 
 ########################################################################
 # Rizzardi et al brain DNA methylation
@@ -287,3 +366,18 @@ module enrichment_rizzardi:
     config: enrichment_rizzardi_config
 
 use rule * from enrichment_rizzardi  as enrichment_rizzardi_*
+
+# Also slightly large; increase memory.
+use rule make_qbed_from_bigwig from enrichment_rizzardi as enrichment_rizzardi_make_qbed_from_bigwig with:
+    resources:
+        mem=15000
+
+use rule enrichment_plot from enrichment_rizzardi as enrichment_rizzardi_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='region,methyltype,smoothing'
+    output:
+        expand('plots/enrichment/rizzardi/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/rizzardi/quantile/{mutclass}.{nquantiles}quantiles.log'

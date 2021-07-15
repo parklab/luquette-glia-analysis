@@ -47,16 +47,33 @@ def read_manifest(filename):
 
 mut_manifest, mut_files, mut_metadata, mut_classes, mut_metatags = \
     read_manifest(config['MUT_MANIFEST'])
-#with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    #print(mut_manifest)
-
 
 signal_manifest, signal_files, signal_metadata, signal_classes, signal_metatags = \
     read_manifest(config['SIGNAL_MANIFEST'])
-#with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    #print(signal_manifest)
+
 
 outroot = config['output_dir'] + "/quantile"
+
+
+rule enrichment_plot:
+    input:
+        outroot + '/{mutclass}/{nquantiles}quantiles.csv'
+    output:
+        expand(outroot + '/{{mutclass}}/{{nquantiles}}quantiles.{ext}',
+            ext=[ 'svg', 'pdf', 'csv2' ])
+    log:
+        outroot + '/{mutclass}/{nquantiles}quantiles.log'
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        # specify group=comma separated list of metadata names to group traces
+        # by unique metadata combinations. Default 'datasource' just causes a
+        # title to be printed. Won't work in workflows that don't have a datasource
+        # metadata column.
+        group='datasource'
+    resources:
+        mem=4000
+    script:
+        "scripts/plot_enrichment_grid.R"
 
 
 # Final output rule
@@ -163,10 +180,13 @@ rule make_qbed_from_bigwig:
                             for binsize in config['tiles'].keys() ] ]),
     log:
         outroot + "/qbed/{signalclass}.log"
+    benchmark:
+        outroot + "/qbed/{signalclass}.benchmark.txt"
     resources:
         mem=7000
     shell:
         """
+        set -euo pipefail
         quantiles=({params[quantile_array]})
         binsizes=({params[binsize_array]})
         tiles=({params[tile_array]})
@@ -177,7 +197,7 @@ rule make_qbed_from_bigwig:
             metatag=${{metatags[$i]}}
             echo "Averaging bigwig for tile=$tile, binsize=$binsize"
             echo "bigWigAverageOverBed {input.bigwig} $tile {output.tmp2}"
-            bigWigAverageOverBed {input.bigwig} $tile {output.tmp2}
+            /usr/bin/time -v bigWigAverageOverBed {input.bigwig} $tile {output.tmp2}
             for q in "${{quantiles[@]}}"; do
                 outfile={params.output_pre}.${{binsize}}binsize_${{q}}quantiles.qbed
                 echo "q=$q, i=$i, tile=$tile, metatag=$metatag, outfile=$outfile"

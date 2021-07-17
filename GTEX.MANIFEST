@@ -1,0 +1,55 @@
+datasource,group,tissue,file
+gtex,Adipose,Adipose - Subcutaneous,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Adipose - Subcutaneous.bigwig
+gtex,Adipose,Adipose - Visceral (Omentum),/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Adipose - Visceral (Omentum).bigwig
+gtex,Adrenal Gland,Adrenal Gland,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Adrenal Gland.bigwig
+gtex,Artery,Artery - Aorta,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Artery - Aorta.bigwig
+gtex,Artery,Artery - Coronary,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Artery - Coronary.bigwig
+gtex,Artery,Artery - Tibial,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Artery - Tibial.bigwig
+gtex,Bladder,Bladder,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Bladder.bigwig
+gtex,Brain,Brain - Amygdala,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Amygdala.bigwig
+gtex,Brain,Brain - Anterior cingulate cortex (BA24),/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Anterior cingulate cortex (BA24).bigwig
+gtex,Brain,Brain - Caudate (basal ganglia),/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Caudate (basal ganglia).bigwig
+gtex,Brain,Brain - Cerebellar Hemisphere,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Cerebellar Hemisphere.bigwig
+gtex,Brain,Brain - Cerebellum,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Cerebellum.bigwig
+gtex,Brain,Brain - Cortex,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Cortex.bigwig
+gtex,Brain,Brain - Frontal Cortex (BA9),/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Frontal Cortex (BA9).bigwig
+gtex,Brain,Brain - Hippocampus,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Hippocampus.bigwig
+gtex,Brain,Brain - Hypothalamus,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Hypothalamus.bigwig
+gtex,Brain,Brain - Nucleus accumbens (basal ganglia),/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Nucleus accumbens (basal ganglia).bigwig
+gtex,Brain,Brain - Putamen (basal ganglia),/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Putamen (basal ganglia).bigwig
+gtex,Brain,Brain - Spinal cord (cervical c-1),/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Spinal cord (cervical c-1).bigwig
+gtex,Brain,Brain - Substantia nigra,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Brain - Substantia nigra.bigwig
+gtex,Breast,Breast - Mammary Tissue,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Breast - Mammary Tissue.bigwig
+gtex,Cells,Cells - Cultured fibroblasts,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Cells - Cultured fibroblasts.bigwig
+gtex,Cells,Cells - EBV-transformed lymphocytes,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Cells - EBV-transformed lymphocytes.bigwig
+gtex,Cervix,Cervix - Ectocervix,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Cervix - Ectocervix.bigwig
+gtex,Cervix,Cervix - Endocervix,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Cervix - Endocervix.bigwig
+gtex,Colon,Colon - Sigmoid,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Colon - Sigmoid.bigwig
+gtex,Colon,Colon - Transverse,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Colon - Transverse.bigwig
+gtex,Esophagus,Esophagus - Gastroesophageal Junction,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Esophagus - Gastroesophageal Junction.bigwig
+gtex,Esophagus,Esophagus - Mucosa,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Esophagus - Mucosa.bigwig
+gtex,Esophagus,Esophagus - Muscularis,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Esophagus - Muscularis.bigwig
+gtex,Fallopian Tube,Fallopian Tube,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Fallopian Tube.bigwig
+gtex,Heart,Heart - Atrial Appendage,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Heart - Atrial Appendage.bigwig
+gtex,Heart,Heart - Left Ventricle,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Heart - Left Ventricle.bigwig
+gtex,Kidney,Kidney - Cortex,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Kidney - Cortex.bigwig
+gtex,Kidney,Kidney - Medulla,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Kidney - Medulla.bigwig
+gtex,Liver,Liver,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Liver.bigwig
+gtex,Lung,Lung,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Lung.bigwig
+gtex,Minor Salivary Gland,Minor Salivary Gland,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Minor Salivary Gland.bigwig
+gtex,Muscle,Muscle - Skeletal,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Muscle - Skeletal.bigwig
+gtex,Nerve,Nerve - Tibial,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Nerve - Tibial.bigwig
+gtex,Ovary,Ovary,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Ovary.bigwig
+gtex,Pancreas,Pancreas,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Pancreas.bigwig
+gtex,Pituitary,Pituitary,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Pituitary.bigwig
+gtex,Prostate,Prostate,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Prostate.bigwig
+gtex,Skin,Skin - Not Sun Exposed (Suprapubic),/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Skin - Not Sun Exposed (Suprapubic).bigwig
+gtex,Skin,Skin - Sun Exposed (Lower leg),/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Skin - Sun Exposed (Lower leg).bigwig
+gtex,Small Intestine,Small Intestine - Terminal Ileum,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Small Intestine - Terminal Ileum.bigwig
+gtex,Spleen,Spleen,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Spleen.bigwig
+gtex,Stomach,Stomach,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Stomach.bigwig
+gtex,Testis,Testis,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Testis.bigwig
+gtex,Thyroid,Thyroid,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Thyroid.bigwig
+gtex,Uterus,Uterus,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Uterus.bigwig
+gtex,Vagina,Vagina,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Vagina.bigwig
+gtex,Whole Blood,Whole Blood,/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/data/gtex/bigwig/Whole Blood.bigwig

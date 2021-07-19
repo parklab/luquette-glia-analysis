@@ -1,0 +1,49 @@
+# vim: syntax=python
+#
+
+celltypes = [ 'OPC', 'astrocyte', 'endothelial', 'excitatory_neuron',
+              'inhibitory_neuron', 'microglia', 'oligo' ]
+libraries = [ 'merged' ] + [ str(x) for x in range(1, 12) ]
+
+
+wildcard_constraints:
+    libid='|'.join(libraries),
+    celltype='|'.join(celltypes)
+
+
+rule all:
+    input:
+        expand('bigwig/transpositions.library{libid}_{celltype}.bigwig',
+            libid=libraries, celltype=celltypes)
+
+
+rule frags_to_beds:
+    input:
+        frags="/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/fragments.tsv",
+        mapfile="/n/data1/hms/dbmi/park/jluquette/glia/figures/scatacseq_sample_to_cell_map.txt"
+    output:
+        expand("bed/transpositions.library{libid}_{celltype}.bed",
+            libid=libraries, celltype=celltypes)
+    log:
+        "bed/frags_to_beds.log"
+    shell:
+        """
+        /n/data1/hms/dbmi/park/jluquette/glia/figures/scripts/scatacseq_10x_frags_to_bed.py \
+            {input.frags} {input.mapfile} bed/transpositions
+        """
+
+
+rule bedgraph_to_bigwig:
+    input:
+        bed="bed/transpositions.library{libid}_{celltype}.bed",
+        genome="/n/data1/hms/dbmi/park/jluquette/glia/figures/hg19.genome"
+    output:
+        tmp=temp("bigwig/transpositions.library{libid}_{celltype}.tmp"),
+        bw="bigwig/transpositions.library{libid}_{celltype}.bigwig"
+    log:
+        "bigwig/transpositions.library{libid}_{celltype}.log"
+    shell:
+        """
+        /n/data1/hms/dbmi/park/jluquette/glia/figures/scripts/scatacseq_fragbed_to_bigwig.sh \
+            {input.bed} {input.genome} {output.bw} {output.tmp}
+        """

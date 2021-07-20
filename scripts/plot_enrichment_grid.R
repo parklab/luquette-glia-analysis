@@ -16,6 +16,8 @@ if ('snakemake' %in% ls()) {
         ))
         if ('group' %in% names(snakemake@params))
             ret <- c(ret, unlist(snakemake@params['group']))
+        if ('highlight' %in% names(snakemake@params))
+            ret <- c(ret, unlist(snakemake@params['highlight']))
         ret
     }
     cat('Got command line arguments from snakemake:\n')
@@ -23,7 +25,7 @@ if ('snakemake' %in% ls()) {
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (all(length(args) != 5:6)) {
+if (all(length(args) != 5:7)) {
     cat("enrichment_table.csv is expected to have metadata columns in the order:\n")
     cat("  1. QUANTILES, 2. BINSIZE, 3-(n), metadata, (n+1)-end, esummary() rows.\n")
     cat("Any number of metadata columns is allowed; metadata column names cannot\n")
@@ -37,7 +39,11 @@ if (all(length(args) != 5:6)) {
     cat("a comma-separated list of key-value pairs of metadata to exclude from plotting.\n")
     cat("N.B., if BINSIZE is specified in ignore, then a blank box will be plotted to\n")
     cat("preserve structure with plots from other datasets.\n")
-    stop("usage: make_roadmap_enrichment_grid.R enrichment_table.csv ignore out.svg out.pdf out.csv [ group_factor1,...,group_factorN ]")
+    cat("highlight is a single key=value pair naming a metadata column and a value taken\n")
+    cat('on by that column. All traces belonging to that metadat will be highlighted green.\n')
+    cat('N.B. highlight can only be used if group_factor is specified. At some point,\n')
+    cat('this can be fixed by using a proper argument parser later.\n')
+    stop("usage: make_roadmap_enrichment_grid.R enrichment_table.csv ignore out.svg out.pdf out.csv [ group_factor1,...,group_factorN ] [highlight]")
 }
 
 in.csv <- args[1]
@@ -46,8 +52,11 @@ out.svg <- args[3]
 out.pdf <- args[4]
 out.csv <- args[5]
 group.factors <- c()
-if (length(args) == 6)
+if (length(args) >= 6)
     group.factors <- args[6]
+highlight <- c()
+if (length(args) >= 7)
+    highlight <- args[7]
 
 if (file.exists(out.svg))
     stop(paste('output file', out.svg, 'already exists, please delete it first'))
@@ -84,7 +93,17 @@ if (ignore.string != 'enrichment_grid_R_ignore_none') {
 } else {
     cat("Not ignoring any metadata columns.\n")
 }
-    
+
+if (length(highlight) > 0) {
+    highlight.key <- strsplit(highlight, '=')[[1]][1]
+    highlight.value <- strsplit(highlight, '=')[[1]][2]
+    if (!(highlight.key %in% colnames(d)))
+        stop(paste('requested highlight metadata column', highlight.key, 'is not in the table. Did you ignore it?'))
+
+    cat(paste('Highlighting', sum(d[[highlight.key]] == highlight.value),
+        'instances of', highlight.key, '=', highlight.value, '\n'))
+}
+
 
 groups <- list(no.name=d)
 if (length(group.factors) > 0) {
@@ -167,13 +186,20 @@ for (i in 1:2) {
                         xaxt=ifelse(bs==tail(binsizes,1), 's', 'n'),
                         yaxt=ifelse(group.name==names(groups)[1], 's', 'n'))
                 }
-                # XXX: TODO: still need a way to highlight specific lines
-                #for (e in brain.eids) {
-                    #dd <- d[mark == m & binsize==bs & eid == e]
-                    #lines(dd$quantile, dd$enr, col=3,
-                        #type='l')
-                        #type='b', pch=20)
-                #}
+
+                # Replot traces with highlights
+                if (length(highlight) > 0) {
+                    for (i in seq_along(signals)) {
+                        s <- signals[[i]]
+                        if (s[[highlight.key]][1] == highlight.value) {
+                            cat('plotting signal with', highlight.key, '=',highlight.value,'\n')
+                            s <- s[order(as.integer(s$quantile)),]
+                            lines(as.integer(s$quantile), s$enr, type='l', col=3)
+                        } else {
+                            cat('skipping signal with', highlight.key, '=',highlight.value,'\n')
+                        }
+                    }
+                }
                 abline(h=1, lty='dashed', col='grey')
             }
         }

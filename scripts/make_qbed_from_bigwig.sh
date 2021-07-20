@@ -3,7 +3,11 @@
 set -euo pipefail
 
 if [ $# -lt 6 ]; then
-    echo "usage: $0 n_quantiles tiles.bed signal.{bigwig|sig} out.qbed tmpout tmpout2 [ metadata1 ... metadataN ]"
+    echo "usage: $0 n_quantiles min_coverage tiles.bed signal.{bigwig|sig} out.qbed tmpout tmpout2 [ metadata1 ... metadataN ]"
+    echo "min_coverage - a fraction in the range [0,1]. Tiles for which the bigwig"
+    echo "    signal covers < min_coverage bases (as a fraction of tile size) will"
+    echo "    be assigned an NA (excluded) score and quantile."
+    echo "    Set to 0 to disable this functionality and behave like the old script."
     echo "if the signal file ends in the (case sensitive) .sig extension, then"
     echo "    bigWigAverageOverBed is not run it is assumed that the .sig file"
     echo "    is in the correct format."
@@ -13,15 +17,18 @@ if [ $# -lt 6 ]; then
 fi
 
 nquantiles=$1
-tilesbed=$2
-bigwig=$3
-outqbed=$4
-tmpout=$5
-tmpout2=$6
-shift 6
-metadata=("QUANTILES=$nquantiles" "$@")
+mincov=$2
+tilesbed=$3
+bigwig="$4"
+outqbed="$5"
+tmpout="$6"
+tmpout2="$7"
+shift 7
+metadata=("QUANTILES=$nquantiles" "MIN_COVERAGE=$mincov" "$@")
 
-if [ "x$(echo $bigwig | grep -c '\.sig$')" == "x0" ]; then
+echo "Minimum coverage requirement: $mincov"
+
+if [ "x$(echo "$bigwig" | grep -c '\.sig$')" == "x0" ]; then
     is_sig=FALSE
     echo "Signal file is type=BIGWIG"
 else
@@ -29,14 +36,14 @@ else
     echo "Signal file is type=SIGNAL, a file produced by bigWigAverageOverBed"
 fi
     
-if [ "x$(echo $metadata | grep -c ';')" != "x0" ]; then
+if [ "x$(echo "$metadata" | grep -c ';')" != "x0" ]; then
     echo "metadata TAG=VALUE pairs must not contain semicolons"
     exit
 fi
 
 metatags="#QBED_VERSION=1"
 for kv in "${metadata[@]}"; do
-    if [ "x$(echo $kv|grep -c '=')" == "x0" ]; then
+    if [ "x$(echo "$kv"|grep -c '=')" == "x0" ]; then
         echo "key-value pair '$kv' does not contain an = sign"
         exit 1
     fi
@@ -45,15 +52,15 @@ done
 echo "using metatags=$metatags"
 
 
-if [ -f $outqbed ]; then
+if [ -f "$outqbed" ]; then
     echo "output file $outqbed already exists, please delete it first"
     exit 1
 fi
-if [ -f $tmpout ]; then
+if [ -f "$tmpout" ]; then
     echo "output file $tmpout already exists, please delete it first"
     exit 1
 fi
-if [ -f $tmpout2 ]; then
+if [ -f "$tmpout2" ]; then
     echo "output file $tmpout2 already exists, please delete it first"
     exit 1
 fi
@@ -63,9 +70,9 @@ fi
 # column 6 of tmpout is mean over just covered bases
 if [ $is_sig == "FALSE" ]; then
     echo "Averaging bigwig over tiles.."
-    ( bigWigAverageOverBed $bigwig $tilesbed $tmpout )
+    ( bigWigAverageOverBed "$bigwig" $tilesbed "$tmpout" )
 else
-    tmpout=$bigwig
+    tmpout="$bigwig"
     echo "Skipping bigWigAverageOverBed because type=SIGNAL, using tmpout=$tmpout"
 fi
 
@@ -75,9 +82,9 @@ fi
 # Column 5 of the tile bed is 1 if the tile is considered analyzable
 # and 0 otherwise.
 echo "Converting to quantiles (n=$nquantiles)"
-Rscript -e 'library(data.table); keep <- fread("'$tilesbed'")[[5]]; score <- fread("'$tmpout'")[[5]]; score[keep == 0] <- NA; q <- findInterval(score, quantile(score, na.rm=T, probs=1:'$nquantiles'/'$nquantiles'), rightmost.closed=TRUE)+1; cat("gc before writing\n"); print(gc()); write(paste(q, score, sep="\t"), ncolumns=1, file="'$tmpout2'"); cat("gc after writing\n"); print(gc())'
+Rscript -e 'library(data.table); keep <- fread("'$tilesbed'")[[5]]; tmpout <- fread("'$tmpout'"); score <- tmpout[[5]]; coverage <- tmpout[[3]]/tmpout[[2]]; score[keep == 0 | coverage < '$mincov'] <- NA; q <- findInterval(score, quantile(score, na.rm=T, probs=1:'$nquantiles'/'$nquantiles'), rightmost.closed=TRUE)+1; cat("gc before writing\n"); print(gc()); write(paste(q, score, sep="\t"), ncolumns=1, file="'$tmpout2'"); cat("gc after writing\n"); print(gc())'
 
 # tilesbed has 5 columns, tmpout2 has 2
 echo "Writing qbed '$outqbed'.."
 (echo "$metatags" ;
- paste $tilesbed $tmpout2 | cut -f1-3,6-7) > $outqbed
+ paste $tilesbed "$tmpout2" | cut -f1-3,6-7) > "$outqbed"

@@ -11,39 +11,56 @@ wildcard_constraints:
     celltype='|'.join(celltypes)
 
 
-rule all:
-    input:
-        expand('bigwig/transpositions.library{libid}_{celltype}.bigwig',
-            libid=libraries, celltype=celltypes)
+#rule all:
+    #input:
+        #expand('bigwig/transpositions.library{libid}_{celltype}.bigwig',
+            #libid=libraries, celltype=celltypes)
 
 
-rule frags_to_beds:
+rule scatacseq_extract_mapfile:
     input:
-        frags="/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/fragments.tsv",
-        mapfile="/n/data1/hms/dbmi/park/jluquette/glia/figures/scatacseq_sample_to_cell_map.txt"
+        "input/any___scatacseq_summary___none.csv"
     output:
-        expand("bed/transpositions.library{libid}_{celltype}.bed",
-            libid=libraries, celltype=celltypes)
-    log:
-        "bed/frags_to_beds.log"
+        "data/scatacseq/auxiliary/sample_to_cell_map.txt"
+    resources:
+        mem=1000
     shell:
         """
-        /n/data1/hms/dbmi/park/jluquette/glia/figures/scripts/scatacseq_10x_frags_to_bed.py \
-            {input.frags} {input.mapfile} bed/transpositions
+        cut -f2,3 -d, {input} | tr ',' '\t' | tr ' ' '_' | tail -n +2 > {output}
         """
+        
 
-
-rule bedgraph_to_bigwig:
+rule scatacseq_frags_to_beds:
     input:
-        bed="bed/transpositions.library{libid}_{celltype}.bed",
-        genome="/n/data1/hms/dbmi/park/jluquette/glia/figures/hg19.genome"
+        frags="input/any___scatacseq_frags___none.tsv",
+        mapfile="data/scatacseq/auxiliary/sample_to_cell_map.txt"
     output:
-        tmp=temp("bigwig/transpositions.library{libid}_{celltype}.tmp"),
-        bw="bigwig/transpositions.library{libid}_{celltype}.bigwig"
+        expand("data/scatacseq/bed/transpositions.library{libid}_{celltype}.bed",
+            libid=libraries, celltype=celltypes)
     log:
-        "bigwig/transpositions.library{libid}_{celltype}.log"
+        "data/scatacseq/bed/frags_to_beds.log"
+    resources:
+        mem=4000
     shell:
         """
-        /n/data1/hms/dbmi/park/jluquette/glia/figures/scripts/scatacseq_fragbed_to_bigwig.sh \
+        /n/data1/hms/dbmi/park/jluquette/glia/analysis/scripts/scatacseq_10x_frags_to_bed.py \
+            {input.frags} {input.mapfile} data/scatacseq/bed/transpositions
+        """
+
+
+rule scatacseq_bedgraph_to_bigwig:
+    input:
+        bed="data/scatacseq/bed/transpositions.library{libid}_{celltype}.bed",
+        genome="input/any___hg19_genome_withXYM___none.genome"
+    output:
+        tmp=temp("data/scatacseq/bigwig/transpositions.library{libid}_{celltype}.tmp"),
+        bw="data/scatacseq/bigwig/transpositions.library{libid}_{celltype}.bigwig"
+    log:
+        "data/scatacseq/bigwig/transpositions.library{libid}_{celltype}.log"
+    resources:
+        mem=4000
+    shell:
+        """
+        /n/data1/hms/dbmi/park/jluquette/glia/analysis/scripts/scatacseq_fragbed_to_bigwig.sh \
             {input.bed} {input.genome} {output.bw} {output.tmp}
         """

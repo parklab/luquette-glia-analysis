@@ -96,3 +96,19 @@ rule download_encode_replichip_bigwig:
         wget -O {output} \
             "https://www.encodeproject.org/files/{wildcards.enc_id}/@@download/{wildcards.enc_id}.bigWig"
         """
+
+
+rule make_gtex_signal_bigwig:
+    input:
+        gtf="input/any___gtex_gene_model___none.gtf",
+        gct="input/any___gtex_expression_tpm___none.gct"
+    output:
+        bigwig="data/gtex/bigwig/{tissue}.bigwig"
+    log:
+        "data/gtex/bigwig/{tissue}.log"
+    params:
+        tissue="{tissue}"
+    resources:
+        mem=16000
+    script:
+        "scripts/convert_gtex_expression_to_bigwig.R"

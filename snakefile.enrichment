@@ -69,7 +69,8 @@ rule enrichment_plot:
         # by unique metadata combinations. Default 'datasource' just causes a
         # title to be printed. Won't work in workflows that don't have a datasource
         # metadata column.
-        group='datasource'
+        group='datasource',
+        #highlight=''  # can use e.g., group=Brain to select lines to highlight
     resources:
         mem=4000
     script:
@@ -149,6 +150,31 @@ rule make_qbed_from_bigwig:
         """
 '''
 
+# extratags must be a list of strings formatted as STRING=STRING
+def make_qbed_from_bigwig_params(min_coverage, extratags=[]):
+    return dict({
+        # can't figure out why this won't work in the shell command
+        #script=workflow.source_path('scripts/make_qbed_from_bigwig.sh'),
+        # We manually roll up (quantile, binsize) pairs into a single rule
+        # because multiplying the number of input files by 16 (in this
+        # project) makes snakemake very slow.
+        'script' : config['qbed_from_bigwig_script'],
+        # New option that allows tiles to be excluded based on the fraction
+        # of the tile covered by the bigwig signal. 0 means no tiles are
+        # excluded. In qbedenrich (the enrichment analysis), exclusion by
+        # this method is indistinguishable to exclusion by alignability.
+        'min_coverage' : min_coverage,
+        'output_pre' : outroot + "/qbed/{signalclass}",
+        'quantile_array' : " ".join([ str(x) for x in config['quantiles'] ]),
+        # tiles, binsizes and metatags must all be the same length
+        'tile_array' : " ".join([ "'" + f + "'" for f in config['tiles'].values() ]),
+        'binsize_array' : " ".join([ "'" + bs + "'" for bs in config['tiles'].keys() ]),
+        'metatag_array' : lambda wildcards: " ".join([ "'" + mt + "'"
+            for mt in [ "BINSIZE=" + binsize + " " + list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, '__metatags__'])[0] \
+                    for binsize in config['tiles'].keys() ] ]) + \
+            " ".join(extratags)
+    })
+
 
 rule make_qbed_from_bigwig:
     input:
@@ -163,21 +189,7 @@ rule make_qbed_from_bigwig:
         tmp1=temp(outroot + "/qbed/{signalclass}.tmp1"),
         tmp2=temp(outroot + "/qbed/{signalclass}.tmp2.sig") # must end in .sig
     params:
-        # can't figure out why this won't work in the shell command
-        #script=workflow.source_path('scripts/make_qbed_from_bigwig.sh'),
-        # We manually roll up (quantile, binsize) pairs into a single rule
-        # because multiplying the number of input files by 16 (in this
-        # project) makes snakemake very slow.
-        script=config['qbed_from_bigwig_script'],
-        output_pre=outroot + "/qbed/{signalclass}",
-        quantile_array=" ".join([ str(x) for x in config['quantiles'] ]),
-        # tiles, binsizes and metatags must all be the same length
-        tile_array=" ".join([ "'" + f + "'" for f in config['tiles'].values() ]),
-        binsize_array=" ".join([ "'" + bs + "'" for bs in config['tiles'].keys() ]),
-        metatag_array=lambda wildcards: \
-            " ".join([ "'" + mt + "'"
-                       for mt in [ "BINSIZE=" + binsize + " " + list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, '__metatags__'])[0] \
-                            for binsize in config['tiles'].keys() ] ]),
+        **make_qbed_from_bigwig_params(0)
     log:
         outroot + "/qbed/{signalclass}.log"
     benchmark:
@@ -202,7 +214,7 @@ rule make_qbed_from_bigwig:
                 outfile={params.output_pre}.${{binsize}}binsize_${{q}}quantiles.qbed
                 echo "q=$q, i=$i, tile=$tile, metatag=$metatag, outfile=$outfile"
                 if [ -f {output.tmp1} ]; then rm {output.tmp1}; fi
-                {params.script} $q $tile {output.tmp2} $outfile \
+                {params.script} $q {params.min_coverage} $tile {output.tmp2} $outfile \
                     dummy \
                     {output.tmp1} \
                     $metatag

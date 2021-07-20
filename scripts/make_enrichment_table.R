@@ -9,9 +9,8 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@output[1],     # output table
-        snakemake@input[1],      # EID metadata from Roadmap 
-        snakemake@input[2:length(snakemake@input)]  # variable sized list of esummary RDAs
+        snakemake@output[1],   # output table
+        snakemake@input        # variable length list of esummary RDAs
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())

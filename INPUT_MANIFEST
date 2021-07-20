@@ -48,5 +48,11 @@ any	cosmic	A	csv	/n/data1/hms/dbmi/park/jluquette/glia/COSMIC_SBS.csv
 any	lysis_pta	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/lysis_test/lysis_sig_061921_original_25_neurons.rda
 # Seurat analysis of scATAC-seq. Just dragging in a very processed
 # data object; no intention (yet) to recapitulate any real analysis here.
-any	scatacseq	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/try1_manual_assignment_table_20210623.csv
+any	scatacseq_summary	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/try1_manual_assignment_table_20210623.csv
+any	scatacseq_frags	none	tsv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/fragments.tsv
 any	scrnaseq	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/snRNA_1465a_table.csv
+# GTEx files for creating tissue specific expression signals
+any	gtex_gene_model	none	gtf	/n/data1/hms/dbmi/park/jluquette/pta/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf
+any	gtex_expression_tpm	none	gct	/n/data1/hms/dbmi/park/jluquette/pta/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct
+# Genome file containing contig lengths. Used by some BED analyses
+any	hg19_genome_withXYM	none	genome	/n/data1/hms/dbmi/park/jluquette/glia/figures/hg19.genome

@@ -95,14 +95,14 @@ rule all:
             output=['svg', 'pdf', 'jpeg']),
         expand("alignability/plots/chromosome_bin_classes_barplot.{output}",
             output=['svg', 'pdf']),
-        expand("alignability/data_plots/chr{chr}.{resolution}.{output}",
-            chr=chrs, resolution=[ '1k', '10k', '100k', '1m' ],
-            output=['svg', 'pdf']),
+        #expand("alignability/data_plots/chr{chr}.{resolution}.{output}",
+            #chr=chrs, resolution=[ '1k', '10k', '100k', '1m' ],
+            #output=['svg', 'pdf']),
         # 1b
-        expand('plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
-            qualtype=snv_qualtypes,  # indels are always added
-            collapsed=[ '', 'COLLAPSED.'],
-            output=output_plot_and_table),
+        #expand('plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
+            #qualtype=snv_qualtypes,  # indels are always added
+            #collapsed=[ '', 'COLLAPSED.'],
+            #output=output_plot_and_table),
         # 1c
         expand("plots/fig1/indel_size_analysis/indel_size.{output}",
             output=[ 'pdf', 'svg']),
@@ -146,30 +146,30 @@ rule all:
         expand("plots/fig3/scatacseq/umap_plot.{output}",
             output=[ 'svg', 'pdf', 'jpeg' ]),
         # 3c
-        expand('plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=celltypes_to_compute,
-            qualtype=all_qualtypes,
-            nquantiles=qsizes,
-            output=[ 'svg', 'pdf' ]),
+        #expand('plots/fig3/encode_replichip/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            #celltype=celltypes_to_compute,
+            #qualtype=all_qualtypes,
+            #nquantiles=qsizes,
+            #output=[ 'svg', 'pdf' ]),
         # 3e
-        expand('plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=celltypes_to_compute,
-            qualtype=all_qualtypes,
-            nquantiles=qsizes,
-            output=[ 'svg', 'pdf' ]),
+        #expand('plots/fig3/roadmap_enrichment/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            #celltype=celltypes_to_compute,
+            #qualtype=all_qualtypes,
+            #nquantiles=qsizes,
+            #output=[ 'svg', 'pdf' ]),
         expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
             nquantiles=qsizes,
-            datasource=[ 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
-            #datasource=[ 'rizzardi' ],
+            datasource=[ 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
+            output=[ 'svg', 'pdf', 'csv' ]),
+        # GTEx enrichment plots with multiple levels of signal coverage
+        expand('plots/enrichment/gtex_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            celltype=celltypes_to_compute,
+            qualtype=all_qualtypes,
+            nquantiles=qsizes,
+            mincov=[ '02', '04', '06', '08' ],
             output=[ 'svg', 'pdf', 'csv' ])
-        # Just signals for now, not sure which figure (if any) will use them
-        #expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles.csv',
-            #celltype=celltypes_to_compute,
-            #qualtype=all_qualtypes,
-            #nquantiles=qsizes,
-            #datasource=[ 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ])
 
 
 include: "snakefile.data"
@@ -177,6 +177,7 @@ include: "snakefile.alignability"
 include: "snakefile.fig1"
 include: "snakefile.fig2"
 include: "snakefile.fig3"
+include: "snakefile.scatacseq"
 
 
 # Below is several instances of
@@ -381,3 +382,153 @@ use rule enrichment_plot from enrichment_rizzardi as enrichment_rizzardi_enrichm
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'plots/enrichment/rizzardi/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+
+########################################################################
+# Our scATAC-seq data
+########################################################################
+enrichment_scatacseq_config = dict(
+    **{ 'output_dir': 'enrichment/scatacseq',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/SCATACSEQ.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_scatacseq:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_scatacseq_config
+
+use rule * from enrichment_scatacseq  as enrichment_scatacseq_*
+
+use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enrichment_plot with:
+    output:
+        expand('plots/enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+
+########################################################################
+# GTEx gene expression levels
+#    This analysis is run for 4 levels of minimum signal coverage:
+#    20%, 40%, 60% and 80%. We do this because we found that intergenic
+#    regions do NOT have similar levels of mutation enrichment as lowly
+#    expressed genes, which one might assume.
+#    This complicates the multiple-resolution analysis because intergenic
+#    and 0 expression are distinct states.
+#
+#    Unfortunately, I don't know of a way to make Snakemake run this
+#    same module 4 times for each min coverage level, so copy paste
+#    it is.
+########################################################################
+
+# Min. signal coverage: _mc02
+enrichment_gtex_expression_mc02_config = dict(
+    **{ 'output_dir': 'enrichment/gtex_expression_mc02',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/GTEX_EXPRESSION.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_gtex_expression_mc02:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_gtex_expression_mc02_config
+
+use rule * from enrichment_gtex_expression_mc02 as enrichment_gtex_expression_mc02_*
+
+use rule make_qbed_from_bigwig from enrichment_gtex_expression_mc02 as enrichment_gtex_expression_mc02_make_qbed_from_bigwig with:
+    params:
+        **enrichment_gtex_expression_mc02.make_qbed_from_bigwig_params(0.2)
+
+use rule enrichment_plot from enrichment_gtex_expression_mc02 as enrichment_gtex_expression_mc02_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource',
+        highlight='group=Brain'
+    output:
+        expand('plots/enrichment/gtex_expression_mc02/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/gtex_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+# Min. signal coverage: _mc04
+enrichment_gtex_expression_mc04_config = dict(
+    **{ 'output_dir': 'enrichment/gtex_expression_mc04',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/GTEX_EXPRESSION.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_gtex_expression_mc04:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_gtex_expression_mc04_config
+
+use rule * from enrichment_gtex_expression_mc04 as enrichment_gtex_expression_mc04_*
+
+use rule make_qbed_from_bigwig from enrichment_gtex_expression_mc04 as enrichment_gtex_expression_mc04_make_qbed_from_bigwig with:
+    params:
+        **enrichment_gtex_expression_mc04.make_qbed_from_bigwig_params(0.4)
+
+use rule enrichment_plot from enrichment_gtex_expression_mc04 as enrichment_gtex_expression_mc04_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource',
+        highlight='group=Brain'
+    output:
+        expand('plots/enrichment/gtex_expression_mc04/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/gtex_expression_mc04/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+# Min. signal coverage: _mc06
+enrichment_gtex_expression_mc06_config = dict(
+    **{ 'output_dir': 'enrichment/gtex_expression_mc06',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/GTEX_EXPRESSION.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_gtex_expression_mc06:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_gtex_expression_mc06_config
+
+use rule * from enrichment_gtex_expression_mc06 as enrichment_gtex_expression_mc06_*
+
+use rule make_qbed_from_bigwig from enrichment_gtex_expression_mc06 as enrichment_gtex_expression_mc06_make_qbed_from_bigwig with:
+    params:
+        **enrichment_gtex_expression_mc06.make_qbed_from_bigwig_params(0.6)
+
+use rule enrichment_plot from enrichment_gtex_expression_mc06 as enrichment_gtex_expression_mc06_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource',
+        highlight='group=Brain'
+    output:
+        expand('plots/enrichment/gtex_expression_mc06/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/gtex_expression_mc06/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+# Min. signal coverage: _mc08
+enrichment_gtex_expression_mc08_config = dict(
+    **{ 'output_dir': 'enrichment/gtex_expression_mc08',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/GTEX_EXPRESSION.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_gtex_expression_mc08:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_gtex_expression_mc08_config
+
+use rule * from enrichment_gtex_expression_mc08 as enrichment_gtex_expression_mc08_*
+
+use rule make_qbed_from_bigwig from enrichment_gtex_expression_mc08 as enrichment_gtex_expression_mc08_make_qbed_from_bigwig with:
+    params:
+        **enrichment_gtex_expression_mc08.make_qbed_from_bigwig_params(0.8)
+
+use rule enrichment_plot from enrichment_gtex_expression_mc08 as enrichment_gtex_expression_mc08_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource',
+        highlight='group=Brain'
+    output:
+        expand('plots/enrichment/gtex_expression_mc08/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/gtex_expression_mc08/quantile/{mutclass}.{nquantiles}quantiles.log'

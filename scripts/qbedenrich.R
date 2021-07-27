@@ -65,7 +65,7 @@ str(results)
 
 e <- results$e
 es <- results$es
-emeta <- attr(e$edata$gbed, 'qbed.metadata')
+emeta <- attr(e$edata$gbed, 'bed.metadata')
 
 cat("Saving output to", results$fulloutfile, "and", results$summaryoutfile, "\n")
 save(e, es, emeta, file=results$fulloutfile, compress=FALSE)

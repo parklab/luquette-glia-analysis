@@ -142,10 +142,10 @@ print(d)
 
 
 # just make a blank panel with text 'txt' in the middle
-textpane <- function(txt) {
+textpane <- function(txt, legend.position='center') {
     par(mar=c(0,0,0,0))
     plot(1, pch=NA, bty='n', xaxt='n', yaxt='n')
-    legend('center', legend=txt, bty='n', cex=1.4)
+    legend(legend.position, legend=txt, bty='n', cex=1.4)
 }
 
 suppressMessages(library(extrafont))
@@ -158,12 +158,13 @@ if (!("Arial" %in% fonts()))
 
 # get height (in lines) of longest class name (will be in x-axis label)
 em <- strheight('M', unit='inches')  # height of a capital M in inches
-# 4 - y axis, 1 - right margin, 1em per point per y panel (plus text label panel)
-figwidth <- (4 + 1)*em + (1+nygroups)*(em*nxlabs)  # in inches
+# 4 - y axis, 1 - right margin, 4 - outer margins
+# 1.5em per point per y panel (plus text label panel)
+figwidth <- (4 + 1 + 4)*em + max(strwidth(xgroups, unit='inches')) + nygroups*em*nxlabs*1.5  # in inches
 
 # x labels will be rotated, so use width
 emw <- strwidth('M', unit='inches')  # width of a capital M in inches
-xlabheight <- max(strwidth(d$quantile, unit='inches'))/emw
+xlabheight <- max(strwidth(xlabs, unit='inches'))/emw
 print(xlabheight)
 # 2em margins top and bottom, 1.5 inches per panel + half the panel size for the column text label, xlabheight*em inches for the x labels
 figheight <- nxgroups*1.5 + 1.5/2 + 4*em + xlabheight*emw
@@ -177,11 +178,14 @@ for (i in 1:2) {
     cat('making', outs[i], '\n')
     devs[[i]](file=outs[i], width=figwidth, height=figheight)
 
-    layout(matrix(1:((nxgroups+1)*(nygroups+1)), nrow=(nxgroups+1), byrow=TRUE),
-        heights=c(2,rep(4,nxgroups)))
+    # from above: each element on the x-axis is given 1.5 ems of space. Give the
+    # left-side group labels 6 ems of space. Very rough, probably won't always work.
+    layout(matrix(1:((nxgroups+1)*(nygroups+2)), nrow=(nxgroups+1), byrow=TRUE),
+        heights=c(2,rep(4,nxgroups)), widths=c(6,6,rep(1.5*nxlabs, nygroups)))
     par(oma=c(2+xlabheight,2,2,2))
 
     # just plot labels for y groups
+    textpane('')
     textpane('')
     for (yg in ygroups) {
         textpane(strsplit(yg, '\n')[[1]])
@@ -189,7 +193,8 @@ for (i in 1:2) {
 
     # plots begin here
     for (xg in xgroups) {
-        textpane(xg)
+        textpane(xg, legend.position='left')
+        textpane('')
 
         # ranges based on error bars
         g <- d[x_group_factor_class == xg]

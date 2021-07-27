@@ -19,7 +19,7 @@ if ('snakemake' %in% ls()) {
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) < 2) {
     cat("WARNING: each esummary object must contain the same metadata\n")
-    stop("usage: make_enrichment_table.R out.csv esummary1.rda [ esummary2.rda ... esummaryN.rda ]")
+    stop("usage: make_qbed_enrichment_table.R out.csv esummary1.rda [ esummary2.rda ... esummaryN.rda ]")
 }
 
 out.csv <- args[1]
@@ -35,11 +35,12 @@ full.table <- do.call(rbind, lapply(esummary.rdas, function(f) {
     do.call(rbind, lapply(names(es), function(ename) {
         m <- emeta[ename,] # meta columns to be duplicated for each row in es[[ename]]
         esum <- es[[ename]]
+        # XXX: the plot script is now responsible for ordering these
         # 'outside', 'excluded' and any other non-integer class will
         # generate warnings about NA, but these can be ignored. the
         # integers will be ordered properly followed by the non-integers
         # in their original order.
-        esum <- esum[order(as.integer(rownames(esum))),]
+        #esum <- esum[order(as.integer(rownames(esum))),]
         ret <- data.table(m, quantile=rownames(esum), esum)
        ret
     }))

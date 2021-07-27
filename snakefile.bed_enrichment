@@ -1,0 +1,114 @@
+# vim: syntax=python
+
+
+import pandas as pd
+
+# nrows is for testing purposes, otherwise leave as None to read the whole file
+def read_manifest(filename, nrows=None):
+    manifest = pd.read_csv(filename, nrows=nrows)
+    files = list(manifest['file'])
+    m_nofiles = manifest.loc[:, manifest.columns != 'file'].astype(str)
+    metadata = list(m_nofiles.columns)
+    classes = m_nofiles.agg('___'.join, axis=1)
+    manifest['__class__'] = classes
+    #tmp = pd.concat([ "'" + m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] + "'" \
+    tmp = pd.concat([ m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] \
+        for i in range(0, m_nofiles.shape[1]) ], axis=1)
+    # XXX: DIFFERENT FROM QBED ENRICHMENT, WHICH JOINS ON SPACES
+    metatags = list(tmp.agg(';'.join, axis=1))
+    manifest['__metatags__'] = metatags
+    return(manifest, files, metadata, list(classes), metatags)
+
+
+mut_manifest, mut_files, mut_metadata, mut_classes, mut_metatags = \
+    read_manifest(config['MUT_MANIFEST'])
+
+signal_manifest, signal_files, signal_metadata, signal_classes, signal_metatags = \
+    read_manifest(config['SIGNAL_MANIFEST'])
+
+
+outroot = config['output_dir'] + "/bed_regions"
+
+
+rule enrichment_bed_plot:
+    input:
+        outroot + '/{mutclass}.csv'
+    output:
+        expand(outroot + '/{{mutclass}}.{ext}',
+            ext=[ 'svg', 'pdf', 'csv2' ])
+    log:
+        outroot + '/{mutclass}.log'
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        # specify group=comma separated list of metadata names to group traces
+        # by unique metadata combinations. Default 'datasource' just causes a
+        # title to be printed. Won't work in workflows that don't have a datasource
+        # metadata column.
+        xlab='quantile',
+        xgroup='datasource',
+        ygroup='datasource',
+        #highlight=''  # can use e.g., group=Brain to select lines to highlight
+    resources:
+        mem=4000
+    script:
+        "scripts/plot_enrichment.R"
+
+
+# Final output rule
+rule enrichment_bed_table:
+    input:
+        outroot + "/{mutclass}/bedenrich/SUMMARY.rda"
+    output:
+        outroot + '/{mutclass}.csv'
+    log:
+        outroot + '/{mutclass}.log'
+    benchmark:
+        outroot + '/{mutclass}.benchmark.txt'
+    resources:
+        mem=4000
+    script:
+        "scripts/make_enrichment_table.R"
+
+
+rule enrichment_bed_analysis:
+    input:
+        mut=lambda wildcards: list(mut_manifest.loc[mut_manifest['__class__'] == wildcards.mutclass, 'file'])[0],
+        perm=lambda wildcards: config['mut_to_perm'][wildcards.mutclass],
+        beds=expand(outroot + "/masked_bed/{signalclass}.bed",
+            signalclass=signal_classes)
+    output:
+        full=outroot + "/{mutclass}/bedenrich/FULL.rda",
+        summary=outroot + "/{mutclass}/bedenrich/SUMMARY.rda",
+    params:
+        nbootstraps=10000
+    resources:
+        mem=10000
+    log:
+        summary=outroot + "/{mutclass}/bedenrich/bedenrich.log"
+    benchmark:
+        outroot + "/{mutclass}/bedenrich/benchmark.txt"
+    script:
+        "scripts/bedenrich.R"
+
+
+# Note that BEDs created here have a single header line that stores
+# all metadata about the track. This is absolutely necessary for later
+# enrichment steps that aggregate signals over man BEDs.
+# Always use the 1000bp alignability mask
+rule enrichment_bed_apply_mask_and_add_metadata:
+    input:
+        bed=lambda wildcards: list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, 'file'])[0],
+        mask=config['masks']['1000'],
+        genome="input/any___hg19_genome_withXYM___none.genome"
+    output:
+        outroot + "/masked_bed/{signalclass}.bed"
+    params:
+        metatags=lambda wildcards: list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, '__metatags__'])[0],
+    resources:
+        mem=1000
+    shell:
+        """
+        ( echo "#{params.metatags}" ;
+          bedtools subtract -A -a {input.bed} -b {input.mask} -g {input.genome} ) \
+        > {output}
+        """

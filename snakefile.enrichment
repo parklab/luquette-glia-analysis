@@ -114,42 +114,6 @@ rule enrichment_qbed_analysis:
         "scripts/qbedenrich.R"
 
 
-# dummy1 and dummy2 are not used, they're only here to require that they
-# be created before running this workflow.
-'''
-rule make_qbed_from_bigwig:
-    input:
-        dummy1=config['MUT_MANIFEST'],
-        dummy2=config['SIGNAL_MANIFEST'],
-        tiles=lambda wildcards: config['tiles'][wildcards.binsize],
-        bigwig=lambda wildcards: signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, 'file']
-    output:
-        qbed=outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.qbed",
-        tmp1=temp(outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.tmp1"),
-        tmp2=temp(outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.tmp2")
-    params:
-        # can't figure out why this won't work in the shell command
-        #script=workflow.source_path('scripts/make_qbed_from_bigwig.sh'),
-        script=config['qbed_from_bigwig_script'],
-        metatags=lambda wildcards: "'BINSIZE=" + wildcards.binsize + "' " + \
-              list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, '__metatags__'])[0]
-    log:
-        outroot + "/qbed/{signalclass}.{binsize}binsize_{nquantiles}quantiles.log"
-    resources:
-        mem=4000
-    shell:
-        """
-        {params.script} \
-            {wildcards.nquantiles} \
-            {input.tiles} \
-            {input.bigwig} \
-            {output.qbed} \
-            {output.tmp1} \
-            {output.tmp2} \
-            {params.metatags} > {log} 2>&1
-        """
-'''
-
 # extratags must be a list of strings formatted as STRING=STRING
 def make_qbed_from_bigwig_params(min_coverage, extratags=[]):
     return dict({
@@ -176,12 +140,15 @@ def make_qbed_from_bigwig_params(min_coverage, extratags=[]):
     })
 
 
+# dummy1 and dummy2 are not used, they're only here to require that they
+# be created before running this workflow.
+# XXX: actually, I don't think this is necessary anymore
 rule make_qbed_from_bigwig:
     input:
-        dummy1=config['MUT_MANIFEST'],
-        dummy2=config['SIGNAL_MANIFEST'],
+        #dummy1=config['MUT_MANIFEST'],
+        #dummy2=config['SIGNAL_MANIFEST'],
         tiles=lambda wildcards: config['tiles'].values(),
-        bigwig=lambda wildcards: signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, 'file']
+        bigwig=lambda wildcards: list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, 'file'])[0]
     output:
         qbed=expand(outroot + "/qbed/{{signalclass}}.{binsize}binsize_{nquantiles}quantiles.qbed",
             binsize=config['tiles'].keys(),

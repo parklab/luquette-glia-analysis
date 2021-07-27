@@ -38,8 +38,10 @@ oligo	callable	A	tsv	/n/data1/hms/dbmi/park/jluquette/glia/callable_regions/call
 oligo	callable	indel_A	tsv	/n/data1/hms/dbmi/park/jluquette/glia/callable_regions/callable_regions10.txt
 # hSNP calls (sensitivity estimation)
 neuron	germline_control	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/hsnps_20210506.rda
+neuron	germline_control	A	csv	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/hsnps_20210506.csv
 neuron	germline_control	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/hindels_20210604.rda
 oligo	germline_control	A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/hsnps_20210603.rda
+oligo	germline_control	A	csv	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/hsnps_20210603.csv
 oligo	germline_control	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/hindels_20210604.rda
 # FDR tuning (for comparing pre- and post-genotyping burden estimates)
 # skipping for now

@@ -29,6 +29,8 @@ neuron_samples = neuron_manifest['sample'].to_list()
 neuron_paths = [ '/n/data1/hms/dbmi/park/jluquette/pta/' + neuron_donors[i] + '/scansnv_fdr01_noX/callable_regions/' + neuron_samples[i] for i in range(0, len(neuron_samples)) ]
 neuron_dict = dict(zip(neuron_samples, neuron_paths))
 
+print(neuron_samples)
+
 
 oligo_manifest = pd.read_csv(path_to_metadata + "/oligo___meta___A.csv")
 oligo_donors = [ str(x) for x in oligo_manifest['donor'].to_list() ]
@@ -36,14 +38,11 @@ oligo_samples = oligo_manifest['sample'].to_list()
 oligo_paths = [ '/n/data1/hms/dbmi/park/jluquette/glia/' + oligo_donors[i] + '/scansnv/callable_regions/' + oligo_samples[i] for i in range(0, len(oligo_samples)) ]
 oligo_dict = dict(zip(oligo_samples, oligo_paths))
 
+print(oligo_samples)
+
 pathdict = { **neuron_dict, **oligo_dict }
 
 
-# Roadmap Epigenomics metadata
-#roadmap_metadata = pd.read_csv(config['ROADMAP_EIDS'])
-#roadmap_eids = roadmap_metadata['EID']
-#roadmap_eids = [ 'E073' ]
-#roadmap_marks = [ 'H3K27ac', 'H3K27me3', 'H3K36me3', 'H3K4me1', 'H3K4me3', 'H3K9me3' ]
 binsizes = [ '1000', '10000', '100000', '1000000' ]
 qsizes = [ 3, 5, 10, 50 ]
 
@@ -66,6 +65,12 @@ enrichment_config = {
         '100000':  'alignability/genome_tiles/genome_tiles_100000binsize.bed',
         '10000':   'alignability/genome_tiles/genome_tiles_10000binsize.bed',
         '1000':    'alignability/genome_tiles/genome_tiles_1000binsize.bed'
+    },
+    'masks': {
+        '1000000': 'alignability/genome_tiles/genome_mask_1000000binsize.bed',
+        '100000':  'alignability/genome_tiles/genome_mask_100000binsize.bed',
+        '10000':   'alignability/genome_tiles/genome_mask_10000binsize.bed',
+        '1000':    'alignability/genome_tiles/genome_mask_1000binsize.bed'
     },
     'mut_to_perm': {
         'neuron___A': 'input/neuron___perm___A.rda',
@@ -95,6 +100,12 @@ rule all:
             output=['svg', 'pdf', 'jpeg']),
         expand("alignability/plots/chromosome_bin_classes_barplot.{output}",
             output=['svg', 'pdf']),
+        expand('alignability/genome_tiles/genome_mask_{binsize}binsize.bed',
+            binsize=[ '200' ] + binsizes),  # add in a 200bp tile set for ChromHMM
+        # spatial sensitivity
+        expand('spatial_sensitivity/bed/{sample}.{binsize}binsize.bed',
+            sample=neuron_samples + oligo_samples,
+            binsize=binsizes),
         #expand("alignability/data_plots/chr{chr}.{resolution}.{output}",
             #chr=chrs, resolution=[ '1k', '10k', '100k', '1m' ],
             #output=['svg', 'pdf']),
@@ -161,7 +172,7 @@ rule all:
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
             nquantiles=qsizes,
-            datasource=[ 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
+            datasource=[ 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # GTEx enrichment plots with multiple levels of signal coverage
         expand('plots/enrichment/gtex_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
@@ -169,6 +180,11 @@ rule all:
             qualtype=all_qualtypes,
             nquantiles=qsizes,
             mincov=[ '02', '04', '06', '08' ],
+            output=[ 'svg', 'pdf', 'csv' ]),
+        expand('plots/enrichment/{datasource}/{celltype}___{qualtype}.{output}',
+            celltype=celltypes_to_compute,
+            qualtype=all_qualtypes,
+            datasource=[ 'roadmap_chromhmm' ],
             output=[ 'svg', 'pdf', 'csv' ])
 
 
@@ -180,7 +196,108 @@ include: "snakefile.fig3"
 include: "snakefile.scatacseq"
 
 
-# Below is several instances of
+# Requires access to the above neuron_samples and oligo_samples
+rule make_sensitivity_bigwig:
+    input:
+        csv=lambda wildcards: 'input/neuron___germline_control___A.csv' if wildcards.sample in neuron_samples else 'input/oligo___germline_control___A.csv'
+    output:
+        bigwig="spatial_sensitivity/bigwig/{sample}.bigwig"
+    params:
+        sample="{sample}"
+    log:
+        "spatial_sensitivity/bigwig/{sample}.log"
+    resources:
+        mem=12000
+    script:
+        "scripts/make_hsnp_sensitivity_track.R"
+
+
+rule make_sensitivity_bed:
+    input:
+        bigwig="spatial_sensitivity/bigwig/{sample}.bigwig",
+        tile=lambda wildcards: enrichment_config['tiles'][wildcards.binsize]
+    output:
+        bed="spatial_sensitivity/bed/{sample}.{binsize}binsize.bed"
+    resources:
+        mem=16000
+    shell:
+        """
+        bigWigAverageOverBed {input.bigwig} {input.tile} {output.bed}
+        """
+        
+
+
+# Below are several instances of
+# boilerplate code to use the bed_enrichment module to automatically
+# run arbitrary BED files through the enrichment pipeline.
+
+########################################################################
+# Roadmap epigenomics histone mark narrow peak calls
+########################################################################
+enrichment_roadmap_histone_narrow_peaks_config = dict(
+    **{ 'output_dir': 'enrichment/roadmap_histone_narrow_peaks',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_HISTONE_NARROWPEAK.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_roadmap_histone_narrow_peaks:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_roadmap_histone_narrow_peaks_config
+
+use rule * from enrichment_roadmap_histone_narrow_peaks as enrichment_roadmap_histone_narrow_peaks_*
+
+use rule enrichment_bed_plot from enrichment_roadmap_histone_narrow_peaks as enrichment_roadmap_histone_narrow_peaks_enrichment_bed_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        xlab='eid',
+        xgroup='mark',
+        ygroup='datasource',
+        highlight='eid=E073'
+    output:
+        expand('plots/enrichment/roadmap_histone_narrow_peaks/{{mutclass}}.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/roadmap_histone_narrow_peaks/{mutclass}.log'
+
+
+########################################################################
+# Roadmap epigenomics chromHMM  state models
+########################################################################
+enrichment_roadmap_chromhmm_config = dict(
+    **{ 'output_dir': 'enrichment/roadmap_chromhmm',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_CHROMHMM.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_roadmap_chromhmm:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_roadmap_chromhmm_config
+
+use rule * from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_*
+
+# Uses 200 bp tiles and has >200 tracks, so give it a generous amount of RAM
+# N.B. failed with 32G after 1 hour of loading BED files
+# Max usage was ~37G.
+use rule enrichment_bed_analysis from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_enrichment_bed_analysis with:
+    resources:
+        mem=42000
+
+use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_enrichment_bed_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        xlab='eid',
+        xgroup='quantile',
+        ygroup='model',
+        highlight='eid=E073'
+    output:
+        expand('plots/enrichment/roadmap_chromhmm/{{mutclass}}.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/roadmap_chromhmm/{mutclass}.log'
+
+
+
+# Below are several instances of
 # boilerplate code to use the enrichment module to automatically
 # run bigWig signal files through the enrichment pipeline.
 
@@ -188,8 +305,8 @@ include: "snakefile.scatacseq"
 # Roadmap epigenomics histones
 ########################################################################
 enrichment_roadmap_config = dict(
-    **{ 'output_dir': 'enrichment/roadmap',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_HISTONE.MANIFEST' },
+    **{ 'output_dir': 'enrichment/roadmap_histone_signal',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_HISTONE_BIGWIG.MANIFEST' },
     **enrichment_config
 )
 
@@ -204,10 +321,36 @@ use rule enrichment_plot from enrichment_roadmap as enrichment_roadmap_enrichmen
         ignore='enrichment_grid_R_ignore_none',
         group='mark'
     output:
-        expand('plots/enrichment/roadmap/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('plots/enrichment/roadmap_histone_signal/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/roadmap/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'plots/enrichment/roadmap_histone_signal/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+
+########################################################################
+# Roadmap DNA methylation
+########################################################################
+enrichment_roadmap_dnamethyl_config = dict(
+    **{ 'output_dir': 'enrichment/roadmap_dnamethyl',
+        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_DNAMETHYL.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_roadmap_dnamethyl:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_roadmap_dnamethyl_config
+
+use rule * from enrichment_roadmap_dnamethyl  as enrichment_roadmap_dnamethyl_*
+
+use rule enrichment_plot from enrichment_roadmap_dnamethyl as enrichment_roadmap_dnamethyl_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='experiment_type,signal_type'
+    output:
+        expand('plots/enrichment/roadmap_dnamethyl/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'plots/enrichment/roadmap_dnamethyl/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -399,7 +542,14 @@ module enrichment_scatacseq:
 
 use rule * from enrichment_scatacseq  as enrichment_scatacseq_*
 
+use rule make_qbed_from_bigwig from enrichment_scatacseq as enrichment_scatacseq_make_qbed_from_bigwig with:
+    resources:
+        mem=15000
+
 use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype',
     output:
         expand('plots/enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])

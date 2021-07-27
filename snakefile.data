@@ -112,3 +112,82 @@ rule make_gtex_signal_bigwig:
         mem=16000
     script:
         "scripts/convert_gtex_expression_to_bigwig.R"
+
+
+methyltype_to_path = {
+    'WGBS_FractionalMethylation' : 'WGBS/FractionalMethylation',
+    'WGBS_ReadCoverage' : 'WGBS/ReadCoverage',
+    'RRBS_FractionalMethylation' : 'RRBS/FractionalMethylation',
+    'RRBS_ReadCoverage' : 'RRBS/ReadCoverage'
+}
+
+rule download_roadmap_dnamethyl:
+    input:
+    output:
+        "data/roadmap/dnamethyl/{methyltype}/bigwig/{enc_id}_{methyltype}.bigwig"
+    params:
+        path=lambda wildcards: methyltype_to_path[wildcards.methyltype]
+    log:
+        "data/roadmap/dnamethyl/{methyltype}/bigwig/{enc_id}_{methyltype}.log"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output} \
+            "https://egg2.wustl.edu/roadmap/data/byDataType/dnamethylation/{params.path}_bigwig/$outfile"
+        """
+
+
+# Both downloads the data and splits it back into its original 200bp bins.
+# By using a standard bin size, all 100+ epigenomes can be analyzed by a
+# single bedenrich run.
+# The alignability tiles here are ONLY intended to split the data into its
+# original 200bp bins - the BEDs are still filtered afterward for 100bp
+# alignability.
+rule download_roadmap_chromhmm15:
+    input:
+        tiles="alignability/genome_tiles/genome_tiles_200binsize.bed"
+    output:
+        bed="data/roadmap/chromhmm/15state/bed/{eid}___200bp_tiles.bed",
+        tmp1=temp("data/roadmap/chromhmm/15state/bed/{eid}.bed.gz"),
+        tmp2=temp("data/roadmap/chromhmm/15state/bed/{eid}.bed"),
+    resources:
+        mem=4000
+    shell:
+        """
+        wget -O {output.tmp1} \
+            "https://egg2.wustl.edu/roadmap/data/byFileType/chromhmmSegmentations/ChmmModels/coreMarks/jointModel/final/{wildcards.eid}_15_coreMarks_mnemonics.bed.gz"
+        gunzip -c {output.tmp1} > {output.tmp2}
+        bedtools intersect -loj -a {input.tiles} -b {output.tmp2} | cut -f1-3,9 > {output.bed}
+        """
+
+
+rule download_roadmap_chromhmm18:
+    input:
+        tiles="alignability/genome_tiles/genome_tiles_200binsize.bed"
+    output:
+        bed="data/roadmap/chromhmm/18state/bed/{eid}___200bp_tiles.bed",
+        tmp1=temp("data/roadmap/chromhmm/18state/bed/{eid}.bed.gz"),
+        tmp2=temp("data/roadmap/chromhmm/18state/bed/{eid}.bed"),
+    resources:
+        mem=4000
+    shell:
+        """
+        wget -O {output.tmp1} \
+            "https://egg2.wustl.edu/roadmap/data/byFileType/chromhmmSegmentations/ChmmModels/core_K27ac/jointModel/final/{wildcards.eid}_18_core_K27ac_mnemonics.bed.gz"
+        gunzip -c {output.tmp1} > {output.tmp2}
+        bedtools intersect -loj -a {input.tiles} -b {output.tmp2} | cut -f1-3,9 > {output.bed}
+        """
+
+
+rule download_roadmap_histone_peaks:
+    input:
+    output:
+        "data/roadmap/histone_marks/narrowPeak/{eid}-{mark}.narrowPeak"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output} \
+            "https://egg2.wustl.edu/roadmap/data/byFileType/peaks/consolidated/narrowPeak/{eid}-{mark}.narrowPeak.gz
+        """

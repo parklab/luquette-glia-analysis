@@ -1,6 +1,22 @@
 # vim: syntax=python
 #
 
+
+# Convenience: for some analyses that use bedtools, extract only the
+# intervals that should be removed.
+rule tile_to_mask:
+    input:
+        "alignability/genome_tiles/genome_tiles_{binsize}binsize.bed"
+    output:
+        "alignability/genome_tiles/genome_mask_{binsize}binsize.bed"
+    resources:
+        mem=1000
+    shell:
+        """
+        grep '0$' {input} > {output}
+        """
+
+
 # The ultimate output of the alignability analysis: a set of tiles covering
 # the genome with poorly aligned regions removed.
 rule tile_genome:

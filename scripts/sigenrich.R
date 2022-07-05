@@ -13,21 +13,38 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
+        snakemake@input['cosmic'],
+        snakemake@params['colname_for_sig'],
         snakemake@params['nbootstraps'],
         snakemake@input['mut'],
         snakemake@input['perm'],
         snakemake@output['full'],
         snakemake@output['summary'],
-        snakemake@input['beds']
+        snakemake@input['qbeds']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
 }
 
 suppressMessages(library(mutenrich))
+suppressMessages(library(data.table))
 
+args <- commandArgs(trailingOnly=TRUE)
+if (length(args) < 1)
+    stop("sigenrich.R cosmic_table.csv colname_for_sig n.bootstraps muts.rda[:varname1] perms.rda[:use_N][:varname2] full_output.rda summary_output.rda input1 [ input2 ... inputN ]")
 
+cosmic.file <- args[1]
+cosmic <- fread(cosmic.file)
+cosmic <- as.matrix(cosmic[,-1], rownames=cosmic[[1]])
 
+colname.for.sig <- args[2]
+
+# hide the first two args from command.line.analysis
+passthrough.args <- args[-(1:2)]
+
+options(error = function() traceback())
+
+Rprof()
 results <- command.line.analysis(function(genome, bed.files) {
         # Allow for naming each BED feature by a ":" in front of the
         # BED file name.
@@ -46,24 +63,25 @@ results <- command.line.analysis(function(genome, bed.files) {
         })
         gbed <- read.bed(bed.and.feats[[1]][2], genome,
             feature.name=bed.and.feats[[1]][1],
-            add.chr.prefix=FALSE, remove.chr.prefix=FALSE, has.metaline=TRUE)
+            add.chr.prefix=FALSE, remove.chr.prefix=FALSE, is.qbed=TRUE)
         if (length(bed.and.feats) > 1) {
             for (i in 2:length(bed.and.feats)) {
                 gbed <- read.bed(bed.and.feats[[i]][2], genome,
                     granges=gbed,
                     feature.name=bed.and.feats[[i]][1],
-                    add.chr.prefix=FALSE, remove.chr.prefix=FALSE, has.metaline=TRUE)
+                    add.chr.prefix=FALSE, remove.chr.prefix=FALSE, is.qbed=TRUE)
             }
         }
         print(gbed)
         cat('Signal metadata ------------- \n')
         print(attr(gbed, 'bed.metadata'))
-        enrich.data(gbed=gbed)
+        enrich.data(gbed=gbed, count.fn=sigs.by.feature, use.mutclass=colname.for.sig, signature.catalog=cosmic)
     },
     genome="BSgenome.Hsapiens.UCSC.hg19",
-    args=commandArgs(trailingOnly=TRUE))
+    args=passthrough.args)
+Rprof(NULL)
 
-str(results)
+#str(results)
 
 e <- results$e
 es <- results$es

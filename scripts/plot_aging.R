@@ -70,8 +70,12 @@ for (i in 1:2) {
         combined$genome.burden,
         col=combined$color, pch=17, ylim=ylim,
         ylab='Autosomal mutation burden', xlab='Age')
-    abline(coef=coef(summary(nmodel)), lwd=2, col=n$color[1])
-    abline(coef=coef(summary(gmodel)), lwd=2, col=g$color[2])
+    #abline(coef=coef(summary(nmodel)), lwd=2, col=n$color[1])
+    #abline(coef=coef(summary(gmodel)), lwd=2, col=g$color[2])
+    # These curve() calls don't plot below 0.
+    abline(h=0, col='grey')
+    curve(coef(summary(nmodel))[1] + coef(summary(nmodel))[2]*x, from=0, to=200, lwd=2, col=1, add=T)
+    curve(coef(summary(gmodel))[1] + coef(summary(gmodel))[2]*x, from=0, to=200, lwd=2, col=2, add=T)
     legend('topleft', lwd=2, pch=17, col=1:2, legend=c('Neurons', 'Oligo'))
 }
 

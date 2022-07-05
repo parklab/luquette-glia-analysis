@@ -42,6 +42,7 @@ def read_manifest(filename):
         for i in range(0, m_nofiles.shape[1]) ], axis=1)
     metatags = list(tmp.agg(' '.join, axis=1))
     manifest['__metatags__'] = metatags
+    #print(manifest)
     return(manifest, files, metadata, list(classes), metatags)
 
 
@@ -77,6 +78,56 @@ rule enrichment_plot:
         "scripts/plot_enrichment_grid.R"
 
 
+rule sigenrichment_plot:
+    input:
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted.csv'
+    output:
+        expand(outroot + '/{{mutclass}}/{{nquantiles}}quantiles_sigenrich.{ext}',
+            ext=[ 'svg', 'pdf', 'csv2' ])
+    log:
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich.log'
+    params:
+        # neurons don't have SBS32, so the estimates have extremely high
+        # variance. this leads to y-axes that are so big the other signatures
+        # can't be seen.
+        ignore=lambda wildcards: "sigclass=SBS32" if wildcards.mutclass.startswith('neuron') else 'enrichment_grid_R_ignore_none',
+        group='datasource,sigclass',
+        #highlight=''  # can use e.g., group=Brain to select lines to highlight
+    resources:
+        mem=4000
+    script:
+        "scripts/plot_enrichment_grid.R"
+
+
+# All this does is break apart the "quantile" column which has
+# the format quantile|||signature class.
+rule adapt_sigenrichment_table:
+    input:
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich.csv'
+    output:
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted.csv'
+    log:
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted.log'
+    resources:
+        mem=1000
+    script:
+        "scripts/adapt_sigenrich_table.R"
+    
+
+rule sigenrichment_table:
+    input:
+        expand(outroot + "/{{mutclass}}/sigenrich/tiled_{binsize}binsize_{{nquantiles}}quantiles.SUMMARY.rda",
+            binsize=config['tiles'].keys())
+    output:
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich.csv'
+    log:
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich.log'
+    resources:
+        mem=4000
+    script:
+        "scripts/make_enrichment_table.R"
+
+
 # Final output rule
 rule enrichment_table:
     input:
@@ -90,6 +141,38 @@ rule enrichment_table:
         mem=4000
     script:
         "scripts/make_enrichment_table.R"
+
+
+rule sigenrichment_qbed_analysis:
+    input:
+        #cosmic='analysis/tables/cosmic_reduced___A.csv',
+        # enable indel sigenrich for Nat. 2022 paper on ID4
+        # COSMIC reduction is always performed on the non-rescue calls (="A" or "indel_A"),
+        # because rescue can introduce signature biases.
+        cosmic=lambda wildcards: 'analysis/tables/cosmic_reduced___' + ('indel_A' if wildcards.mutclass.split('___')[1].split('_')[0] == 'indel' else 'A') + '.csv',
+        mut=lambda wildcards: mut_manifest.loc[mut_manifest['__class__'] == wildcards.mutclass, 'file'],
+        perm=lambda wildcards: config['mut_to_perm'][wildcards.mutclass].replace('___perm___','___perm_full___'),
+        qbeds=expand(outroot + "/qbed/{signalclass}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
+            signalclass=signal_classes)
+    output:
+        full=outroot + "/{mutclass}/sigenrich/tiled_{binsize}binsize_{nquantiles}quantiles.FULL.rda",
+        summary=outroot + "/{mutclass}/sigenrich/tiled_{binsize}binsize_{nquantiles}quantiles.SUMMARY.rda",
+    params:
+        # bootstraps on sigenrich is not yet supported
+        nbootstraps=0,
+        # unfortunately i haven't standardized the column name for mutation signatures
+        # this relies on mutation classes being called "A", "AB", etc. for SNVs and
+        # "indel_A", "indel_AB", etc. for indels.
+        colname_for_sig=lambda wildcards: 'muttype' if wildcards.mutclass.split('___')[1].split('_')[0]=='indel' else 'mutclass'
+    resources:
+        # XXX: update me: so far, these RAM values work with my data.
+        mem=lambda wildcards: 40000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 20000
+    log:
+        summary=outroot + "/{mutclass}/sigenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log"
+    benchmark:
+        outroot + "/{mutclass}/sigenrich/tiled_{binsize}binsize_{nquantiles}quantiles.benchmark.txt"
+    script:
+        "scripts/sigenrich.R"
 
 
 rule enrichment_qbed_analysis:

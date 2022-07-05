@@ -48,7 +48,9 @@ figheight <- 4.5
 # uses a yellow color that's hard to see
 #colors <- 1:7
 #colors <- c('#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#a65628','#f781bf')
-colors <- c('#df536b', '#61d04f', '#2297e6', '#28e2e5', '#cd0bbc', '#f5c710', '#9e9e9e')
+#colors <- c('#df536b', '#61d04f', '#2297e6', '#28e2e5', '#cd0bbc', '#f5c710', '#9e9e9e')
+# now to match neuron=black, oligo=red
+colors <- c('#f5c710', '#61d04f', 'black', '#28e2e5', '#cd0bbc', '#FF0000', '#9e9e9e')
 # case insensitive sorting
 names(colors) <- names(table(d$CellType))[order(tolower(names(table(d$CellType))))]
 

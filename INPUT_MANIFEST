@@ -18,19 +18,65 @@ neuron	mut	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/nmu
 neuron	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passAB/nmut.rda
 neuron	mut	ABM	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passABM/nmut.rda
 neuron	mut	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/ni.rda
+neuron	mut	indel_B	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passB/ni.rda
+neuron	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passAB/ni.rda
+neuron_als	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/als_indel_passAB.rda
+neuron_als_no_outlier	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/als_indel_passAB.no_1334NeuNB_1792NeuNTDPB.rda
+neuron_alz	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/alz_indel_passAB.rda
+neuron_alz_no_outlier	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/alz_indel_passAB.no_1995.rda
+neuron_ba6	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/normal_indel_passAB.rda
 oligo	mut	A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passA/gmut.rda
 oligo	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passAB/gmut.rda
 oligo	mut	ABM	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passABM/gmut.rda
 oligo	mut	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passA/gi.rda
+oligo	mut	indel_B	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passB/gi.rda
+oligo	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passAB/gi.rda
+neuron_10x	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_10/snv_passAB.rda
+neuron_10x	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_10/indel_passAB.rda
+neuron_15x	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_15/snv_passAB.rda
+neuron_15x	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_15/indel_passAB.rda
+neuron_20x	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_20/snv_passAB.rda
+neuron_20x	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_20/indel_passAB.rda
+neuron_25x	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_25/snv_passAB.rda
+neuron_25x	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_25/indel_passAB.rda
+neuron_30x	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_30/snv_passAB.rda
+neuron_30x	mut	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_30/indel_passAB.rda
 # Permutation tables
 neuron	perm	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/perms_10000_mutsigaware_grl.minimized.rda
+neuron	perm_full	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/perms_10000_mutsigaware_grl.rda
 neuron	perm	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passAB/perms_10000_mutsigaware_grl.minimized.rda
 neuron	perm	ABM	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passABM/perms_10000_mutsigaware_grl.minimized.rda
 neuron	perm	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/indel_perms_10000_mutsigaware_grl.minimized.rda
+neuron	perm_full	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/glia/analysis/permutations_neuron_indel_AB.grl_minimized.rda
+neuron_als	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/als_indel/perms.grl_minimized.rda
+neuron_als	perm_full	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/als_indel/perms.grl.rda
+neuron_als_no_outlier	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/als_indel_no_outlier/perms.grl_minimized.rda
+neuron_als_no_outlier	perm_full	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/als_indel_no_outlier/perms.grl.rda
+neuron_alz	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/alz_indel/perms.grl_minimized.rda
+neuron_alz	perm_full	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/alz_indel/perms.grl.rda
+neuron_alz_no_outlier	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/alz_indel_no_outlier/perms.grl_minimized.rda
+neuron_alz_no_outlier	perm_full	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/alz_indel_no_outlier/perms.grl.rda
+neuron_ba6	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/normal_indel/perms.grl_minimized.rda
+neuron_ba6	perm_full	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/multi_project_indels/callable_regions/dp_gte_10/normal_indel/perms.grl.rda
+neuron	perm	indel_B	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passB/indel_perms_10000_mutsigaware_grl.minimized.rda
+neuron	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passAB/indel_perms_10000_mutsigaware_grl.minimized.rda
 oligo	perm	A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passA/perms_10000_mutsigaware_grl.minimized.rda
+oligo	perm_full	A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passA/perms_10000_mutsigaware_grl.rda
 oligo	perm	AB	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passAB/perms_10000_mutsigaware_grl.minimized.rda
 oligo	perm	ABM	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passABM/perms_10000_mutsigaware_grl.minimized.rda
 oligo	perm	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passA/indel_perms_10000_mutsigaware_grl.minimized.rda
+oligo	perm	indel_B	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passB/indel_perms_10000_mutsigaware_grl.minimized.rda
+oligo	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/passAB/indel_perms_10000_mutsigaware_grl.minimized.rda
+neuron_10x	perm	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_10/snv/perms.grl_minimized.rda
+neuron_10x	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_10/indel/perms.grl_minimized.rda
+neuron_15x	perm	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_15/snv/perms.grl_minimized.rda
+neuron_15x	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_15/indel/perms.grl_minimized.rda
+neuron_20x	perm	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_20/snv/perms.grl_minimized.rda
+neuron_20x	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_20/indel/perms.grl_minimized.rda
+neuron_25x	perm	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_25/snv/perms.grl_minimized.rda
+neuron_25x	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_25/indel/perms.grl_minimized.rda
+neuron_30x	perm	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_30/snv/perms.grl_minimized.rda
+neuron_30x	perm	indel_AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/dp_gte_30/indel/perms.grl_minimized.rda
 # Callable regions (dp=6 (SNVS) and dp=10 (indels)
 neuron	callable	A	tsv	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/callable_regions.txt
 neuron	callable	indel_A	tsv	/n/data1/hms/dbmi/park/jluquette/pta/callable_regions/callable_regions10.txt
@@ -56,5 +102,9 @@ any	scrnaseq	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/snRNA_1465a
 # GTEx files for creating tissue specific expression signals
 any	gtex_gene_model	none	gtf	/n/data1/hms/dbmi/park/jluquette/pta/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf
 any	gtex_expression_tpm	none	gct	/n/data1/hms/dbmi/park/jluquette/pta/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct
+any	scrnaseq_mean_expression	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/rds/combined_mean_expr.csv
 # Genome file containing contig lengths. Used by some BED analyses
 any	hg19_genome_withXYM	none	genome	/n/data1/hms/dbmi/park/jluquette/glia/figures/hg19.genome
+# Cancer SNV mutation data frames
+any	cancer_icgc	none	maf	/n/data1/hms/dbmi/park/jluquette/glia/icgc/final_consensus_passonly.snv_mnv_indel.icgc.public.maf
+any	cancer_tcga	none	maf	/n/data1/hms/dbmi/park/jluquette/glia/icgc/final_consensus_passonly.snv_mnv_indel.tcga.controlled.maf

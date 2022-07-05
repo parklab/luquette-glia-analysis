@@ -224,7 +224,8 @@ print(signals)
                 if (length(highlight) > 0)
                     color <- ifelse(signals[[highlight.key]] == highlight.value, 'green', 'black')
                 plot.enrich(es=as.data.frame(signals), ylim=ylim, type='l', ltype='p',
-                     yaxt=ifelse(yg==ygroups[1], 's', 'n'), lcol=color, xaxt='n')
+                     yaxt=ifelse(yg==ygroups[1], 's', 'n'), lcol=color, xaxt='n',
+                    bootstrap.ci=FALSE)
                 if (xg == tail(xgroups,1))
                     axis(side=1, at=1:nrow(signals), labels=signals[['x_label_factor_class']], las=3)
                 abline(h=1, lty='dashed', col='grey')

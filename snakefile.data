@@ -114,6 +114,81 @@ rule make_gtex_signal_bigwig:
         "scripts/convert_gtex_expression_to_bigwig.R"
 
 
+rule map_scrnaseq_to_gtex_gene_model:
+    input:
+        scrnaseq='input/any___scrnaseq_mean_expression___none.csv',
+        gct='input/any___gtex_expression_tpm___none.gct'
+    output:
+        gct="data/scrnaseq/expression/scrnaseq_mean_expression_matrix.gct"
+    log:
+        "data/scrnaseq/expression/scrnaseq_mean_expression_matrix.log"
+    resources:
+        mem=16000
+    script:
+        "scripts/map_scrnaseq_to_gtex_gene_model.R"
+
+
+rule combine_scrnaseq_by_celltype:
+    input:
+        gct="data/scrnaseq/expression/scrnaseq_mean_expression_matrix.gct"
+    output:
+        gct="data/scrnaseq/expression/scrnaseq_mean_expression_by_celltype_matrix.gct"
+    log:
+        "data/scrnaseq/expression/scrnaseq_mean_expression_by_celltype_matrix.log"
+    resources:
+        mem=8000
+    script:
+        "scripts/combine_scrna_by_celltype.R"
+
+
+def get_scrnaseq_matrix_file(wildcards):
+    # This hack is to enable the combined expression profiles per cell
+    # type across the several scRNAseq libraries.
+    # Could be done in a better way.
+    if wildcards.tissue in [ 'Astrocytes', 'Microglia', 'Endothelial', 'Oligodendrocytes', 'OPCs', 'Neurons', 'Inhibitory-Neurons', 'Excitatory-Neurons']:
+        gct="data/scrnaseq/expression/scrnaseq_mean_expression_by_celltype_matrix.gct"
+    else:
+        gct="data/scrnaseq/expression/scrnaseq_mean_expression_matrix.gct"
+
+    return({ "gtf": "input/any___gtex_gene_model___none.gtf", "gct": gct })
+
+
+rule make_scrnaseq_signal_bigwig:
+    input:
+        #gtf="input/any___gtex_gene_model___none.gtf",
+        #gct="data/scrnaseq/expression/scrnaseq_mean_expression_matrix.gct"
+        unpack(get_scrnaseq_matrix_file)
+    output:
+        bigwig="data/scrnaseq/expression/bigwig/{tissue}.bigwig"
+    log:
+        "data/scrnaseq/expression/bigwig/{tissue}.log"
+    params:
+        tissue="{tissue}"
+    resources:
+        mem=16000
+    script:
+        "scripts/convert_gtex_expression_to_bigwig.R"
+
+
+
+# Exactly the same as above rule, just using a different input gct
+# Probably a better way to do this.
+rule make_scrnaseq_by_celltype_signal_bigwig:
+    input:
+        gtf="input/any___gtex_gene_model___none.gtf",
+        gct="data/scrnaseq/expression/scrnaseq_mean_expression_by_celltype_matrix.gct"
+    output:
+        bigwig="data/scrnaseq/expression/bigwig/{celltype}.bigwig"
+    log:
+        "data/scrnaseq/expression/bigwig/{celltype}.log"
+    params:
+        tissue="{celltype}"
+    resources:
+        mem=16000
+    script:
+        "scripts/convert_gtex_expression_to_bigwig.R"
+
+
 methyltype_to_path = {
     'WGBS_FractionalMethylation' : 'WGBS/FractionalMethylation',
     'WGBS_ReadCoverage' : 'WGBS/ReadCoverage',
@@ -191,3 +266,39 @@ rule download_roadmap_histone_peaks:
         wget -O {output} \
             "https://egg2.wustl.edu/roadmap/data/byFileType/peaks/consolidated/narrowPeak/{eid}-{mark}.narrowPeak.gz
         """
+
+
+rule split_cancer_muts_by_type:
+    input:
+        tcga="input/any___cancer_tcga___none.maf",
+        icgc="input/any___cancer_icgc___none.maf"
+    output:
+        "data/cancer_snvdens/snvs/{tumor}.txt"
+    params:
+        tumor="{tumor}"
+    resources:
+        mem=1000
+    shell:
+        """
+        (echo "chr,pos,refnt,altnt,sample"|tr ',' '\t' ;
+         cat {input.tcga} {input.icgc} | cut -f 2,3,4,7,8,10,42,43 | grep "{params.tumor}" | grep SNP | cut -f1,2,5,6,8) > {output}
+        """
+
+
+rule make_cancer_snvdens_bigwigs:
+    input:
+        txt="data/cancer_snvdens/snvs/{tissue}.txt"
+    output:
+        sumbigwig="data/cancer_snvdens/bigwig/{tissue}_sumdens.bigwig",
+        normbigwig="data/cancer_snvdens/bigwig/{tissue}_normdens.bigwig"
+    log:
+        "data/cancer_snvdens/bigwig/{tissue}.log"
+    benchmark:
+        "data/cancer_snvdens/bigwig/{tissue}.benchmark.txt"
+    resources:
+        # this extreme memory req is because a 100bp bin x #samples matrix is built
+        # cancer types with 200+ samples fail at 96G and I don't know how much memory is truly needed
+        # so this very large number is to avoid yet another failure.
+        mem=lambda wildcards, attempt: 32000 if attempt==1 else 196000
+    script:
+        "scripts/make_cancer_mutdens_bigwigs.R"

@@ -83,7 +83,7 @@ rule fig1_mut_burden_analysis:
     output:
         csv="fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
     params:
-        muttype='indel' if wildcards.qualtype.startswith('indel_') else 'snv'
+        muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel_') else 'snv'
     resources:
         mem=1000
     log:

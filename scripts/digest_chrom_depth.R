@@ -128,7 +128,7 @@ progressr::with_progress({
     p(amount=0, class='sticky', scan2::perfcheck(print.header=TRUE))
     mean.mat <- rbindlist(future.apply::future_lapply(1:length(chunks), function(i) {
         # Create a matrix of average read depth in each tile for each sample.
-        mean.dp.per.tile.matrix <- do.call(cbind, lapply(matfiles, function(f) {
+        mean.mats <- lapply(matfiles, function(f) {
             pc <- perfcheck(paste('chunk', i), {
                 dpm.basepair <- read.tabix.data(f, region=chunks[i])
                 # initialize to NA because all bp positions are not in the tile map
@@ -138,8 +138,8 @@ progressr::with_progress({
             })
             p(class='sticky', amount=1, pc)
             dpm[, -'tileid']
-        }))
-        mean.dp.per.tile.matrix
+        })
+        do.call(cbind, mean.mats)
     }))
 })
 

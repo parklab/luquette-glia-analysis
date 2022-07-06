@@ -20,8 +20,8 @@ oligo	meta	indel_A	csv	metadata/metadata_pta_31glia_no_outlier.csv
 #oligo	allmut	A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/calls_20210614_clus50bp_rec1donor_passABCDM.rda
 #oligo	allmut	indel_A	rda	/n/data1/hms/dbmi/park/jluquette/glia/integrated_calls/calls_indel_20210513_clus50bp_rec1donor_passAC.rda
 # Filtered mutation tables for enrichment analysis - i.e., with duplicates and clustered mutations removed
-neuron	mut	any	csv	scan2_input/neuron_snv_indel_pass_rescue.txt
-oligo	mut	any	csv	scan2_input/oligo_snv_indel_pass_rescue.txt
+neuron	mut	any	csv	scan2_output/neuron_snv_indel_pass_rescue.txt
+oligo	mut	any	csv	scan2_output/oligo_snv_indel_pass_rescue.txt
 # XXX: now generated internally from above CSVs
 #neuron	mut	A	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passA/nmut.rda
 #neuron	mut	AB	rda	/n/data1/hms/dbmi/park/jluquette/pta/integrated_calls/passAB/nmut.rda

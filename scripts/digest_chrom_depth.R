@@ -148,8 +148,8 @@ progressr::with_progress({
 }, enable=TRUE)
 
 tiles <- do.call(c, lapply(results, function(r) r$tiles))
-mean.mat <- rbindlist(lapply(results, function(r) r$mean.mats))
-save(chrom, base.tile.size, tiles, results, #tiles.not.in.gatk, mean.mat,
+mean.mat <- rbindlist(lapply(results, function(r) r$mean.mat))
+save(chrom, base.tile.size, tiles, mean.mat, results, #tiles.not.in.gatk, mean.mat,
     file=out.rda, compress=FALSE)
 
 cat('Final memory profile:\n')

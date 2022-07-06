@@ -67,7 +67,7 @@ rule fig1_mut_burden_analysis:
     input:
         meta="input/{celltype}___meta___{qualtype}.csv",
         prevburdens=lambda wildcards: "scan2_paper_output/Collected_SCAN2_%s_burdens.csv" % 'sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV',
-        objects=lambda wildcards: scan2_objects[wildcards.celltype]
+        objects=lambda wildcards: scan2_objects[wildcards.celltype].values()
     output:
         csv="analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
     resources:

@@ -65,32 +65,17 @@ rule fig1_distribution_plot:
 
 rule fig1_mut_burden_analysis:
     input:
-        muts="analysis/tables/{celltype}___allmut___{qualtype}.csv",
-        germline="analysis/tables/{celltype}___germline_control___{qualtype}.csv",
-        callable="input/{celltype}___callable___{qualtype}.tsv",
-        meta="input/{celltype}___meta___{qualtype}.csv"
+        meta="input/{celltype}___meta___{qualtype}.csv",
+        prevburdens=lambda wildcards: "scan2_paper_output/Collected_SCAN2_%s_burdens.csv" % 'sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV',
+        objects=lambda wildcards: scan2_objects[wildcards.celltype]
     output:
         csv="analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
     resources:
-        mem=4000
+        mem=1000
     log:
         "analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.log"
-    params:
-        # listing all command line args as params (in intended sequence):
-        # allows script to automatically recognize snakemake integration.
-        # XXX: i didn't realize params would not translate placeholders
-        # like {input.muts}.. this lambda wildcards workaround is quite
-        # horrible and maybe not worth it.
-        "--metadata", lambda wildcards, input: input[3],
-        "--min-sc-dp",
-        # hardcoded params: we used DP>5 for SNVs and DP>=10 for indels
-        lambda wildcards: 10 if wildcards.qualtype == 'indel_A' else 6,
-        lambda wildcards, input: input[0],
-        lambda wildcards, input: input[1],
-        lambda wildcards, input: input[2],
-        lambda wildcards, output: output[0]
     script:
-        "/n/data1/hms/dbmi/park/jluquette/pta/scan-snv2/scripts/mutburden.R"
+        "scripts/make_mutburden_tables.R"
 
 
 rule fig1_aging_rate_analysis:

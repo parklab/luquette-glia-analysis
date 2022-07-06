@@ -1,5 +1,6 @@
 # vim: syntax=python
 
+
 # >6.0 is required for modules
 from snakemake.utils import min_version
 min_version("6.0")
@@ -23,6 +24,14 @@ all_qualtypes = snv_qualtypes + indel_qualtypes
 binsizes = [ '1000', '10000', '100000', '1000000' ]
 qsizes = [ 3, 5, 10 ]
 
+
+import yaml
+
+with open('metadata/scan2_objects.yaml') as yf:
+    scan2_objects = yaml.load(yf, Loader=yaml.FullLoader)
+
+print(scan2_objects)
+exit(1)
 
 # Constant config variables for the enrichment pipeline
 

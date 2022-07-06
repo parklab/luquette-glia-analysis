@@ -10,7 +10,7 @@ if [ "x$dryrun" != 'x' ]; then
     flags="--dryrun --quiet" # --reason"
 fi
 
-module load slurm-drmaa
+#module load slurm-drmaa
 
 #export TMPDIR=$(realpath try3/tmp)
 #echo "TMPDIR=$TMPDIR"

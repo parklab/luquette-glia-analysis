@@ -115,6 +115,10 @@ tiles$chunk.id <- head(rep(1:ceiling(length(tiles)/tiles.per.chunk), each=tiles.
 chunks <- unlist(reduce(split(tiles, tiles$chunk.id)))
 cat('Starting depth matrix digestion on', length(chunks), 'chunks.\n')
 cat('Parallelizing using', future::nbrOfWorkers(), 'cores.\n')
+cat('chunks:\n')
+print(chunks)
+cat("files:\n")
+print(matfiles)
 
 # IMPORTANT!
 # tilemap has to be exported to child processes. This can be very large

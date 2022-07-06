@@ -39,6 +39,7 @@ if (file.exists(out.rda))
     stop(paste('output file', out.rda, 'already exists, please delete it first'))
 
 suppressMessages(library(scan2))
+suppressMessages(library(pryr))
 suppressMessages(library(progressr))
 suppressMessages(library(future))
 suppressMessages(library(future.apply))
@@ -96,15 +97,17 @@ gatk <- reduce(g.basepair, min.gapwidth=50)
 tiles.not.in.gatk <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size,
     invert=TRUE)
 tiles <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size)
+print(tiles)
 
 
 # Create a mapping from g.basepair -> tiles. This only needs to be
 # done once since all matfiles have the same position format.
 cat('Creating position -> tile map\n')
 system.time(tilemap <- findOverlaps(g.basepair, tiles))
+str(tilemap)
+cat('Tilemap size in MB (must be duplicated for each thread):', object_size(tilemap)/1e6, '\n')
 
 
-sample.ids <- sub('.txt$', '', basename(dpfiles)) # use file name as sample ID
 cat('Memory profile before matrix construction:\n')
 print(gc())
 

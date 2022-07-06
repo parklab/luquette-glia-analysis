@@ -50,7 +50,7 @@ if (n.cores > 1)
 genome <- GenomeInfoDb::Seqinfo(genome='GRCh37.p13')
 
 if (!(chrom %in% seqlevels(genome)))
-    stop(paste('chromosome', chrom, 'is not a valid hg19 chromosome. Did you add the "chr" prefix?'))
+    stop(paste('chromosome', chrom, 'is not a valid GRCh37.p13 chromosome'))
 
 # Promote warnings to errors in (for catching GenomicRanges warnings)
 options(warn=2)
@@ -125,7 +125,9 @@ progressr::with_progress({
         tm <- build.tilemap(chunk=chunks[i], tiles=subsetByOverlaps(tiles, chunks[i]),
             representative.matfile=matfiles[1])
         tilemap <- tm$tilemap
+print(tilemap)
         tiles <- tm$tiles
+print(tiles)
         # Create a matrix of average read depth in each tile for each sample.
         mean.mats <- lapply(1:length(matfiles), function(j) {
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {

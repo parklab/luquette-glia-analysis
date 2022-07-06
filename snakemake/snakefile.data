@@ -33,6 +33,25 @@ rule copy_inputs:
         """
 
 
+# Create passA, passAB, etc. RData files from CSV files.
+# Results used to be provided in RDA format. Now it's somewhat counterproductive
+# to do this but it isn't worth reworking the entire pipeline.
+rule mut_csv_to_rda:
+    input:
+        "scan2_input/{celltype}_snv_indel_pass_rescue.txt"
+    output:
+        "input/{celltype}___mut___{qualtype}.rda"
+    params
+        muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel') else 'snv',
+        rescue=lambda wildcards: '& rescue == TRUE' if wildcards.qualtype.endswith("_AB") else ''
+    resources:
+        mem=1000
+    shell:
+        """
+        Rscript -e 'library(data.table); muts <- fread("{input}"); muts <- muts[muttype == "{params.muttype}" & pass == TRUE {params.rescue}]; save(muts, file="{output}")'
+        """
+
+
 rule tables_rda_to_csv:
     input:
         "input/{celltype}___{filetype}___{qualtype}.rda",

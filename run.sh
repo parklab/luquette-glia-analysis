@@ -7,7 +7,7 @@
 dryrun=$1
 
 if [ "x$dryrun" != 'x' ]; then
-    flags="--dryrun --quiet"
+    flags="--dryrun --quiet" # --reason"
 fi
 
 module load slurm-drmaa
@@ -18,11 +18,12 @@ module load slurm-drmaa
 # tmpdir is necessary for using workflow.source to properly find
 # scripts from within module calls.
 snakemake $flags \
-    --dir try3 \
+    --dir . \
     --latency-wait 60 \
     --keep-going \
-    -s Snakefile \
+    -s snakemake/Snakefile \
+    --restart-times 2 \
     --max-inventory-time 0 \
     -j 1000 \
-    --max-status-checks-per-second 0.1 \
-    --drmaa ' -p park -A park_contrib --mem={resources.mem} -t 12:00:00 -o /n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/cluster-logs/slurm-%A.log'
+    --drmaa ' -p priopark -A park_contrib --mem={resources.mem} -t 24:00:00 -o /n/data1/hms/dbmi/park/jluquette/glia/analysis/try4/cluster-logs/slurm-%A.log'
+    #--max-status-checks-per-second 0.1 \

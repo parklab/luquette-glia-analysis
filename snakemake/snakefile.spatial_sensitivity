@@ -1,0 +1,30 @@
+# vim: syntax=python
+
+# Requires access to the above neuron_samples and oligo_samples
+rule make_sensitivity_bigwig:
+    input:
+        csv=lambda wildcards: 'input/neuron___germline_control___A.csv' if wildcards.sample in neuron_samples else 'input/oligo___germline_control___A.csv'
+    output:
+        bigwig="spatial_sensitivity/bigwig/{sample}.bigwig"
+    params:
+        sample="{sample}"
+    log:
+        "spatial_sensitivity/bigwig/{sample}.log"
+    resources:
+        mem=12000
+    script:
+        "scripts/make_hsnp_sensitivity_track.R"
+
+
+rule make_sensitivity_bed:
+    input:
+        bigwig="spatial_sensitivity/bigwig/{sample}.bigwig",
+        tile=lambda wildcards: enrichment_config['tiles'][wildcards.binsize]
+    output:
+        bed="spatial_sensitivity/bed/{sample}.{binsize}binsize.bed"
+    resources:
+        mem=16000
+    shell:
+        """
+        bigWigAverageOverBed {input.bigwig} {input.tile} {output.bed}
+        """

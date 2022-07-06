@@ -2,6 +2,29 @@
 #
 
 
+
+# Sample-specific metadata
+# XXX: FIXME: these metadata files are actually produced by this snakefile.
+path_to_metadata = "/n/data1/hms/dbmi/park/jluquette/glia/figures/test2/input"
+
+neuron_manifest = pd.read_csv(path_to_metadata + "/neuron___meta___A.csv")
+neuron_donors = [ str(x) for x in neuron_manifest['donor'].to_list() ]
+neuron_samples = neuron_manifest['sample'].to_list()
+neuron_paths = [ '/n/data1/hms/dbmi/park/jluquette/pta/' + neuron_donors[i] + '/scansnv_fdr01_noX/callable_regions/' + neuron_samples[i] for i in range(0, len(neuron_samples)) ]
+neuron_dict = dict(zip(neuron_samples, neuron_paths))
+
+
+oligo_manifest = pd.read_csv(path_to_metadata + "/oligo___meta___A.csv")
+oligo_donors = [ str(x) for x in oligo_manifest['donor'].to_list() ]
+oligo_samples = oligo_manifest['sample'].to_list()
+oligo_paths = [ '/n/data1/hms/dbmi/park/jluquette/glia/' + oligo_donors[i] + '/scansnv/callable_regions/' + oligo_samples[i] for i in range(0, len(oligo_samples)) ]
+oligo_dict = dict(zip(oligo_samples, oligo_paths))
+
+
+pathdict = { **neuron_dict, **oligo_dict }
+
+
+
 # Convenience: for some analyses that use bedtools, extract only the
 # intervals that should be removed.
 rule tile_to_mask:

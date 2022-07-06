@@ -56,7 +56,6 @@ rule fig2_make_cosmic_indel_table:
 rule fig2_make_cosmic_snv_table:
     input:
         cosmic="input/any___cosmic___A.csv",
-        lysis_sig="analysis/tables/any___lysis_pta___A.csv"
     output:
         "analysis/tables/cosmic_full___{qualtype}.csv"
     resources:

@@ -10,54 +10,31 @@ chrs = [ x for x in range(1, 23) ]   # Chromosomes to analyze (autosomes)
 output_plot_and_table = [ 'svg', 'pdf', 'tsv' ]  # Common plot+table output
 
 # Read in the input manifest
-manifest = pd.read_csv('/n/data1/hms/dbmi/park/jluquette/glia/analysis/INPUT_MANIFEST',
+manifest = pd.read_csv('manifests/INPUT_MANIFEST',
     sep='\t',comment='#')
 celltypes = set(manifest['celltype'])
 qualtypes = set(manifest['qualtype'])
 celltypes_to_compute = [ 'neuron', 'oligo' ]
-snv_qualtypes = [ 'A' ] #, 'AB', 'ABM' ]
-indel_qualtypes = [ 'indel_A' ] #, 'indel_B', 'indel_AB' ]
+snv_qualtypes = [ 'A', 'AB' ]
+indel_qualtypes = [ 'indel_A', 'indel_AB' ]
 all_qualtypes = snv_qualtypes + indel_qualtypes
-
-# Sample-specific metadata
-# XXX: FIXME: these metadata files are actually produced by this snakefile.
-path_to_metadata = "/n/data1/hms/dbmi/park/jluquette/glia/figures/test2/input"
-
-neuron_manifest = pd.read_csv(path_to_metadata + "/neuron___meta___A.csv")
-neuron_donors = [ str(x) for x in neuron_manifest['donor'].to_list() ]
-neuron_samples = neuron_manifest['sample'].to_list()
-neuron_paths = [ '/n/data1/hms/dbmi/park/jluquette/pta/' + neuron_donors[i] + '/scansnv_fdr01_noX/callable_regions/' + neuron_samples[i] for i in range(0, len(neuron_samples)) ]
-neuron_dict = dict(zip(neuron_samples, neuron_paths))
-
-print(neuron_samples)
-
-
-oligo_manifest = pd.read_csv(path_to_metadata + "/oligo___meta___A.csv")
-oligo_donors = [ str(x) for x in oligo_manifest['donor'].to_list() ]
-oligo_samples = oligo_manifest['sample'].to_list()
-oligo_paths = [ '/n/data1/hms/dbmi/park/jluquette/glia/' + oligo_donors[i] + '/scansnv/callable_regions/' + oligo_samples[i] for i in range(0, len(oligo_samples)) ]
-oligo_dict = dict(zip(oligo_samples, oligo_paths))
-
-print(oligo_samples)
-
-pathdict = { **neuron_dict, **oligo_dict }
 
 
 binsizes = [ '1000', '10000', '100000', '1000000' ]
-qsizes = [ 3, 5, 10, 50 ]
+qsizes = [ 3, 5, 10 ]
 
 
 # Constant config variables for the enrichment pipeline
 
 enrichment_config = {
-    # The otput directory and signal files are the only parameters that should
+    # The output directory and signal files are the only parameters that should
     # change between analyses.
     #'output_dir': 'path/to/output',
     #'SIGNAL_MANIFEST': 'path/to/sig.csv',
 
-    # These parameters should be constant
-    'qbed_from_bigwig_script': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/scripts/make_qbed_from_bigwig.sh',
-    'MUT_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/MUTATION_MANIFEST',
+    # These parameters should not change between analyses
+    'qbed_from_bigwig_script': 'scripts/make_qbed_from_bigwig.sh',
+    'MUT_MANIFEST': 'manifests/MUTATION_MANIFEST',
     'quantiles': qsizes,
     # must match binsizes
     'tiles': {
@@ -75,31 +52,12 @@ enrichment_config = {
     'mut_to_perm': {
         'neuron___A': 'input/neuron___perm___A.rda',
         'neuron___AB': 'input/neuron___perm___AB.rda',
-        'neuron___ABM': 'input/neuron___perm___ABM.rda',
         'neuron___indel_A': 'input/neuron___perm___indel_A.rda',
-        'neuron___indel_B': 'input/neuron___perm___indel_B.rda',
         'neuron___indel_AB': 'input/neuron___perm___indel_AB.rda',
-        'neuron_als___indel_AB': 'input/neuron_als___perm___indel_AB.rda',
-        'neuron_als_no_outlier___indel_AB': 'input/neuron_als_no_outlier___perm___indel_AB.rda',
-        'neuron_alz___indel_AB': 'input/neuron_alz___perm___indel_AB.rda',
-        'neuron_alz_no_outlier___indel_AB': 'input/neuron_alz_no_outlier___perm___indel_AB.rda',
-        'neuron_ba6___indel_AB': 'input/neuron_ba6___perm___indel_AB.rda',
         'oligo___A': 'input/oligo___perm___A.rda',
         'oligo___AB': 'input/oligo___perm___AB.rda',
-        'oligo___ABM': 'input/oligo___perm___ABM.rda',
         'oligo___indel_A': 'input/oligo___perm___indel_A.rda',
-        'oligo___indel_B': 'input/oligo___perm___indel_B.rda',
         'oligo___indel_AB': 'input/oligo___perm___indel_AB.rda',
-        'neuron_10x___AB': 'input/neuron_10x___perm___AB.rda',
-        'neuron_10x___indel_AB': 'input/neuron_10x___perm___indel_AB.rda',
-        'neuron_15x___AB': 'input/neuron_15x___perm___AB.rda',
-        'neuron_15x___indel_AB': 'input/neuron_15x___perm___indel_AB.rda',
-        'neuron_20x___AB': 'input/neuron_20x___perm___AB.rda',
-        'neuron_20x___indel_AB': 'input/neuron_20x___perm___indel_AB.rda',
-        'neuron_25x___AB': 'input/neuron_25x___perm___AB.rda',
-        'neuron_25x___indel_AB': 'input/neuron_25x___perm___indel_AB.rda',
-        'neuron_30x___AB': 'input/neuron_30x___perm___AB.rda',
-        'neuron_30x___indel_AB': 'input/neuron_30x___perm___indel_AB.rda'
     }
 }
 
@@ -122,17 +80,17 @@ rule all:
         expand('alignability/genome_tiles/genome_mask_{binsize}binsize.bed',
             binsize=[ '200' ] + binsizes),  # add in a 200bp tile set for ChromHMM
         # spatial sensitivity
-        expand('spatial_sensitivity/bed/{sample}.{binsize}binsize.bed',
-            sample=neuron_samples + oligo_samples,
-            binsize=binsizes),
-        #expand("alignability/data_plots/chr{chr}.{resolution}.{output}",
-            #chr=chrs, resolution=[ '1k', '10k', '100k', '1m' ],
-            #output=['svg', 'pdf']),
+        #expand('spatial_sensitivity/bed/{sample}.{binsize}binsize.bed',
+            #sample=neuron_samples + oligo_samples,
+            #binsize=binsizes),
+        expand("alignability/data_plots/chr{chr}.{resolution}.{output}",
+            chr=chrs, resolution=[ '1k', '10k', '100k', '1m' ],
+            output=['svg', 'pdf']),
         # 1b
-        #expand('plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
-            #qualtype=snv_qualtypes,  # indels are always added
-            #collapsed=[ '', 'COLLAPSED.'],
-            #output=output_plot_and_table),
+        expand('plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
+            qualtype=snv_qualtypes,  # indels are always added
+            collapsed=[ '', 'COLLAPSED.'],
+            output=output_plot_and_table),
         # 1c
         expand("plots/fig1/indel_size_analysis/indel_size.{output}",
             output=[ 'pdf', 'svg']),
@@ -147,72 +105,64 @@ rule all:
             qualtype=[ 'A', 'indel_A' ],
             table=[ 'burdens', 'model' ]),
         # 2a
-        expand("plots/fig2/raw_spectrum/snv_spectrum.{output}",
-            output=output_plot_and_table),
+        #expand("plots/fig2/raw_spectrum/snv_spectrum.{output}",
+            #output=output_plot_and_table),
         # 2b
-        expand("analysis/fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv",
-            celltype=celltypes_to_compute,
-            qualtype=[ 'A', 'indel_A' ]),
+        #expand("analysis/fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv",
+            #celltype=celltypes_to_compute,
+            #qualtype=[ 'A', 'indel_A' ]),
         # probably supplementary, related to fig2
-        expand("analysis/fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.{output}",
-            qualtype=[ 'A', 'indel_A' ],
-            output=[ 'pdf', 'svg', 'csv' ]),
+        #expand("analysis/fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.{output}",
+            #qualtype=[ 'A', 'indel_A' ],
+            #output=[ 'pdf', 'svg', 'csv' ]),
         # 2b,f
-        expand("plots/fig2/cosmic_aging/{celltype}_barplots_{qualtype}.{output}",
-            celltype=celltypes_to_compute,
-            qualtype=[ 'A', 'indel_A' ],
-            output=[ 'pdf', 'svg' ]),
+        #expand("plots/fig2/cosmic_aging/{celltype}_barplots_{qualtype}.{output}",
+            #celltype=celltypes_to_compute,
+            #qualtype=[ 'A', 'indel_A' ],
+            #output=[ 'pdf', 'svg' ]),
         # 2c,g
-        expand("plots/fig2/cosmic_aging/scatterplots_{qualtype}.{output}",
-            qualtype=[ 'A', 'indel_A' ],
-            output=[ 'pdf', 'svg', 'csv' ]),
+        #expand("plots/fig2/cosmic_aging/scatterplots_{qualtype}.{output}",
+            #qualtype=[ 'A', 'indel_A' ],
+            #output=[ 'pdf', 'svg', 'csv' ]),
         # 2e
-        expand("plots/fig2/raw_spectrum/indel_spectrum.{output}",
-            output=output_plot_and_table),
+        #expand("plots/fig2/raw_spectrum/indel_spectrum.{output}",
+            #output=output_plot_and_table),
         # 3a
-        expand("plots/fig3/scrnaseq/umap_plot.{output}",
-            output=[ 'svg', 'pdf', 'jpeg' ]),
+        #expand("plots/fig3/scrnaseq/umap_plot.{output}",
+            #output=[ 'svg', 'pdf', 'jpeg' ]),
         # 3b
-        expand("plots/fig3/scatacseq/umap_plot.{output}",
-            output=[ 'svg', 'pdf', 'jpeg' ]),
-        expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=celltypes_to_compute,
-            #celltype=[ 'neuron_10x', 'neuron_15x', 'neuron_20x', 'neuron_25x', 'neuron_30x' ],
+        #expand("plots/fig3/scatacseq/umap_plot.{output}",
+            #output=[ 'svg', 'pdf', 'jpeg' ]),
+        #expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            #celltype=celltypes_to_compute,
             #qualtype=all_qualtypes,
             #qualtype=[ 'AB', 'indel_AB' ],
-            qualtype=[ 'AB' ],
             #nquantiles=qsizes,
-            nquantiles=[ 10 ],
             # just to reduce snakemake runtime for later analyses
-            #datasource=[ 'encode_replichip', 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
-            datasource=[ 'cancer_snvdens' ],
-            output=[ 'svg', 'pdf', 'csv' ]),
+            # XXX: ADD REPLISEQ (removed replichip)
+            #datasource=[ 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'cancer_snvdens' ],
+            #output=[ 'svg', 'pdf', 'csv' ]),
         # GTEx enrichment plots with multiple levels of signal coverage
         #expand('plots/enrichment/gtex_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             #celltype=celltypes_to_compute,
-            #celltype=[ 'neuron', 'neuron_als', 'neuron_als_no_outlier', 'neuron_alz', 'neuron_alz_no_outlier', 'neuron_ba6' ],
-            #celltype=[ 'neuron_10x', 'neuron_15x', 'neuron_20x', 'neuron_25x', 'neuron_30x' ],
             #qualtype=all_qualtypes,
-            #qualtype=[ 'AB', 'indel_AB' ],
             #nquantiles=qsizes,
-            #nquantiles=[ 10, 50 ],
             #mincov=[ '02', '04', '06', '08' ],
-            #mincov=[ '02', '08' ],
             #output=[ 'svg', 'pdf', 'csv' ]),
         # scRNA-seq expression
         # Same as GTEx, but only using 02 and 08 mincoverages since it didn't seem
         # to matter much in GTEx.
-        expand('plots/enrichment/scrnaseq_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=celltypes_to_compute,
-            qualtype=all_qualtypes,
-            nquantiles=qsizes,
-            mincov=[ '02', '08' ],
-            output=[ 'svg', 'pdf', 'csv' ]),
-        expand('plots/enrichment/{datasource}/{celltype}___{qualtype}.{output}',
-            celltype=celltypes_to_compute,
-            qualtype=all_qualtypes,
-            datasource=[ 'roadmap_chromhmm' ], #, 'roadmap_histone_narrowpeak' ],
-            output=[ 'svg', 'pdf', 'csv' ]),
+        #expand('plots/enrichment/scrnaseq_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            #celltype=celltypes_to_compute,
+            #qualtype=all_qualtypes,
+            #nquantiles=qsizes,
+            #mincov=[ '02', '04', '06', '08' ],
+            #output=[ 'svg', 'pdf', 'csv' ]),
+        #expand('plots/enrichment/{datasource}/{celltype}___{qualtype}.{output}',
+            #celltype=celltypes_to_compute,
+            #qualtype=all_qualtypes,
+            #datasource=[ 'roadmap_chromhmm' ], #, 'roadmap_histone_narrowpeak' ],
+            #output=[ 'svg', 'pdf', 'csv' ]),
         # Signature-based enrichment
         #expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
             # just to reduce snakemake runtime for later analyses
@@ -237,11 +187,11 @@ rule all:
             #qualtype=[ 'indel_AB' ],
             #nquantiles=[ 5, 10 ],
             #mincov=[ '02', '08' ]),
-        expand('enrichment/scrnaseq_expression_mc{mincov}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
-            celltype=celltypes_to_compute,
-            qualtype=[ 'A' ],
-            nquantiles=[ 3, 5, 10 ],
-            mincov=[ '02', '08' ])
+        #expand('enrichment/scrnaseq_expression_mc{mincov}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
+            #celltype=celltypes_to_compute,
+            #qualtype=[ 'A' ],
+            #nquantiles=[ 3, 5, 10 ],
+            #mincov=[ '02', '08' ])
 
 
 
@@ -253,36 +203,6 @@ include: "snakefile.fig3"
 include: "snakefile.scatacseq"
 
 
-# Requires access to the above neuron_samples and oligo_samples
-rule make_sensitivity_bigwig:
-    input:
-        csv=lambda wildcards: 'input/neuron___germline_control___A.csv' if wildcards.sample in neuron_samples else 'input/oligo___germline_control___A.csv'
-    output:
-        bigwig="spatial_sensitivity/bigwig/{sample}.bigwig"
-    params:
-        sample="{sample}"
-    log:
-        "spatial_sensitivity/bigwig/{sample}.log"
-    resources:
-        mem=12000
-    script:
-        "scripts/make_hsnp_sensitivity_track.R"
-
-
-rule make_sensitivity_bed:
-    input:
-        bigwig="spatial_sensitivity/bigwig/{sample}.bigwig",
-        tile=lambda wildcards: enrichment_config['tiles'][wildcards.binsize]
-    output:
-        bed="spatial_sensitivity/bed/{sample}.{binsize}binsize.bed"
-    resources:
-        mem=16000
-    shell:
-        """
-        bigWigAverageOverBed {input.bigwig} {input.tile} {output.bed}
-        """
-        
-
 
 # Below are several instances of
 # boilerplate code to use the bed_enrichment module to automatically
@@ -293,7 +213,7 @@ rule make_sensitivity_bed:
 ########################################################################
 enrichment_roadmap_histone_narrowpeak_config = dict(
     **{ 'output_dir': 'enrichment/roadmap_histone_narrowpeak',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_HISTONE_NARROWPEAK.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/ROADMAP_HISTONE_NARROWPEAK.MANIFEST' },
     **enrichment_config
 )
 
@@ -322,7 +242,7 @@ use rule enrichment_bed_plot from enrichment_roadmap_histone_narrowpeak as enric
 ########################################################################
 enrichment_roadmap_chromhmm_config = dict(
     **{ 'output_dir': 'enrichment/roadmap_chromhmm',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_CHROMHMM.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/ROADMAP_CHROMHMM.MANIFEST' },
     **enrichment_config
 )
 
@@ -363,7 +283,7 @@ use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_road
 ########################################################################
 enrichment_roadmap_histone_signal_config = dict(
     **{ 'output_dir': 'enrichment/roadmap_histone_signal',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_HISTONE_BIGWIG.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/ROADMAP_HISTONE_BIGWIG.MANIFEST' },
     **enrichment_config
 )
 
@@ -393,7 +313,7 @@ use rule enrichment_plot from enrichment_roadmap_histone_signal as enrichment_ro
 ########################################################################
 enrichment_roadmap_dnamethyl_config = dict(
     **{ 'output_dir': 'enrichment/roadmap_dnamethyl',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ROADMAP_DNAMETHYL.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/ROADMAP_DNAMETHYL.MANIFEST' },
     **enrichment_config
 )
 
@@ -419,7 +339,7 @@ use rule enrichment_plot from enrichment_roadmap_dnamethyl as enrichment_roadmap
 ########################################################################
 enrichment_encode_replichip_config = dict(
     **{ 'output_dir': 'enrichment/encode_replichip',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/ENCODE_REPLICHIP.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/ENCODE_REPLICHIP.MANIFEST' },
     **enrichment_config
 )
 
@@ -449,7 +369,7 @@ use rule enrichment_plot from enrichment_encode_replichip as enrichment_encode_r
 ########################################################################
 enrichment_conservation_config = dict(
     **{ 'output_dir': 'enrichment/conservation',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/CONSERVATION.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/CONSERVATION.MANIFEST' },
     **enrichment_config
 )
 
@@ -482,7 +402,7 @@ use rule enrichment_plot from enrichment_conservation as enrichment_conservation
 ########################################################################
 enrichment_boca_config = dict(
     **{ 'output_dir': 'enrichment/boca',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/BOCA.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/BOCA.MANIFEST' },
     **enrichment_config
 )
 
@@ -514,7 +434,7 @@ use rule enrichment_plot from enrichment_boca as enrichment_boca_enrichment_plot
 ########################################################################
 enrichment_depth_config = dict(
     **{ 'output_dir': 'enrichment/depth',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/DEPTH.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/DEPTH.MANIFEST' },
     **enrichment_config
 )
 
@@ -540,7 +460,7 @@ use rule enrichment_plot from enrichment_depth as enrichment_depth_enrichment_pl
 ########################################################################
 enrichment_nott_config = dict(
     **{ 'output_dir': 'enrichment/nott',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/NOTT.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/NOTT.MANIFEST' },
     **enrichment_config
 )
 
@@ -566,7 +486,7 @@ use rule enrichment_plot from enrichment_nott as enrichment_nott_enrichment_plot
 ########################################################################
 enrichment_rizzardi_config = dict(
     **{ 'output_dir': 'enrichment/rizzardi',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/RIZZARDI.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/RIZZARDI.MANIFEST' },
     **enrichment_config
 )
 
@@ -597,7 +517,7 @@ use rule enrichment_plot from enrichment_rizzardi as enrichment_rizzardi_enrichm
 ########################################################################
 enrichment_scatacseq_config = dict(
     **{ 'output_dir': 'enrichment/scatacseq',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/SCATACSEQ.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/SCATACSEQ.MANIFEST' },
     **enrichment_config
 )
 
@@ -639,7 +559,7 @@ use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enric
 # Min. signal coverage: _mc02
 enrichment_gtex_expression_mc02_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc02',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/GTEX_EXPRESSION.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/GTEX_EXPRESSION.MANIFEST' },
     **enrichment_config
 )
 
@@ -667,7 +587,7 @@ use rule enrichment_plot from enrichment_gtex_expression_mc02 as enrichment_gtex
 # Min. signal coverage: _mc04
 enrichment_gtex_expression_mc04_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc04',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/GTEX_EXPRESSION.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/GTEX_EXPRESSION.MANIFEST' },
     **enrichment_config
 )
 
@@ -695,7 +615,7 @@ use rule enrichment_plot from enrichment_gtex_expression_mc04 as enrichment_gtex
 # Min. signal coverage: _mc06
 enrichment_gtex_expression_mc06_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc06',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/GTEX_EXPRESSION.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/GTEX_EXPRESSION.MANIFEST' },
     **enrichment_config
 )
 
@@ -723,7 +643,7 @@ use rule enrichment_plot from enrichment_gtex_expression_mc06 as enrichment_gtex
 # Min. signal coverage: _mc08
 enrichment_gtex_expression_mc08_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc08',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/GTEX_EXPRESSION.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/GTEX_EXPRESSION.MANIFEST' },
     **enrichment_config
 )
 
@@ -753,7 +673,7 @@ use rule enrichment_plot from enrichment_gtex_expression_mc08 as enrichment_gtex
 # Min. signal coverage: _mc02
 enrichment_scrnaseq_expression_mc02_config = dict(
     **{ 'output_dir': 'enrichment/scrnaseq_expression_mc02',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/SCRNASEQ_EXPRESSION.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/SCRNASEQ_EXPRESSION.MANIFEST' },
     **enrichment_config
 )
 
@@ -780,7 +700,7 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc02 as enrichment_
 # Min. signal coverage: _mc08
 enrichment_scrnaseq_expression_mc08_config = dict(
     **{ 'output_dir': 'enrichment/scrnaseq_expression_mc08',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/SCRNASEQ_EXPRESSION.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/SCRNASEQ_EXPRESSION.MANIFEST' },
     **enrichment_config
 )
 
@@ -810,7 +730,7 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc08 as enrichment_
 # Cancer SNV density
 enrichment_cancer_config = dict(
     **{ 'output_dir': 'enrichment/cancer_snvdens',
-        'SIGNAL_MANIFEST': '/n/data1/hms/dbmi/park/jluquette/glia/analysis/CANCER_SNVDENS.MANIFEST' },
+        'SIGNAL_MANIFEST': 'manifests/CANCER_SNVDENS.MANIFEST' },
     **enrichment_config
 )
 

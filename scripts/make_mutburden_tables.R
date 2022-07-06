@@ -50,7 +50,7 @@ if (prevburden != 'Notafile') {
     dt <- rbind(dt, fread(prevburden)[,.(sample=sample,nsom=raw.calls, genome.burden=burden)])
 }
 
-meta <- meta[dt, by='sample']
+meta <- meta[dt, on='sample']
 
 fwrite(meta, file=out.csv)
 

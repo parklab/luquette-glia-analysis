@@ -124,7 +124,7 @@ print(matfiles)
 # tilemap has to be exported to child processes. This can be very large
 # if tiles.per.chunk is too big.
 progressr::with_progress({
-    p <- progressr::progressor(along=1:(length(chunks)*length(matfiles))
+    p <- progressr::progressor(along=1:(length(chunks)*length(matfiles)))
     p(amount=0, class='sticky', scan2::perfcheck(print.header=TRUE))
     mean.mat <- rbindlist(future.apply::future_lapply(1:length(chunks), function(i) {
         # Create a matrix of average read depth in each tile for each sample.

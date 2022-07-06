@@ -146,7 +146,7 @@ progressr::with_progress({
         })
         do.call(cbind, mean.mats)
     }))
-})
+}, enable=TRUE)
 
 save(chrom, base.tile.size, tiles, tiles.not.in.gatk, mean.mat,
     file=out.rda, compress=FALSE)

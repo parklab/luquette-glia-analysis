@@ -66,15 +66,14 @@ tiles <- tileGenome(seqlengths=setNames(chrom.end, chrom),
     tilewidth=base.tile.size, cut.last.tile.in.chrom=T)
 
 
-build.tilemap <- function(chrom, chrom.end, tiles, representative.matfile) {
+build.tilemap <- function(chunk, tiles, representative.matfile) {
     # build a GRanges object of positions from GATK DepthOfCoverage.
     # GATK DepthOfCoverage outputs many 0 values, but it skips over
     # some parts of the genome (probably Ns).
     positions <- read.tabix.data(path=representative.matfile,
-        region=GRanges(seqnames=sub('chr', '', chrom),  # SCAN2 output doesn't have chr prefix
-                    ranges=IRanges(start=1, end=chrom.end)),
-        colClasses=c('NULL', 'integer'))[[1]]
-    g.basepair <- GRanges(seqnames=chrom, ranges=IRanges(start=positions, width=1))
+        region=chunk, colClasses=c('NULL', 'integer'))[[1]]
+    g.basepair <- GRanges(seqnames=seqnames(tiles)[1],
+        ranges=IRanges(start=positions, width=1))
 
     # There are a handful of cases where 1-5 bases are not reported
     # by GATK. These shouldn't cause any problems, so use min.gapwidth to
@@ -125,7 +124,7 @@ progressr::with_progress({
     p <- progressr::progressor(along=1:(length(chunks)*length(matfiles)))
     p(amount=0, class='sticky', scan2::perfcheck(print.header=TRUE))
     results <- future.apply::future_lapply(1:length(chunks), function(i) {
-        tm <- build.tilemap(chrom=chrom, chrom.end=chrom.end, tiles=tiles,
+        tm <- build.tilemap(chunk=chunks[i], tiles=subsetByOverlaps(tiles, chunks[i]),
             representative.matfile=matfiles[1])
         tilemap <- tm$tilemap
         tiles <- tm$tiles

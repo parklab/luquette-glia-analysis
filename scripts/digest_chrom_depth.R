@@ -60,7 +60,7 @@ options(warn=2)
 # resolution (base.tile.size).
 # autosomes only
 chrom.end <- seqlengths(genome)[chrom]
-chrom.end <- min(chrom.end, 1e6)
+chrom.end <- min(chrom.end, 20e6)
 
 tiles <- tileGenome(seqlengths=setNames(chrom.end, chrom),
     tilewidth=base.tile.size, cut.last.tile.in.chrom=T)
@@ -135,7 +135,6 @@ progressr::with_progress({
                     ret <- c()
                 } else {
                     # initialize to NA because all bp positions are not in the tile map
-                    #dpm.basepair[, tileid := NA]  
                     dpm.basepair[from(tilemap), tileid := to(tilemap)]
                     ret <- dpm.basepair[,setNames(as.list(colMeans(.SD)), colnames(.SD)),by=tileid][!is.na(tileid)][, -'tileid']
                 }
@@ -149,7 +148,7 @@ progressr::with_progress({
 
 tiles <- do.call(c, lapply(results, function(r) r$tiles))
 mean.mat <- rbindlist(lapply(results, function(r) r$mean.mat))
-save(chrom, base.tile.size, tiles, mean.mat, results, #tiles.not.in.gatk, mean.mat,
+save(chrom, base.tile.size, tiles, mean.mat, #results, #tiles.not.in.gatk, mean.mat,
     file=out.rda, compress=FALSE)
 
 cat('Final memory profile:\n')

@@ -124,12 +124,13 @@ print(matfiles)
 # tilemap has to be exported to child processes. This can be very large
 # if tiles.per.chunk is too big.
 progressr::with_progress({
-    p <- progressr::progressor(along=1:length(chunks))
+    p <- progressr::progressor(along=1:(length(chunks)*length(matfiles))
     p(amount=0, class='sticky', scan2::perfcheck(print.header=TRUE))
     mean.mat <- rbindlist(future.apply::future_lapply(1:length(chunks), function(i) {
         # Create a matrix of average read depth in each tile for each sample.
-        mean.mats <- lapply(matfiles, function(f) {
-            pc <- perfcheck(paste('chunk', i), {
+        mean.mats <- lapply(1:length(matfiles), function(j) {
+            pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
+                f <- matfiles[j]
                 dpm.basepair <- read.tabix.data(f, region=chunks[i])
                 # initialize to NA because all bp positions are not in the tile map
                 dpm.basepair[, tileid := NA]  

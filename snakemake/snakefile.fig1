@@ -66,10 +66,12 @@ rule fig1_distribution_plot:
 rule fig1_mut_burden_analysis:
     input:
         meta="input/{celltype}___meta___{qualtype}.csv",
-        prevburdens=lambda wildcards: "scan2_paper_output/Collected_SCAN2_" + ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV') + "_burdens.csv",
+        prevburdens=lambda wildcards: 'Notafile' if wildcards.celltype == 'oligo' else ("scan2_paper_output/Collected_SCAN2_" + ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV') + "_burdens.csv"),
         objects=lambda wildcards: scan2_objects[wildcards.celltype].values()
     output:
         csv="fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
+    params:
+        muttype='indel' if wildcards.qualtype.startswith('indel_') else 'snv'
     resources:
         mem=1000
     log:

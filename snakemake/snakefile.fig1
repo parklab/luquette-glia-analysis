@@ -75,15 +75,23 @@ rule fig1_distribution_plot:
         "scripts/barplot_enrich_2x2.R"
 
 
+# only specify prevburdens for neurons
+def mut_burden_analysis_input(wildcards):
+    d = { 'meta' : "input/{celltype}___meta___{qualtype}.csv",
+          'objects' : scan2_objects[wildcards.celltype].values() }
+
+    if wildcards.celltype == 'neuron':
+        d['prevburdens'] = "scan2_paper_output/Collected_SCAN2_%s_burdens.csv" % ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV')
+    return(d)
+
+
 rule fig1_mut_burden_analysis:
     input:
-        meta="input/{celltype}___meta___{qualtype}.csv",
-        prevburdens=lambda wildcards: 'Notafile' if wildcards.celltype == 'oligo' else ("scan2_paper_output/Collected_SCAN2_" + ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV') + "_burdens.csv"),
-        objects=lambda wildcards: scan2_objects[wildcards.celltype].values()
+        unpack(mut_burden_analysis_input)
     output:
         csv="fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
     params:
-        muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel_') else 'snv'
+        muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel_') else 'snv',
     resources:
         mem=1000
     log:

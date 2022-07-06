@@ -8,11 +8,14 @@ if ('snakemake' %in% ls()) {
     sink(con, type='output')
     sink(con, type='message')
 
+    if (!('prevburdens' %in% names(snakemake@input)))
+        snakemake@input['prevburdens'] <- 'Notafile'
+
     commandArgs <- function(...) unlist(c(
         snakemake@output['csv'],
         snakemake@input['meta'],
         snakemake@params['muttype'],
-        snakemake@input['prevburdens'],  # only for neurons; 'Notafile' for oligo
+        snakemake@input['prevburdens'],  # only a file for neurons; 'Notafile' for oligo
         snakemake@input['objects']       # variable length list
     ))
     cat('Got command line arguments from snakemake:\n')

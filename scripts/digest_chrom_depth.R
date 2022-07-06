@@ -20,7 +20,7 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) < 6) {
-    cat('hg19 is assumed; chromosome should be prefixed with "chr"\n')
+    cat('hg19 is assumed.\n')
     cat('base.tile.size is the smallest tile size used to create a\n')
     cat('non-overlapping tiling of the genome. Windows created further\n')
     cat('down in the pipeline CAN ONLY be integer multiples of this tile\n')
@@ -28,7 +28,7 @@ if (length(args) < 6) {
     stop("usage: digest_chrom_depth.R chromosome base.tile.size tiles.per.chunk n.cores out.rda joint_depth_matrix1.tab.gz [ joint_depth_matrix2.tab.gz ... joint_depth_matrixN.tab.gz ]")
 }
 
-chrom <- args[1]
+chrom <- as.character(args[1])
 base.tile.size <- as.integer(args[2])
 tiles.per.chunk <- as.integer(args[3])
 n.cores <- as.integer(args[4])
@@ -47,7 +47,7 @@ suppressMessages(library(GenomeInfoDb))
 if (n.cores > 1)
     plan(multicore, workers=n.cores)
 
-genome <- GenomeInfoDb::Seqinfo(genome='hg19')
+genome <- GenomeInfoDb::Seqinfo(genome='GRCh37.p13')
 
 if (!(chrom %in% seqlevels(genome)))
     stop(paste('chromosome', chrom, 'is not a valid hg19 chromosome. Did you add the "chr" prefix?'))
@@ -108,8 +108,6 @@ print(gc())
 
 tiles$chunk.id <- head(rep(1:ceiling(length(tiles)/tiles.per.chunk), each=tiles.per.chunk), length(tiles))
 chunks <- unlist(reduce(split(tiles, tiles$chunk.id)))
-# SCAN2 files don't have chr prefixes
-seqlevels(chunks) <- sub('chr', '', seqlevels(chunks))
 cat('Starting depth matrix digestion on', length(chunks), 'chunks.\n')
 cat('Parallelizing using', future::nbrOfWorkers(), 'cores.\n')
 cat('chunks:\n')

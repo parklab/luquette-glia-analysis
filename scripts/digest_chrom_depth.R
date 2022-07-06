@@ -58,7 +58,7 @@ options(warn=2)
 # Build a base set of tiles covering the genome at the maximum
 # resolution (base.tile.size).
 # autosomes only
-chrom.end <- seqlengths(genome)[chrom],
+chrom.end <- seqlengths(genome)[chrom]
 chrom.end <- min(chrom.end, 1e6)
 
 tiles <- tileGenome(seqlengths=chrom.end,

@@ -114,7 +114,7 @@ print(gc())
 tiles$chunk.id <- head(rep(1:ceiling(length(tiles)/tiles.per.chunk), each=tiles.per.chunk), length(tiles))
 chunks <- unlist(reduce(split(tiles, tiles$chunk.id)))
 # SCAN2 files don't have chr prefixes
-seqnames(chunks) <- sub('chr', '', seqnames(chunks))
+seqlevels(chunks) <- sub('chr', '', seqlevels(chunks))
 cat('Starting depth matrix digestion on', length(chunks), 'chunks.\n')
 cat('Parallelizing using', future::nbrOfWorkers(), 'cores.\n')
 cat('chunks:\n')

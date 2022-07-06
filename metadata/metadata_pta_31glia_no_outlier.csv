@@ -1,4 +1,4 @@
-sample,donor,amp,type,age,color,plotage,outlier,gtype
+sample,donor,amp,type,age,color,plotage,outlier,type
 1278-Oligo-5,1278,PTA,oligo,0.4,red,-1,FALSE,oligo
 1278-Oligo-7,1278,PTA,oligo,0.4,red,-1,FALSE,oligo
 1278-Oligo-8,1278,PTA,oligo,0.4,red,-1,FALSE,oligo

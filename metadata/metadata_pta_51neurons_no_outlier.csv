@@ -1,52 +1,52 @@
-sample,donor,amp,type,age,color,plotage,outlier,gtype
-1278BA9-A,1278,PTA,PFC neuron,0.4,black,-1,FALSE,
-1278BA9-B,1278,PTA,PFC neuron,0.4,black,-1,FALSE,
-1278BA9-C,1278,PTA,PFC neuron,0.4,black,-1,FALSE,
-5817PFC-A,5817,PTA,PFC neuron,0.6,black,0.5,FALSE,
-5817PFC-B,5817,PTA,PFC neuron,0.6,black,0.5,FALSE,
-5817PFC-C,5817,PTA,PFC neuron,0.6,black,0.5,FALSE,
-5871-Neuron-4,5871,PTA,PFC neuron,2,black,2,FALSE,
-5871-Neuron-5,5871,PTA,PFC neuron,2,black,2,FALSE,
-5871-Neuron-6,5871,PTA,PFC neuron,2,black,2,FALSE,
-4638-Neuron-5,4638,PTA,PFC neuron,15.1,black,15.1,FALSE,
-4638-Neuron-6,4638,PTA,PFC neuron,15.1,black,15.1,FALSE,
-1465BA9-A,1465,PTA,PFC neuron,17.5,black,17.5,FALSE,
-1465BA9-B,1465,PTA,PFC neuron,17.5,black,17.5,FALSE,
-1465BA9-C,1465,PTA,PFC neuron,17.5,black,17.5,FALSE,
-1465BA9-D,1465,PTA,PFC neuron,17.5,black,17.5,FALSE,
-5559PFC-A,5559,PTA,PFC neuron,19.8,black,19.8,FALSE,
-5559PFC-B,5559,PTA,PFC neuron,19.8,black,19.8,FALSE,
-5559PFC-C,5559,PTA,PFC neuron,19.8,black,19.8,FALSE,
-4643-Neuron-3,4643,PTA,PFC neuron,42.2,black,42.2,FALSE,
-4643-Neuron-4,4643,PTA,PFC neuron,42.2,black,42.2,FALSE,
-4643-Neuron-6,4643,PTA,PFC neuron,42.2,black,42.2,FALSE,
-5087PFC-A,5087,PTA,PFC neuron,44.9,black,44.9,FALSE,
-5087PFC-B,5087,PTA,PFC neuron,44.9,black,44.9,FALSE,
-5087PFC-C,5087,PTA,PFC neuron,44.9,black,44.9,FALSE,
-936PFC-A,936,PTA,PFC neuron,49.2,black,49.2,FALSE,
-936PFC-B,936,PTA,PFC neuron,49.2,black,49.2,FALSE,
-936PFC-C,936,PTA,PFC neuron,49.2,black,49.2,FALSE,
-5219-Neuron-2,5219,PTA,PFC neuron,77,black,77,FALSE,
-5219-Neuron-4,5219,PTA,PFC neuron,77,black,77,FALSE,
-5219-Neuron-5,5219,PTA,PFC neuron,77,black,77,FALSE,
-5657PFC-A,5657,PTA,PFC neuron,82,black,81,FALSE,
-5657PFC-B,5657,PTA,PFC neuron,82,black,81,FALSE,
-5657PFC-C,5657,PTA,PFC neuron,82,black,81,FALSE,
-5823PFC-A,5823,PTA,PFC neuron,82.7,black,82.7,FALSE,
-5823PFC-B,5823,PTA,PFC neuron,82.7,black,82.7,FALSE,
-5823PFC-C,5823,PTA,PFC neuron,82.7,black,82.7,FALSE,
-UMB4976_E1,UMB4976,PTA,PFC neuron,104,black,104,FALSE,
-UMB4976_E2,UMB4976,PTA,PFC neuron,104,black,104,FALSE,
-UMB4976_E3,UMB4976,PTA,PFC neuron,104,black,104,FALSE,
-UMB5451_B2,UMB5451,PTA,PFC neuron,57,black,57,FALSE,
-UMB5451_B3,UMB5451,PTA,PFC neuron,57,black,57,FALSE,
-UMB5451_B5,UMB5451,PTA,PFC neuron,57,black,57,FALSE,
-UMB5572_D2,UMB5572,PTA,PFC neuron,70,black,73,FALSE,
-UMB5572_D3,UMB5572,PTA,PFC neuron,70,black,73,FALSE,
-UMB5572_D4,UMB5572,PTA,PFC neuron,70,black,73,FALSE,
-UMB5666_F1,UMB5666,PTA,PFC neuron,65,black,65,FALSE,
-UMB5666_F2,UMB5666,PTA,PFC neuron,65,black,65,FALSE,
-UMB5666_F5,UMB5666,PTA,PFC neuron,65,black,65,FALSE,
-UMB5943_C2,UMB5943,PTA,PFC neuron,69,black,69,FALSE,
-UMB5943_C4,UMB5943,PTA,PFC neuron,69,black,69,FALSE,
-UMB5943_C5,UMB5943,PTA,PFC neuron,69,black,69,FALSE,
+sample,donor,amp,type,age,color,plotage,outlier,type
+1278BA9-A,1278,PTA,PFC neuron,0.4,black,-1,FALSE,PFC neuron
+1278BA9-B,1278,PTA,PFC neuron,0.4,black,-1,FALSE,PFC neuron
+1278BA9-C,1278,PTA,PFC neuron,0.4,black,-1,FALSE,PFC neuron
+5817PFC-A,5817,PTA,PFC neuron,0.6,black,0.5,FALSE,PFC neuron
+5817PFC-B,5817,PTA,PFC neuron,0.6,black,0.5,FALSE,PFC neuron
+5817PFC-C,5817,PTA,PFC neuron,0.6,black,0.5,FALSE,PFC neuron
+5871-Neuron-4,5871,PTA,PFC neuron,2,black,2,FALSE,PFC neuron
+5871-Neuron-5,5871,PTA,PFC neuron,2,black,2,FALSE,PFC neuron
+5871-Neuron-6,5871,PTA,PFC neuron,2,black,2,FALSE,PFC neuron
+4638-Neuron-5,4638,PTA,PFC neuron,15.1,black,15.1,FALSE,PFC neuron
+4638-Neuron-6,4638,PTA,PFC neuron,15.1,black,15.1,FALSE,PFC neuron
+1465BA9-A,1465,PTA,PFC neuron,17.5,black,17.5,FALSE,PFC neuron
+1465BA9-B,1465,PTA,PFC neuron,17.5,black,17.5,FALSE,PFC neuron
+1465BA9-C,1465,PTA,PFC neuron,17.5,black,17.5,FALSE,PFC neuron
+1465BA9-D,1465,PTA,PFC neuron,17.5,black,17.5,FALSE,PFC neuron
+5559PFC-A,5559,PTA,PFC neuron,19.8,black,19.8,FALSE,PFC neuron
+5559PFC-B,5559,PTA,PFC neuron,19.8,black,19.8,FALSE,PFC neuron
+5559PFC-C,5559,PTA,PFC neuron,19.8,black,19.8,FALSE,PFC neuron
+4643-Neuron-3,4643,PTA,PFC neuron,42.2,black,42.2,FALSE,PFC neuron
+4643-Neuron-4,4643,PTA,PFC neuron,42.2,black,42.2,FALSE,PFC neuron
+4643-Neuron-6,4643,PTA,PFC neuron,42.2,black,42.2,FALSE,PFC neuron
+5087PFC-A,5087,PTA,PFC neuron,44.9,black,44.9,FALSE,PFC neuron
+5087PFC-B,5087,PTA,PFC neuron,44.9,black,44.9,FALSE,PFC neuron
+5087PFC-C,5087,PTA,PFC neuron,44.9,black,44.9,FALSE,PFC neuron
+936PFC-A,936,PTA,PFC neuron,49.2,black,49.2,FALSE,PFC neuron
+936PFC-B,936,PTA,PFC neuron,49.2,black,49.2,FALSE,PFC neuron
+936PFC-C,936,PTA,PFC neuron,49.2,black,49.2,FALSE,PFC neuron
+5219-Neuron-2,5219,PTA,PFC neuron,77,black,77,FALSE,PFC neuron
+5219-Neuron-4,5219,PTA,PFC neuron,77,black,77,FALSE,PFC neuron
+5219-Neuron-5,5219,PTA,PFC neuron,77,black,77,FALSE,PFC neuron
+5657PFC-A,5657,PTA,PFC neuron,82,black,81,FALSE,PFC neuron
+5657PFC-B,5657,PTA,PFC neuron,82,black,81,FALSE,PFC neuron
+5657PFC-C,5657,PTA,PFC neuron,82,black,81,FALSE,PFC neuron
+5823PFC-A,5823,PTA,PFC neuron,82.7,black,82.7,FALSE,PFC neuron
+5823PFC-B,5823,PTA,PFC neuron,82.7,black,82.7,FALSE,PFC neuron
+5823PFC-C,5823,PTA,PFC neuron,82.7,black,82.7,FALSE,PFC neuron
+UMB4976_E1,UMB4976,PTA,PFC neuron,104,black,104,FALSE,PFC neuron
+UMB4976_E2,UMB4976,PTA,PFC neuron,104,black,104,FALSE,PFC neuron
+UMB4976_E3,UMB4976,PTA,PFC neuron,104,black,104,FALSE,PFC neuron
+UMB5451_B2,UMB5451,PTA,PFC neuron,57,black,57,FALSE,PFC neuron
+UMB5451_B3,UMB5451,PTA,PFC neuron,57,black,57,FALSE,PFC neuron
+UMB5451_B5,UMB5451,PTA,PFC neuron,57,black,57,FALSE,PFC neuron
+UMB5572_D2,UMB5572,PTA,PFC neuron,70,black,73,FALSE,PFC neuron
+UMB5572_D3,UMB5572,PTA,PFC neuron,70,black,73,FALSE,PFC neuron
+UMB5572_D4,UMB5572,PTA,PFC neuron,70,black,73,FALSE,PFC neuron
+UMB5666_F1,UMB5666,PTA,PFC neuron,65,black,65,FALSE,PFC neuron
+UMB5666_F2,UMB5666,PTA,PFC neuron,65,black,65,FALSE,PFC neuron
+UMB5666_F5,UMB5666,PTA,PFC neuron,65,black,65,FALSE,PFC neuron
+UMB5943_C2,UMB5943,PTA,PFC neuron,69,black,69,FALSE,PFC neuron
+UMB5943_C4,UMB5943,PTA,PFC neuron,69,black,69,FALSE,PFC neuron
+UMB5943_C5,UMB5943,PTA,PFC neuron,69,black,69,FALSE,PFC neuron

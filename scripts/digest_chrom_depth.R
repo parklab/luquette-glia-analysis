@@ -61,7 +61,7 @@ options(warn=2)
 chrom.end <- seqlengths(genome)[chrom]
 chrom.end <- min(chrom.end, 1e6)
 
-tiles <- tileGenome(seqlengths=chrom.end,
+tiles <- tileGenome(seqlengths=setNames(chrom.end, chrom),
     tilewidth=base.tile.size, cut.last.tile.in.chrom=T)
 
 

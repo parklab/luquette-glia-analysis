@@ -125,9 +125,7 @@ progressr::with_progress({
         tm <- build.tilemap(chunk=chunks[i], tiles=subsetByOverlaps(tiles, chunks[i]),
             representative.matfile=matfiles[1])
         tilemap <- tm$tilemap
-print(tilemap)
         tiles <- tm$tiles
-print(tiles)
         # Create a matrix of average read depth in each tile for each sample.
         mean.mats <- lapply(1:length(matfiles), function(j) {
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
@@ -145,10 +143,12 @@ print(tiles)
             p(class='sticky', amount=1, pc)
             ret
         })
-        list(tiles=tiles, mean.mats=mean.mats)
+        list(tiles=tiles, mean.mat=do.call(cbind, mean.mats))
     })
 }, enable=TRUE)
 
+tiles <- do.call(c, lapply(results, function(r) r$tiles))
+mean.mat <- rbindlist(lapply(results, function(r) r$mean.mats))
 save(chrom, base.tile.size, tiles, results, #tiles.not.in.gatk, mean.mat,
     file=out.rda, compress=FALSE)
 

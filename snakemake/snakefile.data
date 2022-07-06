@@ -41,7 +41,7 @@ rule mut_csv_to_rda:
         "scan2_output/{celltype}_snv_indel_pass_rescue.txt"
     output:
         "input/{celltype}___mut___{qualtype}.rda"
-    params
+    params:
         muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel') else 'snv',
         rescue=lambda wildcards: '& rescue == TRUE' if wildcards.qualtype.endswith("_AB") else ''
     resources:

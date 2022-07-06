@@ -137,7 +137,7 @@ print(tiles)
                     ret <- c()
                 } else {
                     # initialize to NA because all bp positions are not in the tile map
-                    dpm.basepair[, tileid := NA]  
+                    #dpm.basepair[, tileid := NA]  
                     dpm.basepair[from(tilemap), tileid := to(tilemap)]
                     ret <- dpm.basepair[,setNames(as.list(colMeans(.SD)), colnames(.SD)),by=tileid][!is.na(tileid)][, -'tileid']
                 }

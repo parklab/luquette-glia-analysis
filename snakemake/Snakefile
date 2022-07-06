@@ -94,21 +94,21 @@ rule all:
             chr=chrs, resolution=[ '1k', '10k', '100k', '1m' ],
             output=['svg', 'pdf']),
         # 1b
-        expand('plots/fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
+        expand('fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
             qualtype=snv_qualtypes,  # indels are always added
             collapsed=[ '', 'COLLAPSED.'],
             output=output_plot_and_table),
         # 1c
-        expand("plots/fig1/indel_size_analysis/indel_size.{output}",
+        expand("fig1/indel_size_analysis/indel_size.{output}",
             output=[ 'pdf', 'svg']),
         # 1d
-        expand("plots/fig1/snpeff_analysis/snpeff_analysis.{output}",
+        expand("fig1/snpeff_analysis/snpeff_analysis.{output}",
             output=output_plot_and_table),
         # 1e,f
-        expand('plots/fig1/aging_rate_analysis/{qualtype}.{output}',
+        expand('fig1/aging_rate_analysis/{qualtype}.{output}',
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg']),
-        expand('plots/fig1/aging_rate_analysis/{qualtype}_{table}.csv',
+        expand('fig1/aging_rate_analysis/{qualtype}_{table}.csv',
             qualtype=[ 'A', 'indel_A' ],
             table=[ 'burdens', 'model' ]),
         # 2a

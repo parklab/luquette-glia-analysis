@@ -56,11 +56,11 @@ rule tables_rda_to_csv:
     input:
         "input/{celltype}___{filetype}___{qualtype}.rda",
     output:
-        "analysis/tables/{celltype}___{filetype}___{qualtype}.csv",
+        "tables/{celltype}___{filetype}___{qualtype}.csv",
     resources:
         mem=4000
     log:
-        "analysis/tables/{celltype}___{filetype}___{qualtype}.log"
+        "tables/{celltype}___{filetype}___{qualtype}.log"
     script:
         "scripts/rda_to_csv.R"
 
@@ -69,11 +69,11 @@ rule rda_to_vcf:
     input:
         "input/{celltype}___mut___{qualtype}.rda"
     output:
-        "analysis/vcfs/{celltype}___mut___{qualtype}.vcf"
+        "vcfs/{celltype}___mut___{qualtype}.vcf"
     resources:
         mem=4000
     log:
-        "analysis/vcfs/{celltype}___mut___{qualtype}.rda_to_vcf.log"
+        "vcfs/{celltype}___mut___{qualtype}.rda_to_vcf.log"
     script:
         "scripts/rda_to_vcf.R"
 

@@ -145,7 +145,7 @@ print(tiles)
             p(class='sticky', amount=1, pc)
             ret
         })
-        list(tiles, mean.mats)
+        list(tiles=tiles, mean.mats=mean.mats)
     })
 }, enable=TRUE)
 

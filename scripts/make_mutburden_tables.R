@@ -42,7 +42,7 @@ meta <- fread(meta)[,.(sample,donor,age,plotage,color,type)]
 
 objects <- lapply(object.rdas, function(rf) get(load(rf)))
 
-dt <- data.table(sample=sapply(objects, function(o) sum(o@single.cell)),
+dt <- data.table(sample=sapply(objects, function(o) o@single.cell),
                  nsom=sapply(objects, function(o) sum(o@mutburden[[muttype]]$ncalls)),
                  genome.burden=sapply(objects, function(o) o@mutburden$burden[2]))
 if (prevburden != 'Notafile') {

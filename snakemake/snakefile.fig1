@@ -1,9 +1,21 @@
 # vim: syntax=python
 
+rule fig1_make_gene_regions:
+    input:
+        "data/gencode/gencode.v26lift37.annotation.gtf"
+    output:
+        "data/gencode/gene_regions.bed"
+    resources:
+        mem=8000
+    shell:
+        "scripts/make_gene_regions.R {input} {output}"
+
+
 rule fig1_distribution_analysis:
     input:
         mut="input/{celltype}___mut___{qualtype}.rda",
-        perm="input/{celltype}___perm___{qualtype}.rda"
+        perm="input/{celltype}___perm___{qualtype}.rda",
+        bed="data/gencode/gene_regions.bed"
     output:
         fullrda="fig1/distribution_analysis/{celltype}___{qualtype}.FULL.rda",
         rda="fig1/distribution_analysis/{celltype}___{qualtype}.rda"
@@ -15,13 +27,13 @@ rule fig1_distribution_analysis:
         "fig1/distribution_analysis/{celltype}___{qualtype}.benchmark.txt"
     shell:
         """
-        /n/data1/hms/dbmi/park/jluquette/glia/scripts/bedenrich.r \
+        scripts/bedenrich.r \
             10000 \
             {input.mut} \
             {input.perm} \
             {output.fullrda} \
             {output.rda} \
-            /n/data1/hms/dbmi/park/jluquette/pta/gtex/gene_classes.sorted.bed > {log} 2>&1
+            {input.bed} > {log} 2>&1
         """
 
 
@@ -123,7 +135,7 @@ rule fig1_run_snpeff:
         mem=8000
     shell:
         """
-        /n/data1/hms/dbmi/park/jluquette/glia/snpeff/run_one.sh \
+        scripts/run_snpeff.sh \
             {input.vcf} {output.vcf} > {log} 2>&1
         """
 

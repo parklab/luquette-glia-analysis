@@ -132,7 +132,7 @@ print(tiles)
         mean.mats <- lapply(1:length(matfiles), function(j) {
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
                 f <- matfiles[j]
-                dpm.basepair <- read.tabix.data(f, region=chunks[i])
+                dpm.basepair <- read.tabix.data(f, region=chunks[i])[,-(1:2)]
                 if (nrow(dpm.basepair) == 0) {
                     ret <- c()
                 } else {

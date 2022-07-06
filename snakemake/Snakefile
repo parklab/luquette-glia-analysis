@@ -30,8 +30,6 @@ import yaml
 with open('metadata/scan2_objects.yaml') as yf:
     scan2_objects = yaml.load(yf, Loader=yaml.FullLoader)
 
-print(scan2_objects)
-exit(1)
 
 # Constant config variables for the enrichment pipeline
 

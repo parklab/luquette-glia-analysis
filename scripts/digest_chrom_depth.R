@@ -66,46 +66,42 @@ tiles <- tileGenome(seqlengths=setNames(chrom.end, chrom),
     tilewidth=base.tile.size, cut.last.tile.in.chrom=T)
 
 
-# build a GRanges object of positions from GATK DepthOfCoverage.
-# GATK DepthOfCoverage outputs many 0 values, but it skips over
-# some parts of the genome (probably Ns).
-positions <- read.tabix.data(path=matfiles[1],
-    region=GRanges(seqnames=sub('chr', '', chrom),  # SCAN2 output doesn't have chr prefix
-                   ranges=IRanges(start=1, end=chrom.end)),
-    colClasses=c('NULL', 'integer'))[[1]]
-g.basepair <- GRanges(seqnames=chrom, ranges=IRanges(start=positions, width=1))
+build.tilemap <- function(chrom, chrom.end, tiles, representative.matfile) {
+    # build a GRanges object of positions from GATK DepthOfCoverage.
+    # GATK DepthOfCoverage outputs many 0 values, but it skips over
+    # some parts of the genome (probably Ns).
+    positions <- read.tabix.data(path=representative.matfile,
+        region=GRanges(seqnames=sub('chr', '', chrom),  # SCAN2 output doesn't have chr prefix
+                    ranges=IRanges(start=1, end=chrom.end)),
+        colClasses=c('NULL', 'integer'))[[1]]
+    g.basepair <- GRanges(seqnames=chrom, ranges=IRanges(start=positions, width=1))
 
-# There are a handful of cases where 1-5 bases are not reported
-# by GATK. These shouldn't cause any problems, so use min.gapwidth to
-# merge over them.
-gatk <- reduce(g.basepair, min.gapwidth=50)
-
-
-# Keep any tile that overlaps at least 95% with GATK coverage.
-# This doesn't quite do that, but because of the reduce() above, there
-# should be very few ranges in the 'gatk' object and they should be
-# quite large. This code will exclude windows that, for example, overlap
-# by >95% with GATK coverage but the GATK coverage is broken up into
-# two smaller windows such that each individual window doesn't give 95%
-# overlap. E.g.,
-#          |---------------- tile ------------------|
-#   |---- gatk window 1 -------| |------ gatk window 2 -------|
-# In the above example, the tile overlaps >95% with GATK, but because
-# that overlap is computed per GATK window, neither windows 1 or 2 meet
-# the 95% overlap necessary to keep the tile. This affects very little
-# of the genome due to base.tile.size being small.
-tiles.not.in.gatk <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size,
-    invert=TRUE)
-tiles <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size)
-print(tiles)
+    # There are a handful of cases where 1-5 bases are not reported
+    # by GATK. These shouldn't cause any problems, so use min.gapwidth to
+    # merge over them.
+    gatk <- reduce(g.basepair, min.gapwidth=50)
 
 
-# Create a mapping from g.basepair -> tiles. This only needs to be
-# done once since all matfiles have the same position format.
-cat('Creating position -> tile map\n')
-system.time(tilemap <- findOverlaps(g.basepair, tiles))
-str(tilemap)
-cat('Tilemap size in MB (must be duplicated for each thread):', object_size(tilemap)/1e6, '\n')
+    # Keep any tile that overlaps at least 95% with GATK coverage.
+    # This doesn't quite do that, but because of the reduce() above, there
+    # should be very few ranges in the 'gatk' object and they should be
+    # quite large. This code will exclude windows that, for example, overlap
+    # by >95% with GATK coverage but the GATK coverage is broken up into
+    # two smaller windows such that each individual window doesn't give 95%
+    # overlap. E.g.,
+    #          |---------------- tile ------------------|
+    #   |---- gatk window 1 -------| |------ gatk window 2 -------|
+    # In the above example, the tile overlaps >95% with GATK, but because
+    # that overlap is computed per GATK window, neither windows 1 or 2 meet
+    # the 95% overlap necessary to keep the tile. This affects very little
+    # of the genome due to base.tile.size being small.
+    tiles.not.in.gatk <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size,
+        invert=TRUE)
+    tiles <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size)
+    
+    tilemap <- findOverlaps(g.basepair, tiles)
+    list(tiles=tiles, tilemap=tilemap)
+}
 
 
 cat('Memory profile before matrix construction:\n')
@@ -128,7 +124,11 @@ print(matfiles)
 progressr::with_progress({
     p <- progressr::progressor(along=1:(length(chunks)*length(matfiles)))
     p(amount=0, class='sticky', scan2::perfcheck(print.header=TRUE))
-    mean.mat <- rbindlist(future.apply::future_lapply(1:length(chunks), function(i) {
+    results <- future.apply::future_lapply(1:length(chunks), function(i) {
+        tm <- build.tilemap(chrom=chrom, chrom.end=chrom.end, tiles=tiles,
+            representative.matfile=matfiles[1])
+        tilemap <- tm$tilemap
+        tiles <- tm$tiles
         # Create a matrix of average read depth in each tile for each sample.
         mean.mats <- lapply(1:length(matfiles), function(j) {
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
@@ -146,11 +146,11 @@ progressr::with_progress({
             p(class='sticky', amount=1, pc)
             ret
         })
-        do.call(cbind, mean.mats)
-    }))
+        list(tiles, mean.mats)
+    })
 }, enable=TRUE)
 
-save(chrom, base.tile.size, tiles, tiles.not.in.gatk, mean.mat,
+save(chrom, base.tile.size, tiles, results, #tiles.not.in.gatk, mean.mat,
     file=out.rda, compress=FALSE)
 
 cat('Final memory profile:\n')

@@ -19,54 +19,63 @@ if ('snakemake' %in% ls()) {
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 5) {
+if (length(args) < 6) {
     cat('hg19 is assumed; chromosome should be prefixed with "chr"\n')
     cat('base.tile.size is the smallest tile size used to create a\n')
     cat('non-overlapping tiling of the genome. Windows created further\n')
     cat('down in the pipeline CAN ONLY be integer multiples of this tile\n')
-    cat('size.\n')
-    stop("usage: digest_chrom_depth.R chromosome base.tile.size out.rda positions.txt depth1.txt [ depth2.txt ... depthN.txt ]")
+    cat('size. So the tile size here should be very small; e.g., 100 bp.\n')
+    stop("usage: digest_chrom_depth.R chromosome base.tile.size tiles.per.chunk n.cores out.rda joint_depth_matrix1.tab.gz [ joint_depth_matrix2.tab.gz ... joint_depth_matrixN.tab.gz ]")
 }
 
 chrom <- args[1]
 base.tile.size <- as.integer(args[2])
-out.rda <- args[3]
-posfile <- args[4]
-dpfiles <- args[-(1:4)]
+tiles.per.chunk <- as.integer(args[3])
+n.cores <- as.integer(args[4])
+out.rda <- args[5]
+matfiles <- args[-(1:5)]
 
 if (file.exists(out.rda))
     stop(paste('output file', out.rda, 'already exists, please delete it first'))
 
-suppressMessages(library(data.table))
-suppressMessages(library(GenomicRanges))
-suppressMessages(library(BSgenome))
-suppressMessages(library(BSgenome.Hsapiens.UCSC.hg19))
+suppressMessages(library(scan2))
+suppressMessages(library(progressr))
+suppressMessages(library(future))
+suppressMessages(library(future_apply))
+suppressMessages(library(GenomeInfoDb))
+if (n.cores > 1)
+    plan(multicore, workers=n.cores)
 
-if (!(chrom %in% seqlevels(BSgenome.Hsapiens.UCSC.hg19)))
+genome <- GenomeInfoDb::Seqinfo(genome='hg19')
+
+if (!(chrom %in% seqlevels(genome)))
     stop(paste('chromosome', chrom, 'is not a valid hg19 chromosome. Did you add the "chr" prefix?'))
 
-# GenomicRanges only warns when two objects don't have compatible
-# chromosome names. Make it cause an error so we fail early.
+# Promote warnings to errors in (for catching GenomicRanges warnings)
 options(warn=2)
+
+# First step: build the full tile map over the chromosome
+# Build a base set of tiles covering the genome at the maximum
+# resolution (base.tile.size).
+# autosomes only
+chrom.end <- seqlengths(genome)[chrom],
+tiles <- tileGenome(seqlengths=chrom.end,
+    tilewidth=base.tile.size, cut.last.tile.in.chrom=T)
+
 
 # build a GRanges object of positions from GATK DepthOfCoverage.
 # GATK DepthOfCoverage outputs many 0 values, but it skips over
 # some parts of the genome (probably Ns).
-positions <- fread(posfile)[[1]]
+positions <- read.tabix.data(path=matfiles[1],
+    region=GRanges(seqnames=sub('chr', '', chrom),  # SCAN2 output doesn't have chr prefix
+                   ranges=IRanges(start=1, end=chrom.end)),
+    colClasses=c('NULL', 'integer'))[[1]]
 g.basepair <- GRanges(seqnames=chrom, ranges=IRanges(start=positions, width=1))
 
 # There are a handful of cases where 1-5 bases are not reported
 # by GATK. These shouldn't cause any problems, so use min.gapwidth to
 # merge over them.
 gatk <- reduce(g.basepair, min.gapwidth=50)
-
-
-# Build a base set of tiles covering the genome at the maximum
-# resolution (base.tile.size).
-seqinfo(BSgenome.Hsapiens.UCSC.hg19)
-# autosomes only
-tiles <- tileGenome(seqlengths=seqlengths(BSgenome.Hsapiens.UCSC.hg19)[chrom],
-    tilewidth=base.tile.size, cut.last.tile.in.chrom=T)
 
 
 # Keep any tile that overlaps at least 95% with GATK coverage.
@@ -80,15 +89,15 @@ tiles <- tileGenome(seqlengths=seqlengths(BSgenome.Hsapiens.UCSC.hg19)[chrom],
 #   |---- gatk window 1 -------| |------ gatk window 2 -------|
 # In the above example, the tile overlaps >95% with GATK, but because
 # that overlap is computed per GATK window, neither windows 1 or 2 meet
-# the 95% overlap necessary to keep the tile. This should happen very
-# rarely.
+# the 95% overlap necessary to keep the tile. This affects very little
+# of the genome due to base.tile.size being small.
 tiles.not.in.gatk <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size,
     invert=TRUE)
 tiles <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size)
 
 
 # Create a mapping from g.basepair -> tiles. This only needs to be
-# done once since all files have the same position format.
+# done once since all matfiles have the same position format.
 cat('Creating position -> tile map\n')
 system.time(tilemap <- findOverlaps(g.basepair, tiles))
 
@@ -97,17 +106,36 @@ sample.ids <- sub('.txt$', '', basename(dpfiles)) # use file name as sample ID
 cat('Memory profile before matrix construction:\n')
 print(gc())
 
-# Create a matrix of average read depth in each tile for each sample.
-mean.dp.per.tile.matrix <- sapply(setNames(dpfiles, sample.ids), function(f) {
-    cat('reading', f, '\n')
-    dp.basepair <- fread(f)[[1]]  # fread is way faster than scan() for some reason
-    sample.id <- sub('.txt$', '', basename(f)) # use file name as sample ID
-    mean.dp.per.tile <- sapply(split(dp.basepair[from(tilemap)], to(tilemap)), mean)
-    mean.dp.per.tile
+tiles$chunk.id <- head(rep(1:ceiling(length(tiles)/tiles.per.chunk), each=tiles.per.chunk), length(tiles))
+chunks <- unlist(reduce(split(tiles, tiles$chunk.id)))
+cat('Starting depth matrix digestion on', length(chunks), 'chunks.\n')
+cat('Parallelizing using', future::nbrOfWorkers(), 'cores.\n')
+
+# IMPORTANT!
+# tilemap has to be exported to child processes. This can be very large
+# if tiles.per.chunk is too big.
+progressr::with_progress({
+    p <- progressr::progressor(along=1:length(chunks))
+    p(amount=0, class='sticky', scan2::perfcheck(print.header=TRUE))
+    mean.mat <- rbindlist(future.apply::future_lapply(1:length(chunks), function(i) {
+        # Create a matrix of average read depth in each tile for each sample.
+        mean.dp.per.tile.matrix <- do.call(cbind, lapply(matfiles, function(f) {
+            pc <- perfcheck(paste('chunk', i), {
+                dpm.basepair <- read.tabix.data(f, region=chunks[i])
+                # initialize to NA because all bp positions are not in the tile map
+                dpm.basepair[, tileid := NA]  
+                dpm.basepair[from(tilemap), tileid := to(tilemap)]
+                dpm <- dpm.basepair[,setNames(as.list(colMeans(.SD)), colnames(.SD)),by=tileid][!is.na(tileid)]
+            })
+            p(class='sticky', amount=1, pc)
+            dpm[, -'tileid']
+        }))
+        mean.dp.per.tile.matrix
+    }))
 })
 
-save(chrom, base.tile.size, tiles, tiles.not.in.gatk, mean.dp.per.tile.matrix,
-    file=out.rda)
+save(chrom, base.tile.size, tiles, tiles.not.in.gatk, mean.mat,
+    file=out.rda, compress=FALSE)
 
 cat('Final memory profile:\n')
 print(gc())

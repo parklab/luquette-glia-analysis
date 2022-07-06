@@ -41,7 +41,7 @@ if (file.exists(out.rda))
 suppressMessages(library(scan2))
 suppressMessages(library(progressr))
 suppressMessages(library(future))
-suppressMessages(library(future_apply))
+suppressMessages(library(future.apply))
 suppressMessages(library(GenomeInfoDb))
 if (n.cores > 1)
     plan(multicore, workers=n.cores)
@@ -59,6 +59,8 @@ options(warn=2)
 # resolution (base.tile.size).
 # autosomes only
 chrom.end <- seqlengths(genome)[chrom],
+chrom.end <- min(chrom.end, 1e6)
+
 tiles <- tileGenome(seqlengths=chrom.end,
     tilewidth=base.tile.size, cut.last.tile.in.chrom=T)
 

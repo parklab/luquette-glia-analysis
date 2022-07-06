@@ -132,13 +132,17 @@ progressr::with_progress({
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
                 f <- matfiles[j]
                 dpm.basepair <- read.tabix.data(f, region=chunks[i])
-                # initialize to NA because all bp positions are not in the tile map
-                dpm.basepair[, tileid := NA]  
-                dpm.basepair[from(tilemap), tileid := to(tilemap)]
-                dpm <- dpm.basepair[,setNames(as.list(colMeans(.SD)), colnames(.SD)),by=tileid][!is.na(tileid)]
+                if (nrow(dpm.basepair) == 0) {
+                    ret <- c()
+                } else {
+                    # initialize to NA because all bp positions are not in the tile map
+                    dpm.basepair[, tileid := NA]  
+                    dpm.basepair[from(tilemap), tileid := to(tilemap)]
+                    ret <- dpm.basepair[,setNames(as.list(colMeans(.SD)), colnames(.SD)),by=tileid][!is.na(tileid)][, -'tileid']
+                }
             })
             p(class='sticky', amount=1, pc)
-            dpm[, -'tileid']
+            ret
         })
         do.call(cbind, mean.mats)
     }))

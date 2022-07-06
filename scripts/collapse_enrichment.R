@@ -36,12 +36,12 @@ print(classes.to.collapse)
 
 
 if (file.exists(fulloutrda))
-    stop(paste('outut file', fulloutrda, 'already exists, please delete it first'))
+    stop(paste('output file', fulloutrda, 'already exists, please delete it first'))
 if (file.exists(summaryoutrda))
-    stop(paste('outut file', summaryoutrda, 'already exists, please delete it first'))
+    stop(paste('output file', summaryoutrda, 'already exists, please delete it first'))
 
-source("/n/data1/hms/dbmi/park/jluquette/glia/scripts/enrichment.r")
 suppressMessages(library(GenomicRanges))
+suppressMessages(library(mutenrich))
 
 load(inrda) # loads 'e'
 

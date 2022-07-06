@@ -35,10 +35,10 @@ if (file.exists(outpdf))
 if (file.exists(outtsv))
     stop(paste('outut file', outtsv, 'already exists, please delete it first'))
 
-source("/n/data1/hms/dbmi/park/jluquette/glia/scripts/enrichment.r")
 suppressMessages(library(GenomicRanges))
 suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
+suppressMessages(library(mutenrich))
 
 
 if (!("Arial" %in% fonts()))

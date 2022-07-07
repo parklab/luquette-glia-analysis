@@ -32,7 +32,7 @@ digest.files <- args[-(1:3)]
 if (file.exists(out.bed))
     stop(paste('output file', out.bed, 'already exists, please delete it first'))
 
-suppressMessages(library(yaml))
+suppressMessages(library(data.table))
 
 meta <- fread(metacsv)
 sample.ids <- metacsv$sample

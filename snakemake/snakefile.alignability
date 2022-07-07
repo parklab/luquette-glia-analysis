@@ -2,27 +2,11 @@
 #
 
 
+import yaml
 
-# Sample-specific metadata
-# XXX: FIXME: these metadata files are actually produced by this snakefile.
-path_to_metadata = "/n/data1/hms/dbmi/park/jluquette/glia/figures/test2/input"
-
-neuron_manifest = pd.read_csv(path_to_metadata + "/neuron___meta___A.csv")
-neuron_donors = [ str(x) for x in neuron_manifest['donor'].to_list() ]
-neuron_samples = neuron_manifest['sample'].to_list()
-neuron_paths = [ '/n/data1/hms/dbmi/park/jluquette/pta/' + neuron_donors[i] + '/scansnv_fdr01_noX/callable_regions/' + neuron_samples[i] for i in range(0, len(neuron_samples)) ]
-neuron_dict = dict(zip(neuron_samples, neuron_paths))
-
-
-oligo_manifest = pd.read_csv(path_to_metadata + "/oligo___meta___A.csv")
-oligo_donors = [ str(x) for x in oligo_manifest['donor'].to_list() ]
-oligo_samples = oligo_manifest['sample'].to_list()
-oligo_paths = [ '/n/data1/hms/dbmi/park/jluquette/glia/' + oligo_donors[i] + '/scansnv/callable_regions/' + oligo_samples[i] for i in range(0, len(oligo_samples)) ]
-oligo_dict = dict(zip(oligo_samples, oligo_paths))
-
-
-pathdict = { **neuron_dict, **oligo_dict }
-
+# dict: donor ID -> joint matrix file (.tab.gz)
+with open('metadata/scan2_joint_depth_matrixes.yaml', 'r') as yf:
+    scan2_depth_matrixes = yaml.load(yf, loader=yaml.FullLoader)
 
 
 # Convenience: for some analyses that use bedtools, extract only the
@@ -44,8 +28,8 @@ rule tile_to_mask:
 # the genome with poorly aligned regions removed.
 rule tile_genome:
     input:
-        expand("alignability/data_digest/chr{chr}.rda",
-            chr=chrs)
+        rdas=expand("alignability/base_tile_size_tables/chr{chr}.rda", chr=chrs)
+        metadata="metadata/metadata_82cells_combined.csv"  # for sample IDs of PTA single cells
     output:
         "alignability/genome_tiles/genome_tiles_{binsize}binsize.bed"
     log:
@@ -58,48 +42,36 @@ rule tile_genome:
         "scripts/tile_genome_no_badbins.R"
 
 
-# this can be applied to any file, they're all identical in positions
-rule cut_position_column:
-    input:
-        lambda wildcards: topath('UMB4976_E1', wildcards.chr, 'chr')
-    output:
-        "alignability/data_columns/chr{chr}/positions.txt"
-    resources:
-        mem=1000
-    shell:
-        "cut -f1 {input} | cut -f2 -d: > {output}"
+#rule combine_digested_chroms:
+    #input:
+        #expand("alignability/base_tile_size_tables/chr{chr}.rda", chr=chrs)
+    #output:
+        #"alignability/base_tile_size_tables/allchrs.rda", chr=chrs)
+    #benchmark:
+        #"alignability/base_tile_size_tables/benchmark_combine_digested_chroms.txt"
+    #resources:
+        #mem=40000
+    #script:
+        #"scripts/combine_digested_depth_files.R"
 
-
-# Really horrible hack because the files are not consistently named.
-# Some have a 'chr' prefix in front of chrom number and some don't.
-def topath(sample, chrom, chrprefix):
-    return(pathdict[sample] + "/callable_regions." + chrprefix + chrom + ".txt")
-
-rule cut_data_column:
-    input:
-        lambda wildcards: topath(wildcards.sample, wildcards.chr, '') if Path(topath(wildcards.sample, wildcards.chr, '')).is_file() else topath(wildcards.sample, wildcards.chr, 'chr')
-    output:
-        "alignability/data_columns/chr{chr}/{sample}.txt"
-    resources:
-        mem=1000
-    shell:
-        "cut -f2 {input} > {output}"
-
-
+    
 rule digest_chrom:
     input:
-        "alignability/data_columns/chr{chr}/positions.txt",
-        expand("alignability/data_columns/chr{{chr}}/{sample}.txt",
-            sample=pathdict.keys())
+        matfiles=scan2_depth_matrixes.values(),
+        matfileidxs=[ tab + '.tbi' for tab in scan2_depth_matrixes.values() ],
     output:
-        "alignability/data_digest/chr{chr}.rda"
+        rda="alignability/base_tile_size_tables/chr{chr}.rda"
+    benchmark:
+        "alignability/base_tile_size_tables/benchmark_chr{chr}.txt"
     log:
-        "alignability/data_digest/chr{chr}.log"
+        "alignability/base_tile_size_tables/chr{chr}.log"
     resources:
-        mem=24000
+        mem=lambda wildcards, input, threads: 2000*threads
     params:
-        chrom="chr{chr}",
-        base_tile_size="100"
+        chrom="{chr}",
+        base_tile_size=100,   # in basepairs
+        tiles_per_chunk=10000 # = 1MB chunks
+    threads: 20
     script:
         "scripts/digest_chrom_depth.R"
 

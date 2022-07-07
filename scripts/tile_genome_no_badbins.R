@@ -20,7 +20,7 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) < 4) {
-    stop("usage: tile_genome_no_badbins.R binsize out.bed metadata.yaml chr_digest1.rda [ chr.digest2.rda .. chr.digestN.rda]")
+    stop("usage: tile_genome_no_badbins.R binsize out.bed metadata.csv chr_digest1.rda [ chr.digest2.rda .. chr.digestN.rda]")
 }
 
 binsize <- as.integer(args[1])
@@ -34,8 +34,9 @@ if (file.exists(out.bed))
 
 suppressMessages(library(yaml))
 
-meta <- read_yaml(metayaml)
-sample.ids <- c(names(meta[['neuron']]), names(meta[['oligo']]))
+meta <- fread(metacsv)
+sample.ids <- metacsv$sample
+print(sample.ids)
 
 suppressMessages(library(GenomicRanges))
 suppressMessages(library(BSgenome))

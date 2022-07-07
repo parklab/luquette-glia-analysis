@@ -25,7 +25,7 @@ if (length(args) < 4) {
 
 binsize <- as.integer(args[1])
 out.bed <- args[2]
-metayaml <- args[3]
+metacsv <- args[3]
 digest.files <- args[-(1:3)]
 
 

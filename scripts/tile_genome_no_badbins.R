@@ -44,7 +44,7 @@ suppressMessages(library(BSgenome.Hsapiens.UCSC.hg19))
 base.tiles <- do.call(c, lapply(digest.files, function(df) {
     cat('reading digest file', df, '\n')
     load(df)
-    mean.mat <- mean.mat[, colnames(meanmat) %in% sample.ids]
+    mean.mat <- mean.mat[, colnames(mean.mat) %in% sample.ids]
     tiles$dp <- rowMeans(mean.mat)
     tiles.not.in.gatk$dp <- NA
     a <- c(tiles, tiles.not.in.gatk)

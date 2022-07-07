@@ -11,24 +11,31 @@ if ('snakemake' %in% ls()) {
     commandArgs <- function(...) unlist(c(
         snakemake@params[1],    # binsize
         snakemake@output[1],    # out.bed
-        snakemake@input # variable length list of per-chromosome RDA digest files
+        snakemake@input['metadata'],
+        snakemake@input['rdas'] # variable length list of per-chromosome RDA digest files
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 3) {
-    stop("usage: tile_genome_no_badbins.R binsize out.bed chr_digest1.rda [ chr.digest2.rda .. chr.digestN.rda]")
+if (length(args) < 4) {
+    stop("usage: tile_genome_no_badbins.R binsize out.bed metadata.yaml chr_digest1.rda [ chr.digest2.rda .. chr.digestN.rda]")
 }
 
 binsize <- as.integer(args[1])
 out.bed <- args[2]
-digest.files <- args[-(1:2)]
+metayaml <- args[3]
+digest.files <- args[-(1:3)]
 
 
 if (file.exists(out.bed))
     stop(paste('output file', out.bed, 'already exists, please delete it first'))
+
+suppressMessages(library(yaml))
+
+meta <- read_yaml(metayaml)
+sample.ids <- c(names(meta[['neuron']]), names(meta[['oligo']]))
 
 suppressMessages(library(GenomicRanges))
 suppressMessages(library(BSgenome))
@@ -37,10 +44,12 @@ suppressMessages(library(BSgenome.Hsapiens.UCSC.hg19))
 base.tiles <- do.call(c, lapply(digest.files, function(df) {
     cat('reading digest file', df, '\n')
     load(df)
-    tiles$dp <- rowMeans(mean.dp.per.tile.matrix)
+    mean.mat <- mean.mat[, colnames(meanmat) %in% sample.ids]
+    tiles$dp <- rowMeans(mean.mat)
     tiles.not.in.gatk$dp <- NA
     a <- c(tiles, tiles.not.in.gatk)
     a <- sort(a)
+    seqlevels(a) <- paste0('chr', seqlevels(a))
     genome(a) <- genome(BSgenome.Hsapiens.UCSC.hg19)
     a$dpclass <- ifelse(is.na(a$dp), 0,
         ifelse(a$dp < 6, 1,

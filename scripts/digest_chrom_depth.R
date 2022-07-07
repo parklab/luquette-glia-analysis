@@ -123,6 +123,7 @@ progressr::with_progress({
             representative.matfile=matfiles[1])
         gbp <- tm$gbp
 cat(paste('chunk', i, '---------\n'))
+cat('chunk', i, ':\n'); print(chunks[i]);
 cat('gbp: '); str(gbp)
 print(gbp)
         tilemap <- tm$tilemap
@@ -131,10 +132,11 @@ print(gbp)
         mean.mats <- lapply(1:length(matfiles), function(j) {
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
                 f <- matfiles[j]
-                dpm.basepair <- read.tabix.data(f, region=chunks[i])[,-(1:2)]
+                dpm.basepair <- read.tabix.data(f, region=chunks[i])#[,-(1:2)]
 cat(paste('chunk', i, 'file', j, '=', matfiles[j], '---------\n'))
 cat('dpm.basepair: '); str(dpm.basepair)
 print(dpm.basepair)
+                dpm.basepair <- dpm.basepair[,-(1:2)]
                 if (nrow(dpm.basepair) == 0) {
                     ret <- c()
                 } else {

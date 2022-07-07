@@ -39,7 +39,6 @@ if (file.exists(out.rda))
     stop(paste('output file', out.rda, 'already exists, please delete it first'))
 
 suppressMessages(library(scan2))
-suppressMessages(library(pryr))
 suppressMessages(library(progressr))
 suppressMessages(library(future))
 suppressMessages(library(future.apply))
@@ -99,7 +98,7 @@ build.tilemap <- function(chunk, tiles, representative.matfile) {
     tiles <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size)
     
     tilemap <- findOverlaps(g.basepair, tiles)
-    list(tiles=tiles, tilemap=tilemap)
+    list(gbp=g.basepair, tiles=tiles, tilemap=tilemap)
 }
 
 
@@ -115,15 +114,16 @@ print(chunks)
 cat("files:\n")
 print(matfiles)
 
-# IMPORTANT!
-# tilemap has to be exported to child processes. This can be very large
-# if tiles.per.chunk is too big.
+
 progressr::with_progress({
     p <- progressr::progressor(along=1:(length(chunks)*length(matfiles)))
     p(amount=0, class='sticky', scan2::perfcheck(print.header=TRUE))
     results <- future.apply::future_lapply(1:length(chunks), function(i) {
         tm <- build.tilemap(chunk=chunks[i], tiles=subsetByOverlaps(tiles, chunks[i]),
             representative.matfile=matfiles[1])
+        gbp <- tm$gbp
+cat(paste('chunk', i, 'file', j, '---------\n'))
+cat('gbp: '); str(gbp)
         tilemap <- tm$tilemap
         tiles <- tm$tiles
         # Create a matrix of average read depth in each tile for each sample.
@@ -131,6 +131,7 @@ progressr::with_progress({
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
                 f <- matfiles[j]
                 dpm.basepair <- read.tabix.data(f, region=chunks[i])[,-(1:2)]
+cat('dpm.basepair: '); str(dpm.basepair)
                 if (nrow(dpm.basepair) == 0) {
                     ret <- c()
                 } else {

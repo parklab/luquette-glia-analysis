@@ -61,7 +61,7 @@ options(warn=2)
 # resolution (base.tile.size).
 # autosomes only
 chrom.end <- seqlengths(genome)[chrom]
-chrom.end <- min(chrom.end, 20e6)
+chrom.end <- min(chrom.end, 2e6)
 
 tiles <- tileGenome(seqlengths=setNames(chrom.end, chrom),
     tilewidth=base.tile.size, cut.last.tile.in.chrom=T)
@@ -103,7 +103,7 @@ build.tilemap <- function(chunk, tiles, representative.matfile) {
     tiles <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size)
     
     tilemap <- findOverlaps(g.basepair, tiles)
-    list(tiles=tiles, tiles.not.in.gatk, tilemap=tilemap)
+    list(tiles=tiles, tiles.not.in.gatk=tiles.not.in.gatk, tilemap=tilemap)
 }
 
 

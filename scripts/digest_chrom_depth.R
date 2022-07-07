@@ -71,9 +71,12 @@ build.tilemap <- function(chunk, tiles, representative.matfile) {
     # GATK DepthOfCoverage outputs many 0 values, but it skips over
     # some parts of the genome (probably Ns).
     positions <- read.tabix.data(path=representative.matfile,
-        region=chunk, colClasses=c('NULL', 'integer'))[[1]]
+        region=chunk, colClasses=c('NULL', 'integer'))#[[1]]
+    if (nrow(positions) == 0)
+        return(NULL)
+
     g.basepair <- GRanges(seqnames=seqnames(tiles)[1],
-        ranges=IRanges(start=positions, width=1))
+        ranges=IRanges(start=positions[[1]], width=1))
     # XXX: see discussion about tabix bug below. tabix returns positions
     # outside of the requested chunk so we have to remove them.
     g.basepair <- subsetByOverlaps(g.basepair, chunk)
@@ -126,38 +129,47 @@ progressr::with_progress({
     results <- future.apply::future_lapply(1:length(chunks), function(i) {
         tm <- build.tilemap(chunk=chunks[i], tiles=subsetByOverlaps(tiles, chunks[i]),
             representative.matfile=matfiles[1])
-        tilemap <- tm$tilemap
-        tiles <- tm$tiles
-        tiles.not.in.gatk <- tm$tiles.not.in.gatk
-        # Create a matrix of average read depth in each tile for each sample.
-        mean.mats <- lapply(1:length(matfiles), function(j) {
-            pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
-                f <- matfiles[j]
-                # XXX: There is some very strange behavior in tabix that causes it to
-                # return lines outside of the requested range. I can't figure out what
-                # causes it, but hopefully it has no practical effect. In this case,
-                # despite all depth matrix tables having md5-identical chrom and pos
-                # columns, (command line, so nothing to do with scan2's
-                # tabix functions) tabix <file> 1:2000001-3000000 returns
-                # position 2000000 for 2 out of the 17 matrix files (1278 and 5572) in
-                # in addition to the 950,000 other positions remaining after gap
-                # removal.
-                # This affects any tool using tabix as well as SCAN2. As a result, we
-                # just have to make sure the tilemap is restricted to the requested
-                # range and that these tabix data.tables are as well.
-                dpm.basepair <- read.tabix.data(f, region=chunks[i])
-                dpm.basepair <- dpm.basepair[pos >= start(chunks[i])[1] & pos <= end(chunks[i])[1],-(1:2)]
-                if (nrow(dpm.basepair) == 0) {
-                    ret <- c()
-                } else {
-                    # initialize to NA because all bp positions are not in the tile map
-                    dpm.basepair[from(tilemap), tileid := to(tilemap)]
-                    ret <- dpm.basepair[,setNames(as.list(colMeans(.SD)), colnames(.SD)),by=tileid][!is.na(tileid)][, -'tileid']
-                }
+        # returns NULL for regions with no data; e.g., heterochromatin arms like 22p
+        if (is.null(tm)) {
+            tiles <- c()
+            tiles.not.in.gatk <- c()
+            mean.mat <- c()
+            cat("skipping chunk", i, "; no depth data. This is normal for heterochromatin arms like 22p.\n")
+            print(chunks[i])
+        } else {
+            tilemap <- tm$tilemap
+            tiles <- tm$tiles
+            tiles.not.in.gatk <- tm$tiles.not.in.gatk
+            # Create a matrix of average read depth in each tile for each sample.
+            mean.mats <- lapply(1:length(matfiles), function(j) {
+                pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
+                    f <- matfiles[j]
+                    # XXX: There is some very strange behavior in tabix that causes it to
+                    # return lines outside of the requested range. I can't figure out what
+                    # causes it, but hopefully it has no practical effect. In this case,
+                    # despite all depth matrix tables having md5-identical chrom and pos
+                    # columns, (command line, so nothing to do with scan2's
+                    # tabix functions) tabix <file> 1:2000001-3000000 returns
+                    # position 2000000 for 2 out of the 17 matrix files (1278 and 5572) in
+                    # in addition to the 950,000 other positions remaining after gap
+                    # removal.
+                    # This affects any tool using tabix as well as SCAN2. As a result, we
+                    # just have to make sure the tilemap is restricted to the requested
+                    # range and that these tabix data.tables are as well.
+                    dpm.basepair <- read.tabix.data(f, region=chunks[i])
+                    dpm.basepair <- dpm.basepair[pos >= start(chunks[i])[1] & pos <= end(chunks[i])[1],-(1:2)]
+                    if (nrow(dpm.basepair) == 0) {
+                        ret <- c()
+                    } else {
+                        # initialize to NA because all bp positions are not in the tile map
+                        dpm.basepair[from(tilemap), tileid := to(tilemap)]
+                        ret <- dpm.basepair[,setNames(as.list(colMeans(.SD)), colnames(.SD)),by=tileid][!is.na(tileid)][, -'tileid']
+                    }
+                })
+                p(class='sticky', amount=1, pc)
+                ret
             })
-            p(class='sticky', amount=1, pc)
-            ret
-        })
+        }
         list(tiles=tiles, tiles.not.in.gatk=tiles.not.in.gatk, mean.mat=do.call(cbind, mean.mats))
     })
 }, enable=TRUE)

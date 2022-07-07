@@ -5,7 +5,8 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
-snpeff=snakemake/scripts/snpEff.jar
+snpeff=snakemake/scripts/snpEff/snpEff.jar
+config=snakemake/scripts/snpEff/snpEff.config
 
 invcf=$1
 outvcf=$2
@@ -16,4 +17,4 @@ if [ -f $outvcf ]; then
 fi
 
 
-java -jar $snpeff -t -noStats -v hg19 $invcf > $outvcf
+java -jar $snpeff -c $config -t -noStats -v hg19 $invcf > $outvcf

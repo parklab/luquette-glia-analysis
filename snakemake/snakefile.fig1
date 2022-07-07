@@ -8,7 +8,7 @@ rule fig1_make_gene_regions:
     resources:
         mem=8000
     shell:
-        "scripts/make_gene_regions.R {input} {output}"
+        "snakemake/scripts/make_gene_regions.R {input} {output}"
 
 
 rule fig1_distribution_analysis:
@@ -27,7 +27,7 @@ rule fig1_distribution_analysis:
         "fig1/distribution_analysis/{celltype}___{qualtype}.benchmark.txt"
     shell:
         """
-        scripts/bedenrich.r \
+        snakemake/scripts/bedenrich.r \
             10000 \
             {input.mut} \
             {input.perm} \
@@ -143,7 +143,7 @@ rule fig1_run_snpeff:
         mem=8000
     shell:
         """
-        scripts/run_snpeff.sh \
+        snakemake/scripts/run_snpeff.sh \
             {input.vcf} {output.vcf} > {log} 2>&1
         """
 

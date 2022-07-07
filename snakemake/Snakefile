@@ -40,7 +40,7 @@ enrichment_config = {
     #'SIGNAL_MANIFEST': 'path/to/sig.csv',
 
     # These parameters should not change between analyses
-    'qbed_from_bigwig_script': 'scripts/make_qbed_from_bigwig.sh',
+    'qbed_from_bigwig_script': 'snakemake/scripts/make_qbed_from_bigwig.sh',
     'MUT_MANIFEST': 'manifests/MUTATION_MANIFEST',
     'quantiles': qsizes,
     # must match binsizes

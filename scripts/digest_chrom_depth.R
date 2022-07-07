@@ -103,7 +103,7 @@ build.tilemap <- function(chunk, tiles, representative.matfile) {
     tiles <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size)
     
     tilemap <- findOverlaps(g.basepair, tiles)
-    list(tiles=tiles, tilemap=tilemap)
+    list(tiles=tiles, tiles.not.in.gatk, tilemap=tilemap)
 }
 
 
@@ -129,6 +129,7 @@ progressr::with_progress({
             representative.matfile=matfiles[1])
         tilemap <- tm$tilemap
         tiles <- tm$tiles
+        tiles.not.in.gatk <- tm$tiles.not.in.gatk
         # Create a matrix of average read depth in each tile for each sample.
         mean.mats <- lapply(1:length(matfiles), function(j) {
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
@@ -158,13 +159,14 @@ progressr::with_progress({
             p(class='sticky', amount=1, pc)
             ret
         })
-        list(tiles=tiles, mean.mat=do.call(cbind, mean.mats))
+        list(tiles=tiles, tiles.not.in.gatk=tiles.not.in.gatk, mean.mat=do.call(cbind, mean.mats))
     })
 }, enable=TRUE)
 
 tiles <- do.call(c, lapply(results, function(r) r$tiles))
+tiles.not.in.gatk <- do.call(c, lapply(results, function(r) r$tiles.not.in.gatk))
 mean.mat <- rbindlist(lapply(results, function(r) r$mean.mat))
-save(chrom, base.tile.size, tiles, mean.mat, file=out.rda)
+save(chrom, base.tile.size, tiles, tiles.not.in.gatk, mean.mat, file=out.rda)
 
 cat('Final memory profile:\n')
 print(gc())

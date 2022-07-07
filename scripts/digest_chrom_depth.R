@@ -124,6 +124,7 @@ progressr::with_progress({
         gbp <- tm$gbp
 cat(paste('chunk', i, '---------\n'))
 cat('gbp: '); str(gbp)
+print(gbp)
         tilemap <- tm$tilemap
         tiles <- tm$tiles
         # Create a matrix of average read depth in each tile for each sample.
@@ -131,7 +132,9 @@ cat('gbp: '); str(gbp)
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
                 f <- matfiles[j]
                 dpm.basepair <- read.tabix.data(f, region=chunks[i])[,-(1:2)]
+cat(paste('chunk', i, 'file', j, '=', matfiles[j], '---------\n'))
 cat('dpm.basepair: '); str(dpm.basepair)
+print(dpm.basepair)
                 if (nrow(dpm.basepair) == 0) {
                     ret <- c()
                 } else {

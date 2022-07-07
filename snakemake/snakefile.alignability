@@ -65,7 +65,7 @@ rule digest_chrom:
 
 rule plot_digest:
     input:
-        "alignability/data_digest/chr{chr}.rda"
+        "alignability/base_tile_size_tables/chr{chr}.rda"
     output:
         "alignability/data_plots/chr{chr}.{resolution}.svg",
         "alignability/data_plots/chr{chr}.{resolution}.pdf"
@@ -79,7 +79,7 @@ rule plot_digest:
 
 rule plot_bin_classes:
     input:
-        expand("alignability/data_digest/chr{chr}.rda", chr=chrs)
+        expand("alignability/base_tile_size_tables/chr{chr}.rda", chr=chrs)
     output:
         expand("alignability/plots/chromosome_bin_classes_heatmap.{output}",
             output=['svg', 'pdf', 'jpeg']),

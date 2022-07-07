@@ -101,7 +101,7 @@ build.tilemap <- function(chunk, tiles, representative.matfile) {
     tiles <- subsetByOverlaps(tiles, gatk, minoverlap=0.95*base.tile.size)
     
     tilemap <- findOverlaps(g.basepair, tiles)
-    list(gbp=g.basepair, tiles=tiles, tilemap=tilemap)
+    list(tiles=tiles, tilemap=tilemap)
 }
 
 
@@ -120,15 +120,11 @@ print(matfiles)
 
 progressr::with_progress({
     p <- progressr::progressor(along=1:(length(chunks)*length(matfiles)))
+    progressr::handlers(progressr::handler_newline())
     p(amount=0, class='sticky', scan2::perfcheck(print.header=TRUE))
     results <- future.apply::future_lapply(1:length(chunks), function(i) {
         tm <- build.tilemap(chunk=chunks[i], tiles=subsetByOverlaps(tiles, chunks[i]),
             representative.matfile=matfiles[1])
-        gbp <- tm$gbp
-cat(paste('chunk', i, '---------\n'))
-cat('chunk', i, ':\n'); print(chunks[i]);
-cat('gbp: '); str(gbp)
-print(gbp)
         tilemap <- tm$tilemap
         tiles <- tm$tiles
         # Create a matrix of average read depth in each tile for each sample.
@@ -147,10 +143,7 @@ print(gbp)
                 # This affects any tool using tabix as well as SCAN2. As a result, we
                 # just have to make sure the tilemap is restricted to the requested
                 # range and that these tabix data.tables are as well.
-                dpm.basepair <- read.tabix.data(f, region=chunks[i])#[,-(1:2)]
-cat(paste('chunk', i, 'file', j, '=', matfiles[j], '---------\n'))
-cat('dpm.basepair: '); str(dpm.basepair)
-print(dpm.basepair)
+                dpm.basepair <- read.tabix.data(f, region=chunks[i])
                 dpm.basepair <- dpm.basepair[pos >= start(chunks[i])[1] & pos <= end(chunks[i])[1],-(1:2)]
                 if (nrow(dpm.basepair) == 0) {
                     ret <- c()
@@ -169,7 +162,7 @@ print(dpm.basepair)
 
 tiles <- do.call(c, lapply(results, function(r) r$tiles))
 mean.mat <- rbindlist(lapply(results, function(r) r$mean.mat))
-save(chrom, base.tile.size, tiles, mean.mat, #results, #tiles.not.in.gatk, mean.mat,
+save(chrom, base.tile.size, tiles, mean.mat,
     file=out.rda, compress=FALSE)
 
 cat('Final memory profile:\n')

@@ -35,7 +35,7 @@ if (file.exists(out.bed))
 suppressMessages(library(data.table))
 
 meta <- fread(metacsv)
-sample.ids <- metacsv$sample
+sample.ids <- meta$sample
 print(sample.ids)
 
 suppressMessages(library(GenomicRanges))

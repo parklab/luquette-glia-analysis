@@ -73,6 +73,9 @@ build.tilemap <- function(chunk, tiles, representative.matfile) {
         region=chunk, colClasses=c('NULL', 'integer'))[[1]]
     g.basepair <- GRanges(seqnames=seqnames(tiles)[1],
         ranges=IRanges(start=positions, width=1))
+    # XXX: see discussion about tabix bug below. tabix returns positions
+    # outside of the requested chunk so we have to remove them.
+    g.basepair <- subsetByOverlap(g.basepair, chunk)
 
     # There are a handful of cases where 1-5 bases are not reported
     # by GATK. These shouldn't cause any problems, so use min.gapwidth to
@@ -132,11 +135,23 @@ print(gbp)
         mean.mats <- lapply(1:length(matfiles), function(j) {
             pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
                 f <- matfiles[j]
+                # XXX: There is some very strange behavior in tabix that causes it to
+                # return lines outside of the requested range. I can't figure out what
+                # causes it, but hopefully it has no practical effect. In this case,
+                # despite all depth matrix tables having exactly the same numbers of
+                # lines and chr/pos values, (command line, so nothing to do with scan2's
+                # tabix functions) tabix <file> 1:2000001-3000000 returns
+                # position 2000000 for 2 out of the 17 matrix files (1278 and 5572) in
+                # in addition to the 950,000 other positions remaining after gap
+                # removal.
+                # This affects any tool using tabix as well as SCAN2. As a result, we
+                # just have to make sure the tilemap is restricted to the requested
+                # range and that these tabix data.tables are as well.
                 dpm.basepair <- read.tabix.data(f, region=chunks[i])#[,-(1:2)]
 cat(paste('chunk', i, 'file', j, '=', matfiles[j], '---------\n'))
 cat('dpm.basepair: '); str(dpm.basepair)
 print(dpm.basepair)
-                dpm.basepair <- dpm.basepair[,-(1:2)]
+                dpm.basepair <- dpm.basepair[pos >= start(chunk)[1] & pos <= end(chunk)[1],-(1:2)]
                 if (nrow(dpm.basepair) == 0) {
                     ret <- c()
                 } else {

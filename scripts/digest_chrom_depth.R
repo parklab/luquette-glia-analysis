@@ -75,7 +75,7 @@ build.tilemap <- function(chunk, tiles, representative.matfile) {
         ranges=IRanges(start=positions, width=1))
     # XXX: see discussion about tabix bug below. tabix returns positions
     # outside of the requested chunk so we have to remove them.
-    g.basepair <- subsetByOverlap(g.basepair, chunk)
+    g.basepair <- subsetByOverlaps(g.basepair, chunk)
 
     # There are a handful of cases where 1-5 bases are not reported
     # by GATK. These shouldn't cause any problems, so use min.gapwidth to

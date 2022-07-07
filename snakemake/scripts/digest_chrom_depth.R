@@ -12,7 +12,7 @@ if ('snakemake' %in% ls()) {
         snakemake@params['chrom'],
         snakemake@params['base_tile_size'],
         snakemake@params['tiles_per_chunk'],
-        snakemake@threads,
+        n_cores=snakemake@threads,
         snakemake@output['rda'],
         snakemake@input['matfiles'] # variable number of matrix files
     ))

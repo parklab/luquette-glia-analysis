@@ -27,7 +27,7 @@ rule fig1_distribution_analysis:
         "fig1/distribution_analysis/{celltype}___{qualtype}.benchmark.txt"
     shell:
         """
-        snakemake/scripts/bedenrich.r \
+        snakemake/scripts/bedenrich.R \
             10000 \
             {input.mut} \
             {input.perm} \

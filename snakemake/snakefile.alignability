@@ -28,7 +28,7 @@ rule tile_to_mask:
 # the genome with poorly aligned regions removed.
 rule tile_genome:
     input:
-        rdas=expand("alignability/base_tile_size_tables/chr{chr}.rda", chr=chrs)
+        rdas=expand("alignability/base_tile_size_tables/chr{chr}.rda", chr=chrs),
         metadata="metadata/metadata_82cells_combined.csv"  # for sample IDs of PTA single cells
     output:
         "alignability/genome_tiles/genome_tiles_{binsize}binsize.bed"

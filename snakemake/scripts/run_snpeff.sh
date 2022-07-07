@@ -5,7 +5,7 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
-snpeff=scripts/snpEff.jar
+snpeff=snakemake/scripts/snpEff.jar
 
 invcf=$1
 outvcf=$2

@@ -11,7 +11,7 @@ if ('snakemake' %in% ls()) {
     commandArgs <- function(...) unlist(c(
         snakemake@params['chrom'],
         snakemake@params['base_tile_size'],
-        snakemake@params['chunks_per_tile'],
+        snakemake@params['tiles_per_chunk'],
         snakemake@threads,
         snakemake@output['rda'],
         snakemake@input['matfiles'] # variable number of matrix files

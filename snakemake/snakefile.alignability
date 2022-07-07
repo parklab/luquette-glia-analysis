@@ -53,7 +53,7 @@ rule digest_chrom:
     log:
         "alignability/base_tile_size_tables/chr{chr}.log"
     resources:
-        mem=lambda wildcards, input, threads: 2000*threads
+        mem=lambda wildcards, input, threads: 3000*threads
     params:
         chrom="{chr}",
         base_tile_size=100,   # in basepairs

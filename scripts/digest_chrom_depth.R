@@ -151,7 +151,7 @@ print(gbp)
 cat(paste('chunk', i, 'file', j, '=', matfiles[j], '---------\n'))
 cat('dpm.basepair: '); str(dpm.basepair)
 print(dpm.basepair)
-                dpm.basepair <- dpm.basepair[pos >= start(chunk)[1] & pos <= end(chunk)[1],-(1:2)]
+                dpm.basepair <- dpm.basepair[pos >= start(chunks[i])[1] & pos <= end(chunks[i])[1],-(1:2)]
                 if (nrow(dpm.basepair) == 0) {
                     ret <- c()
                 } else {

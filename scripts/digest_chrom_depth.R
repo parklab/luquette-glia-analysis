@@ -122,7 +122,7 @@ progressr::with_progress({
         tm <- build.tilemap(chunk=chunks[i], tiles=subsetByOverlaps(tiles, chunks[i]),
             representative.matfile=matfiles[1])
         gbp <- tm$gbp
-cat(paste('chunk', i, 'file', j, '---------\n'))
+cat(paste('chunk', i, '---------\n'))
 cat('gbp: '); str(gbp)
         tilemap <- tm$tilemap
         tiles <- tm$tiles

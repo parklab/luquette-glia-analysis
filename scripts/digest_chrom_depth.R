@@ -175,8 +175,9 @@ progressr::with_progress({
     })
 }, enable=TRUE)
 
-tiles <- do.call(c, lapply(results, function(r) r$tiles))
-tiles.not.in.gatk <- do.call(c, lapply(results, function(r) r$tiles.not.in.gatk))
+# GRanges won't c() if the list contains any NULLs
+tiles <- do.call(c, Filter(function(x) !is.null(x), lapply(results, function(r) r$tiles)))
+tiles.not.in.gatk <- do.call(c, Filter(function(x) !is.null(x), lapply(results, function(r) r$tiles.not.in.gatk)))
 mean.mat <- rbindlist(lapply(results, function(r) r$mean.mat))
 save(chrom, base.tile.size, tiles, tiles.not.in.gatk, mean.mat, file=out.rda)
 

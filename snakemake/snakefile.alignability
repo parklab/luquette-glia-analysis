@@ -6,7 +6,7 @@ import yaml
 
 # dict: donor ID -> joint matrix file (.tab.gz)
 with open('metadata/scan2_joint_depth_matrixes.yaml', 'r') as yf:
-    scan2_depth_matrixes = yaml.load(yf, loader=yaml.FullLoader)
+    scan2_depth_matrixes = yaml.load(yf, Loader=yaml.FullLoader)
 
 
 # Convenience: for some analyses that use bedtools, extract only the
@@ -42,19 +42,6 @@ rule tile_genome:
         "scripts/tile_genome_no_badbins.R"
 
 
-#rule combine_digested_chroms:
-    #input:
-        #expand("alignability/base_tile_size_tables/chr{chr}.rda", chr=chrs)
-    #output:
-        #"alignability/base_tile_size_tables/allchrs.rda", chr=chrs)
-    #benchmark:
-        #"alignability/base_tile_size_tables/benchmark_combine_digested_chroms.txt"
-    #resources:
-        #mem=40000
-    #script:
-        #"scripts/combine_digested_depth_files.R"
-
-    
 rule digest_chrom:
     input:
         matfiles=scan2_depth_matrixes.values(),

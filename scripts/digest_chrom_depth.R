@@ -138,8 +138,8 @@ print(gbp)
                 # XXX: There is some very strange behavior in tabix that causes it to
                 # return lines outside of the requested range. I can't figure out what
                 # causes it, but hopefully it has no practical effect. In this case,
-                # despite all depth matrix tables having exactly the same numbers of
-                # lines and chr/pos values, (command line, so nothing to do with scan2's
+                # despite all depth matrix tables having md5-identical chrom and pos
+                # columns, (command line, so nothing to do with scan2's
                 # tabix functions) tabix <file> 1:2000001-3000000 returns
                 # position 2000000 for 2 out of the 17 matrix files (1278 and 5572) in
                 # in addition to the 950,000 other positions remaining after gap

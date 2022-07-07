@@ -9,10 +9,12 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@params[1:2],
-        snakemake@output[1],
-        snakemake@input[1], # position file
-        snakemake@input[-1] # variable number of depth files
+        snakemake@params['chrom'],
+        snakemake@params['base_tile_size'],
+        snakemake@params['chunks_per_tile'],
+        snakemake@threads,
+        snakemake@output['rda'],
+        snakemake@input['matfiles'] # variable number of matrix files
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
@@ -162,8 +164,7 @@ progressr::with_progress({
 
 tiles <- do.call(c, lapply(results, function(r) r$tiles))
 mean.mat <- rbindlist(lapply(results, function(r) r$mean.mat))
-save(chrom, base.tile.size, tiles, mean.mat,
-    file=out.rda, compress=FALSE)
+save(chrom, base.tile.size, tiles, mean.mat, file=out.rda)
 
 cat('Final memory profile:\n')
 print(gc())

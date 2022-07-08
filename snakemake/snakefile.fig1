@@ -60,9 +60,9 @@ rule fig1_distribution_collapsed:
 rule fig1_distribution_plot:
     input:
         nmut="fig1/distribution_analysis/neuron___{qualtype}.FULL.{collapsed}rda",
-        ni="fig1/distribution_analysis/neuron___indel_A.FULL.{collapsed}rda",
+        ni="fig1/distribution_analysis/neuron___{qualtype}.FULL.{collapsed}rda",
         gmut="fig1/distribution_analysis/oligo___{qualtype}.FULL.{collapsed}rda",
-        gi="fig1/distribution_analysis/oligo___indel_A.FULL.{collapsed}rda"
+        gi="fig1/distribution_analysis/oligo___{qualtype}.FULL.{collapsed}rda"
     output:
         svg="fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}svg",
         pdf="fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}pdf",
@@ -149,14 +149,14 @@ rule fig1_run_snpeff:
 
 rule fig1_snpeff_analysis:
     input:
-        "fig1/snpeff_analysis/neuron___snpeff___A.vcf",
-        "fig1/snpeff_analysis/neuron___snpeff___indel_A.vcf",
-        "fig1/snpeff_analysis/oligo___snpeff___A.vcf",
-        "fig1/snpeff_analysis/oligo___snpeff___indel_A.vcf"
+        "fig1/snpeff_analysis/neuron___snpeff___AB.vcf",
+        "fig1/snpeff_analysis/neuron___snpeff___indel_AB.vcf",
+        "fig1/snpeff_analysis/oligo___snpeff___AB.vcf",
+        "fig1/snpeff_analysis/oligo___snpeff___indel_AB.vcf"
     output:
-        svg="fig1/snpeff_analysis/snpeff_analysis.svg",
-        pdf="fig1/snpeff_analysis/snpeff_analysis.pdf",
-        tsv="fig1/snpeff_analysis/snpeff_analysis.tsv"
+        svg="fig1/snpeff_analysis/AB_snpeff_analysis.svg",
+        pdf="fig1/snpeff_analysis/AB_snpeff_analysis.pdf",
+        tsv="fig1/snpeff_analysis/AB_snpeff_analysis.tsv"
     resources:
         mem=4000
     log:

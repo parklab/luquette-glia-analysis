@@ -90,9 +90,9 @@ rule all:
         #expand('spatial_sensitivity/bed/{sample}.{binsize}binsize.bed',
             #sample=neuron_samples + oligo_samples,
             #binsize=binsizes),
-        expand("alignability/data_plots/chr{chr}.{resolution}.{output}",
-            chr=chrs, resolution=[ '1k', '10k', '100k', '1m' ],
-            output=['svg', 'pdf']),
+        #expand("alignability/data_plots/chr{chr}.{resolution}.{output}",
+            #chr=chrs, resolution=[ '1k', '10k', '100k', '1m' ],
+            #output=['svg', 'pdf']),
         # 1b
         expand('fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
             qualtype=snv_qualtypes,  # indels are always added

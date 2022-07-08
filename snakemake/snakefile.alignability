@@ -63,18 +63,20 @@ rule digest_chrom:
         "scripts/digest_chrom_depth.R"
 
 
-rule plot_digest:
-    input:
-        "alignability/base_tile_size_tables/chr{chr}.rda"
-    output:
-        "alignability/data_plots/chr{chr}.{resolution}.svg",
-        "alignability/data_plots/chr{chr}.{resolution}.pdf"
-    resources:
-        mem=8000
-    params:
-        "{resolution}"
-    script:
-        "scripts/plot_chrom_depth.R"
+# this script expects an input file format that is no longer generated
+# XXX: some of the variables (like 'gs') are created in plot_bin_classes.R
+#rule plot_digest:
+    #input:
+        #"alignability/base_tile_size_tables/chr{chr}.rda"  # this is not correct
+    #output:
+        #"alignability/data_plots/chr{chr}.{resolution}.svg",
+        #"alignability/data_plots/chr{chr}.{resolution}.pdf"
+    #resources:
+        #mem=8000
+    #params:
+        #"{resolution}"
+    #script:
+        #"scripts/plot_chrom_depth.R"
 
 
 rule plot_bin_classes:

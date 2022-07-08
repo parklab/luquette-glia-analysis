@@ -60,6 +60,9 @@ gs <- lapply(digest.files, function(df) {
     tiles.not.in.gatk$dp <- NA
     a <- c(tiles, tiles.not.in.gatk)
     a <- sort(a)
+    seqlevels(a) <- paste0('chr', seqlevels(a))
+    seqlevels(a) <- seqlevels(BSgenome.Hsapiens.UCSC.hg19)
+    seqinfo(a) <- seqinfo(BSgenome.Hsapiens.UCSC.hg19)
     a$dpclass <- ifelse(is.na(a$dp), 0, ifelse(a$dp < 6, 1, ifelse(a$dp > quantile(a$dp, prob=0.975, na.rm=T), 2, 3)))
     a
 })

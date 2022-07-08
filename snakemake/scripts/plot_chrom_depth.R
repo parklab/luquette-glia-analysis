@@ -36,13 +36,16 @@ if (file.exists(out.pdf))
 suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(GenomicRanges))
-#suppressMessages(library(BSgenome))
-#suppressMessages(library(BSgenome.Hsapiens.UCSC.hg19))
 
 if (!("Arial" %in% fonts()))
     stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
-load(in.rda)
+vars.loaded <- load(in.rda)
+vars.expected <- c('chrom', 'tiles', 'tiles.not.in.gatk', 'mean.mat')
+vars.missing <- !(vars.expected %in% vars.loaded)
+if (any(vars.missing))
+    stop(paste('expected the following variables in', in.rda, 'but they were not found:', vars.expected[vars.missing], collapse='\n'))
+
 
 figwidth <- 9 # inches
 figheight <- 4 
@@ -52,8 +55,8 @@ outs <- c(out.svg, out.pdf)
 for (i in 1:2) {
     devs[[i]](file=outs[i], width=figwidth, height=figheight)
     par(mar=c(5,4,1,1))
-    chrom <- seqnames(gs[[1]])[1]
-    pos <- apply(ps[[binsize]], 1, mean) # get the bin midpoint
+    chrom <- chrom #
+    pos <- (end(tiles) + start(tiles))/2  # get the bin midpoint
     readmat <- ys[[binsize]]
     matplot(pos, 100*t(t(readmat) / colSums(readmat)),
         type='l', lty='solid', col=rgb(0,0,0,alpha=0.1), xlim=c(0, max(pos)),

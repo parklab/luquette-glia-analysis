@@ -42,7 +42,9 @@ suppressMessages(library(GenomicRanges))
 suppressMessages(library(BSgenome))
 suppressMessages(library(BSgenome.Hsapiens.UCSC.hg19))
 
-base.tiles <- do.call(c, lapply(digest.files, function(df) {
+# unname: IMPORTANT - snakemake names the digest files, which, for reasons
+# I don't understand, prevents GRanges from c()ing together.
+base.tiles <- do.call(c, lapply(unname(digest.files), function(df) {
     cat('reading digest file', df, '\n')
     load(df)
     mean.mat <- mean.mat[, ..sample.ids]
@@ -59,9 +61,6 @@ base.tiles <- do.call(c, lapply(digest.files, function(df) {
             ifelse(a$dp > quantile(a$dp, prob=0.975, na.rm=T), 2, 3)))
     a
 }))
-#seqlevels(base.tiles) <- sortSeqlevels(seqlevels(base.tiles))
-#seqinfo(base.tiles) <- seqinfo(BSgenome.Hsapiens.UCSC.hg19)
-#seqinfo(base.tiles)
 
 new.tiles <- tileGenome(seqlengths=seqlengths(base.tiles)[paste0('chr', 1:22)],
     tilewidth=binsize, cut.last.tile.in.chrom=T)

@@ -5,13 +5,13 @@ rule fig2_raw_snv_spectrum:
         "input/neuron___mut___A.rda",
         "input/oligo___mut___A.rda"
     output:
-        "plots/fig2/raw_spectrum/snv_spectrum.svg",
-        "plots/fig2/raw_spectrum/snv_spectrum.pdf",
-        "plots/fig2/raw_spectrum/snv_spectrum.tsv"
+        "fig2/raw_spectrum/snv_spectrum.svg",
+        "fig2/raw_spectrum/snv_spectrum.pdf",
+        "fig2/raw_spectrum/snv_spectrum.tsv"
     resources:
         mem=4000
     log:
-        "plots/fig2/raw_spectrum/snv_spectrum.log"
+        "fig2/raw_spectrum/plot_snv_raw_spectrum.log"
     script:
         "scripts/plot_raw_snv.R"
 
@@ -21,13 +21,13 @@ rule fig2_raw_indel_spectrum:
         "input/neuron___mut___indel_A.rda",
         "input/oligo___mut___indel_A.rda"
     output:
-        "plots/fig2/raw_spectrum/indel_spectrum.svg",
-        "plots/fig2/raw_spectrum/indel_spectrum.pdf",
-        "plots/fig2/raw_spectrum/indel_spectrum.tsv"
+        "fig2/raw_spectrum/indel_spectrum.svg",
+        "fig2/raw_spectrum/indel_spectrum.pdf",
+        "fig2/raw_spectrum/indel_spectrum.tsv"
     resources:
         mem=4000
     log:
-        "plots/fig2/raw_spectrum/indel_spectrum.log"
+        "fig2/raw_spectrum/plot_indel_raw_spectrum.log"
     script:
         "scripts/plot_raw_indel.R"
 
@@ -44,11 +44,11 @@ rule fig2_make_cosmic_indel_table:
     input:
         cosmic="input/any___cosmic___indel_A.csv",
     output:
-        "analysis/tables/cosmic_full___indel_A.csv"
+        "tables/cosmic_full___indel_A.csv"
     resources:
         mem=4000
     log:
-        "analysis/tables/cosmic_full___indel_A.log"
+        "tables/cosmic_full___indel_A.log"
     script:
         "scripts/make_cosmic_indel_table.R"
 
@@ -57,42 +57,42 @@ rule fig2_make_cosmic_snv_table:
     input:
         cosmic="input/any___cosmic___A.csv",
     output:
-        "analysis/tables/cosmic_full___{qualtype}.csv"
+        "tables/cosmic_full___{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "analysis/tables/cosmic_full___{qualtype}.log"
+        "tables/cosmic_full___{qualtype}.log"
     script:
         "scripts/make_cosmic_snv_table.R"
 
 
 rule fig2_cosmic_fit:
     input:
-        "analysis/tables/{celltype}___mut___{qualtype}.csv",
-        "analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv",
-        "analysis/tables/{cosmic}___{qualtype}.csv"
+        "tables/{celltype}___mut___{qualtype}.csv",
+        "fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv",
+        "tables/{cosmic}___{qualtype}.csv"
     output:
-        "analysis/fig2/{cosmic}/{celltype}___mutmat___{qualtype}.csv",
-        "analysis/fig2/{cosmic}/{celltype}___expomat___{qualtype}.csv"
+        "fig2/{cosmic}/{celltype}___mutmat___{qualtype}.csv",
+        "fig2/{cosmic}/{celltype}___expomat___{qualtype}.csv"
     params:
         muttype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV'
     resources:
         mem=4000
     log:
-        "analysis/fig2/{cosmic}/{celltype}___cosmic_fit___{qualtype}.log"
+        "fig2/{cosmic}/{celltype}___cosmic_fit___{qualtype}.log"
     script:
         "scripts/fit_cosmic.R"
 
 
 rule fig2_score_cosmic_analysis:
     input:
-        "analysis/fig2/cosmic_full/{celltype}___mutmat___{qualtype}.csv",
-        "analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv",
-        "analysis/tables/cosmic_full___{qualtype}.csv"
+        "fig2/cosmic_full/{celltype}___mutmat___{qualtype}.csv",
+        "fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv",
+        "tables/cosmic_full___{qualtype}.csv"
     output:
-        "analysis/fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv"
+        "fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv"
     log:
-        "analysis/fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.log"
+        "fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.log"
     resources:
         mem=8000
     params:
@@ -104,12 +104,12 @@ rule fig2_score_cosmic_analysis:
 
 rule fig2_select_cosmic_sigs:
     input:
-        "analysis/fig2/cosmic_signature_inclusion/neuron_signature_scores_{qualtype}.csv",
-        "analysis/fig2/cosmic_signature_inclusion/oligo_signature_scores_{qualtype}.csv"
+        "fig2/cosmic_signature_inclusion/neuron_signature_scores_{qualtype}.csv",
+        "fig2/cosmic_signature_inclusion/oligo_signature_scores_{qualtype}.csv"
     output:
-        "analysis/fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.svg",
-        "analysis/fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.pdf",
-        "analysis/fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv"
+        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.svg",
+        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.pdf",
+        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv"
     params:
         # these values were determined MANUALLY by looking at the plots
         # generated above and considering the signatures detected.
@@ -125,7 +125,7 @@ rule fig2_select_cosmic_sigs:
     resources:
         mem=8000
     log:
-        "analysis/fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.log"
+        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.log"
     script:
         "scripts/select_cosmic_sigs.R"
 
@@ -134,46 +134,46 @@ rule fig2_select_cosmic_sigs:
 # the selected signatures.
 rule fig2_make_reduced_cosmic_table:
     input:
-        "analysis/fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv",
-        "analysis/tables/cosmic_full___{qualtype}.csv"
+        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv",
+        "tables/cosmic_full___{qualtype}.csv"
     output:
-        "analysis/tables/cosmic_reduced___{qualtype}.csv"
+        "tables/cosmic_reduced___{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "analysis/tables/cosmic_reduced___{qualtype}.log"
+        "tables/cosmic_reduced___{qualtype}.log"
     script:
         "scripts/reduce_cosmic.R"
 
 
 rule fig2_cosmic_barplots:
     input:
-        "analysis/fig2/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
-        "analysis/fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
+        "fig2/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
+        "fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
     output:
-        "plots/fig2/cosmic_aging/{celltype}_barplots_{qualtype}.svg",
-        "plots/fig2/cosmic_aging/{celltype}_barplots_{qualtype}.pdf"
+        "fig2/cosmic_aging/{celltype}_barplots_{qualtype}.svg",
+        "fig2/cosmic_aging/{celltype}_barplots_{qualtype}.pdf"
     resources:
         mem=4000
     log:
-        "plots/fig2/cosmic_aging/{celltype}_barplots_{qualtype}.log"
+        "fig2/cosmic_aging/{celltype}_barplots_{qualtype}.log"
     script:
         "scripts/plot_cosmic_barplots.R"
 
 
 rule fig2_cosmic_vs_age_plots:
     input:
-        "analysis/fig2/cosmic_reduced/neuron___expomat___{qualtype}.csv",
-        "analysis/fig1/aging_rate_analysis/neuron___mutburden___{qualtype}.csv",
-        "analysis/fig2/cosmic_reduced/oligo___expomat___{qualtype}.csv",
-        "analysis/fig1/aging_rate_analysis/oligo___mutburden___{qualtype}.csv"
+        "fig2/cosmic_reduced/neuron___expomat___{qualtype}.csv",
+        "fig1/aging_rate_analysis/neuron___mutburden___{qualtype}.csv",
+        "fig2/cosmic_reduced/oligo___expomat___{qualtype}.csv",
+        "fig1/aging_rate_analysis/oligo___mutburden___{qualtype}.csv"
     output:
-        "plots/fig2/cosmic_aging/scatterplots_{qualtype}.svg",
-        "plots/fig2/cosmic_aging/scatterplots_{qualtype}.pdf",
-        "plots/fig2/cosmic_aging/scatterplots_{qualtype}.csv"
+        "fig2/cosmic_aging/scatterplots_{qualtype}.svg",
+        "fig2/cosmic_aging/scatterplots_{qualtype}.pdf",
+        "fig2/cosmic_aging/scatterplots_{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "plots/fig2/cosmic_aging/scatterplots_{qualtype}.log"
+        "fig2/cosmic_aging/scatterplots_{qualtype}.log"
     script:
         "scripts/plot_cosmic_vs_age.R"

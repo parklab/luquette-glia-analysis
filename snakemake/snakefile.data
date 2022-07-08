@@ -43,12 +43,12 @@ rule mut_csv_to_rda:
         "input/{celltype}___mut___{qualtype}.rda"
     params:
         muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel') else 'snv',
-        rescue=lambda wildcards: '& rescue == TRUE' if wildcards.qualtype.endswith("_AB") else ''
+        rescue=lambda wildcards: '| rescue == TRUE' if wildcards.qualtype.endswith("_AB") else ''
     resources:
         mem=1000
     shell:
         """
-        Rscript -e 'library(data.table); muts <- fread("{input}"); muts <- muts[muttype == "{params.muttype}" & pass == TRUE {params.rescue}]; save(muts, file="{output}")'
+        Rscript -e 'library(data.table); muts <- fread("{input}"); muts <- muts[muttype == "{params.muttype}" & (pass == TRUE {params.rescue})]; save(muts, file="{output}")'
         """
 
 

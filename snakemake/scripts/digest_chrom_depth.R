@@ -166,11 +166,11 @@ progressr::with_progress({
                         ret <- dpm.basepair[,setNames(as.list(colMeans(.SD)), colnames(.SD)),by=tileid][!is.na(tileid)][, -'tileid']
                     }
                 })
-                p(class='sticky', amount=1, pc)
                 ret
             })
             mean.mat <- do.call(cbind, mean.mats)
         }
+        p(class='sticky', amount=1, pc)
         list(tiles=tiles, tiles.not.in.gatk=tiles.not.in.gatk, mean.mat=mean.mat)
     })
 }, enable=TRUE)

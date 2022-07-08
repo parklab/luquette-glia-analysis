@@ -70,7 +70,7 @@ rule fig1_distribution_plot:
     resources:
         mem=4000
     log:
-        "fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}log"
+        "fig1/distribution_analysis/{qualtype}_plot_gene_classes.{collapsed}log"
     script:
         "scripts/barplot_enrich_2x2.R"
 

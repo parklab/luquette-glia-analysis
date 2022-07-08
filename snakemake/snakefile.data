@@ -43,7 +43,7 @@ rule mut_csv_to_rda:
         "input/{celltype}___mut___{qualtype}.rda"
     params:
         muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel') else 'snv',
-        rescue=lambda wildcards: '| rescue == TRUE' if wildcards.qualtype.endswith("_AB") else ''
+        rescue=lambda wildcards: '| rescue == TRUE' if wildcards.qualtype.endswith("AB") else ''
     resources:
         mem=1000
     shell:

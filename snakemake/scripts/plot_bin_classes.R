@@ -56,7 +56,7 @@ colors <- c('#df536b', '#61d04f', '#2297e6', '#28e2e5', '#cd0bbc', '#f5c710', '#
 gs <- lapply(digest.files, function(df) {
     cat('reading digest file', df, '\n')
     load(df)
-    tiles$dp <- rowMeans(mean.dp.per.tile.matrix)
+    tiles$dp <- rowMeans(mean.mat)
     tiles.not.in.gatk$dp <- NA
     a <- c(tiles, tiles.not.in.gatk)
     a <- sort(a)

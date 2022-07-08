@@ -51,17 +51,19 @@ base.tiles <- do.call(c, lapply(digest.files, function(df) {
     a <- c(tiles, tiles.not.in.gatk)
     a <- sort(a)
     seqlevels(a) <- paste0('chr', seqlevels(a))
-    genome(a) <- genome(BSgenome.Hsapiens.UCSC.hg19)
+    seqlevels(a) <- seqlevels(BSgenome.Hsapiens.UCSC.hg19)
+    seqinfo(a) <- seqinfo(BSgenome.Hsapiens.UCSC.hg19)
+    #genome(a) <- genome(BSgenome.Hsapiens.UCSC.hg19)
     a$dpclass <- ifelse(is.na(a$dp), 0,
         ifelse(a$dp < 6, 1,
             ifelse(a$dp > quantile(a$dp, prob=0.975, na.rm=T), 2, 3)))
     a
 }))
-seqlevels(base.tiles) <- sortSeqlevels(seqlevels(base.tiles))
+#seqlevels(base.tiles) <- sortSeqlevels(seqlevels(base.tiles))
 #seqinfo(base.tiles) <- seqinfo(BSgenome.Hsapiens.UCSC.hg19)
-seqinfo(base.tiles)
+#seqinfo(base.tiles)
 
-new.tiles <- tileGenome(seqlengths=seqlengths(base.tiles), #[1:22],
+new.tiles <- tileGenome(seqlengths=seqlengths(base.tiles)[paste0('chr', 1:22)],
     tilewidth=binsize, cut.last.tile.in.chrom=T)
 
 # Score the amount of overlap with "good" bins (class=3)

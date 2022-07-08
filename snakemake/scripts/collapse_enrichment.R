@@ -16,8 +16,10 @@ if ('snakemake' %in% ls()) {
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 4)
+if (length(args) < 4) {
+    cat("WARNING: assumes enrichment analysis contains only a single feature\n")
     stop("usage: collapse_enrichment in.rda full_output.rda summary_output.rda newclassA=oldclassA1,oldclassA2 [newclassB=oldclassB1,oldclassB2 ... ]")
+}
 
 inrda<- args[1]
 fulloutrda <- args[2]
@@ -46,9 +48,9 @@ suppressMessages(library(mutenrich))
 load(inrda) # loads 'e'
 
 cat('Collapsing..\n')
-e <- collapse(e, classes.to.collapse=classes.to.collapse)
+e <- mutenrich::collapse(e, feature=e$feature.set[1], classes.to.collapse=classes.to.collapse)
 cat('Computing summary..\n')
-es <- esummary(e)
+es <- mutenrich::esummary(e)
 
 cat('Saving..\n')
 save(e, es, file=fulloutrda)

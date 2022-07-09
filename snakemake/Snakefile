@@ -74,7 +74,7 @@ wildcard_constraints:
     qualtype='|'.join(qualtypes),
     cosmic='cosmic_full|cosmic_reduced',
     umap='atac|rna',
-    datasource="roadmap|encode/replication_timing"  # still used?
+    #datasource="roadmap|encode/replication_timing"  # still used?
 
 
 rule all:
@@ -147,7 +147,7 @@ rule all:
             # XXX: ADD REPLISEQ (removed replichip)
             datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
-                [ 'nott', 'encode_replichip', 'conservation', 'depth' ],
+                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'depth' ],
             #datasource=[ 'roadmap_histone_signal', 'scatacseq', 'boca', 'depth', 'cancer_snvdens' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # GTEx enrichment plots with multiple levels of signal coverage
@@ -345,7 +345,7 @@ use rule enrichment_plot from enrichment_roadmap_dnamethyl as enrichment_roadmap
 
 
 ########################################################################
-# ENCODE replication timing as measured by Repli-chip
+# ENCODE replication timing measured by Repli-chip
 ########################################################################
 enrichment_encode_replichip_config = dict(
     **{ 'output_dir': 'enrichment/encode_replichip',
@@ -372,6 +372,35 @@ use rule enrichment_plot from enrichment_encode_replichip as enrichment_encode_r
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'enrichment/encode_replichip/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+########################################################################
+# Replication timing measured by Repliseq
+########################################################################
+enrichment_repliseq_config = dict(
+    **{ 'output_dir': 'enrichment/repliseq',
+        'SIGNAL_MANIFEST': 'manifests/REPLISEQ.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_repliseq:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_repliseq_config
+
+use rule * from enrichment_repliseq as enrichment_repliseq_*
+
+use rule sigenrichment_qbed_analysis from enrichment_repliseq as enrichment_repliseq_sigenrichment_qbed_analysis with:
+    resources:
+        mem=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+
+use rule enrichment_plot from enrichment_repliseq as enrichment_repliseq_enrichment_plot with:
+    params:
+        ignore='BINSIZE=1000',
+        group='datasource'
+    output:
+        expand('enrichment/repliseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/repliseq/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################

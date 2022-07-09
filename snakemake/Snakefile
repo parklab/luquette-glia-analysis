@@ -144,26 +144,28 @@ rule all:
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
             nquantiles=[ 5, 10 ],
-            datasource=[ 'nott' ],
             # XXX: ADD REPLISEQ (removed replichip)
-            #datasource=[ 'roadmap_histone_signal', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'cancer_snvdens' ],
+            datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
+                [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
+                [ 'nott', 'encode_replichip', 'conservation', 'depth' ],
+            #datasource=[ 'roadmap_histone_signal', 'scatacseq', 'boca', 'depth', 'cancer_snvdens' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # GTEx enrichment plots with multiple levels of signal coverage
-        expand('enrichment/gtex_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=celltypes_to_compute,
-            qualtype=all_qualtypes,
-            nquantiles=[ 5, 10 ],
-            mincov=[ '02', '04', '06', '08' ],
-            output=[ 'svg', 'pdf', 'csv' ]),
+        #expand('enrichment/gtex_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            #celltype=celltypes_to_compute,
+            #qualtype=all_qualtypes,
+            #nquantiles=[ 5, 10 ],
+            #mincov=[ '02', '04', '06', '08' ],
+            #output=[ 'svg', 'pdf', 'csv' ]),
         # scRNA-seq expression
         # Same as GTEx, but only using 02 and 08 mincoverages since it didn't seem
         # to matter much in GTEx.
-        expand('enrichment/scrnaseq_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=celltypes_to_compute,
-            qualtype=all_qualtypes,
-            nquantiles=[ 5, 10 ],
-            mincov=[ '02', '04', '06', '08' ],
-            output=[ 'svg', 'pdf', 'csv' ]),
+        #expand('enrichment/scrnaseq_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            #celltype=celltypes_to_compute,
+            #qualtype=all_qualtypes,
+            #nquantiles=[ 5, 10 ],
+            #mincov=[ '02', '04', '06', '08' ],
+            #output=[ 'svg', 'pdf', 'csv' ]),
         #expand('plots/enrichment/{datasource}/{celltype}___{qualtype}.{output}',
             #celltype=celltypes_to_compute,
             #qualtype=all_qualtypes,

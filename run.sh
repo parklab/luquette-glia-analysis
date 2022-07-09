@@ -14,6 +14,8 @@ usedrmaa='false'
 
 if [ "x$word" == 'xdry' ]; then
     flags="--dryrun --quiet" # --reason"
+elif [ "x$word" == 'xunlock' ]; then
+    flags='--unlock'
 elif [ "x$word" == 'xtest' ]; then
     jobflag='-j 1'
     kgflag=''

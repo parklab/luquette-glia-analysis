@@ -35,12 +35,11 @@ if (file.exists(out.gct))
     stop(paste('output file', out.gct, 'already exists, please delete it first'))
 
 suppressMessages(library(data.table))
-suppressMessages(library(dplyr))
 
 # original copy to keep order (setkey destroys it)
 g <- fread(gtex.median.tpm.file, skip=2)[,1:2]
 s <- fread(scrnaseq.csv)
-new.mat <- dplyr::left_join(g, s, by=c('Description'='gene'))
+new.mat <- s[g, on=c('gene'='Description')]
 new.mat[is.na(new.mat)] <- 0
 
 # mimic the .gct file's 2 line header

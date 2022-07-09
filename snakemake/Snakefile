@@ -135,10 +135,10 @@ rule all:
         expand("fig2/raw_spectrum/indel_spectrum.{output}",
             output=output_plot_and_table),
         # 3a
-        expand("plots/fig3/scrnaseq/umap_plot.{output}",
+        expand("fig3/scrnaseq/umap_plot.{output}",
             output=[ 'svg', 'pdf', 'jpeg' ]),
         # 3b
-        expand("plots/fig3/scatacseq/umap_plot.{output}",
+        expand("fig3/scatacseq/umap_plot.{output}",
             output=[ 'svg', 'pdf', 'jpeg' ]),
         #expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             #celltype=celltypes_to_compute,

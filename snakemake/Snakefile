@@ -140,7 +140,7 @@ rule all:
         # 3b
         expand("fig3/scatacseq/umap_plot.{output}",
             output=[ 'svg', 'pdf', 'jpeg' ]),
-        expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
             nquantiles=[ 5, 10 ],

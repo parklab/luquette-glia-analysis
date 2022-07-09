@@ -35,9 +35,7 @@ if (file.exists(out.mutmat.csv))
 if (file.exists(out.expo.csv))
     stop(paste('output file', out.expo.csv, 'already exists, please delete it first'))
 
-library(data.table)
 library(scan2)       # for df.to.sbs96
-library(pracma)      # for lsqnonneg
 
 # Given a list of mutation dataframes, calculate exposure to the supplied
 # COSMIC database (which may have been subsetted to contain only spectra
@@ -63,11 +61,11 @@ mutburden[, correction.factor := ifelse(nsom == 0, 0, genome.burden / nsom)]
 samples <- mutburden[['sample']]
 if (muttype == 'SNV') {
     M <- sapply(samples, function(s)
-        df.to.sbs96(muts[sample==s,], eps=0, fraction=FALSE))
+        table(sbs96(muts[sample==s,]$mutsig)))
 } else {
     # plot.indel returns the ID83 signature vector
     M <- sapply(samples, function(s)
-        plot.indel(iclass=muts[sample==s, muttype], make.plot=FALSE))
+        table(id83(muts[sample==s,]$mutsig)))
 }
 head(M)
 

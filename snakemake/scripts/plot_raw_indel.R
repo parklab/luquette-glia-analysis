@@ -51,13 +51,13 @@ for (i in 1:2) {
 
     layout(1:2)
     par(mar=c(1,4,3,1))
-    n <- plot.indel(iclass=get(load(nfile))$muttype, make.plot=FALSE)
-    g <- plot.indel(iclass=get(load(gfile))$muttype, make.plot=FALSE)
-    plot.indel(proc=n/sum(n), main='Neurons')
-    plot.indel(proc=g/sum(g), main='Oligo')
+    n <- as.spectrum(id83(get(load(nfile))$mutsig)
+    g <- as.spectrum(id83(get(load(gfile))$mutsig)
+    plot.id83(x=1, spectrum=n, eps=0), main='Neurons')
+    plot.id83(x=1, spectrum=g, eps=0), main='Oligo')
 }
 
-d <- data.table(MutType=names(n), Neurons=n/sum(n), Oligo=g/sum(g))
+d <- data.table(MutType=names(n), Neurons=n, Oligo=g)
 fwrite(d, file=outcsv)
 
 if ('snakemake' %in% ls()) {

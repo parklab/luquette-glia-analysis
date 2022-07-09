@@ -27,7 +27,6 @@ outcsv <- args[2]
 if (file.exists(outcsv))
     stop(paste('output file', outcsv, 'already exists, please delete it first'))
 
-library(data.table)
 library(scan2)
 
 # N.B.
@@ -36,8 +35,7 @@ cosmic <- fread(cosmic.csv, header=T, stringsAsFactors=F)
 head(cosmic)
 
 
-# Hackish way to get the indel signature names, in order
-id83 <- names(plot.indel(iclass=c(), make.plot=F))
+id83 <- levels(id83(c()))
 
 # In the COSMIC database, ID83 channel names are formatted differently
 # from SigProfilerMatrixGenerator (spmgr). E.g.:

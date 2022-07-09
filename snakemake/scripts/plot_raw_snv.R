@@ -51,8 +51,8 @@ for (i in 1:2) {
 
     layout(1:2)
     par(mar=c(1,4,3,1))
-    n <- plot.3mer(get(load(nfile)), fraction=T, main='Neurons')
-    g <- plot.3mer(get(load(gfile)), fraction=T, main='Oligo')
+    n <- plot.sbs96(sbs96(get(load(nfile))$mutsig), fraction=T, main='Neurons')
+    g <- plot.sbs96(sbs96(get(load(gfile))$mutsig), fraction=T, main='Oligo')
 }
 
 d <- data.table(MutType=names(n), Neurons=n, Oligo=g)

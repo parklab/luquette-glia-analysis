@@ -143,7 +143,6 @@ rule all:
         expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
-            qualtype=[ 'AB', 'indel_AB' ],
             nquantiles=qsizes,
             # just to reduce snakemake runtime for later analyses
             # XXX: ADD REPLISEQ (removed replichip)

@@ -61,8 +61,11 @@ cosmic <- cosmic[o,]
 # Add the PTA error signature
 lysis.sig <- t(t(get(data(snv.artifact.signature.v3))))
 
-if (!all(lysis.sig[,1] == rownames(cosmic)))
+if (!all(rownames(lysis.sig) == rownames(cosmic))) {
+    cat('pta order:'); print(rownames(lysis.sig))
+    cat('cosmic order:'); print(rownames(cosmic))
     stop("PTA artifact signature and COSMIC mutation types are not in the same order")
+}
 
 cosmic <- cbind(MutType=rownames(cosmic), cosmic, lysis.sig)
 

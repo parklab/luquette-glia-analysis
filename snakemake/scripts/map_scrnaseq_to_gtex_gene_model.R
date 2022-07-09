@@ -39,7 +39,9 @@ suppressMessages(library(data.table))
 # original copy to keep order (setkey destroys it)
 g <- fread(gtex.median.tpm.file, skip=2)[,1:2]
 s <- fread(scrnaseq.csv)
+# Join puts column 1 of g on the far right side; we want it as the first column
 new.mat <- s[g, on=c('gene'='Description')]
+setcolorder(new.mat, c(ncol(new.mat),1:(ncol(new.mat)-1)))
 new.mat[is.na(new.mat)] <- 0
 
 # mimic the .gct file's 2 line header

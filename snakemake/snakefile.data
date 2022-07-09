@@ -385,3 +385,17 @@ rule download_gtex_expression:
             "https://storage.googleapis.com/gtex_analysis_v8/rna_seq_data/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct.gz"
         gunzip -c {output}.gz > {output}
         """
+
+
+rule download_ucsc_conservation:
+    input:
+    output:
+        phastcons="data/ucsc/conservation/hg19.100way.phastCons.bw",
+        phylop="data/ucsc/conservation/hg19.100way.phyloP100way.bw"
+    resources:
+        mem=1000
+    shell:
+    """
+    wget -O {output.phylop} "http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phyloP100way/hg19.100way.phyloP100way.bw"
+    wget -O {output.phastcons} "https://hgdownload.cse.ucsc.edu/goldenPath/hg19/phastCons100way/hg19.100way.phastCons.bw"
+    """

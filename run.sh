@@ -23,7 +23,7 @@ else
     jobflag='-j 1000'
     kgflag='--keep-going'
     drmaaflag="--drmaa ' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'"
-    flags="--max-status-checks-per-second 0.1"# --restart-times 2"
+    flags="--max-status-checks-per-second 0.1" # --restart-times 2"
 fi
 
 #module load slurm-drmaa

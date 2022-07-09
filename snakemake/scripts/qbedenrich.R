@@ -44,14 +44,14 @@ results <- command.line.analysis(function(genome, bed.files) {
         })
         gbed <- read.bed(bed.and.feats[[1]][2], genome,
             feature.name=bed.and.feats[[1]][1],
-            add.chr.prefix=FALSE, remove.chr.prefix=FALSE,
+            add.chr.prefix=FALSE, remove.chr.prefix=TRUE,
             is.qbed=TRUE)
         if (length(bed.and.feats) > 1) {
             for (i in 2:length(bed.and.feats)) {
                 gbed <- read.bed(bed.and.feats[[i]][2], genome,
                     granges=gbed,
                     feature.name=bed.and.feats[[i]][1],
-                    add.chr.prefix=FALSE, remove.chr.prefix=FALSE,
+                    add.chr.prefix=FALSE, remove.chr.prefix=TRUE,
                     is.qbed=TRUE)
             }
         }

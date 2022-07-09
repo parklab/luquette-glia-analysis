@@ -412,6 +412,6 @@ rule download_repliseq:
         mem=1000
     shell:
         """
-        wget -O {params.file} \
-            "http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeUwRepliSeq/{output}"
+        wget -O {output} \
+            "http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeUwRepliSeq/{params.file}"
         """

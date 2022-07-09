@@ -26,9 +26,9 @@ oligo	perm	indel_A	rda	scan2_output/permutations/oligo_perms_indel_pass.rda
 oligo	perm	indel_AB	rda	scan2_output/permutations/oligo_perms_indel_rescue.rda
 # Seurat analysis of scATAC-seq. Just dragging in a very processed
 # data object; no intention (yet) to recapitulate any real analysis here.
-any	scatacseq_summary	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/try1_manual_assignment_table_20210623.csv
+any	scatacseq_umap	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/try1_manual_assignment_table_20210623.csv
 any	scatacseq_frags	none	tsv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/fragments.tsv
-any	scrnaseq	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/snRNA_1465a_table.csv
+any	scrnaseq_umap	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/snRNA_1465a_table.csv
 any	scrnaseq_mean_expression	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/rds/combined_mean_expr.csv
 # GTEx files for creating tissue specific expression signals
 #any	gtex_gene_model	none	gtf	/n/data1/hms/dbmi/park/jluquette/pta/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf

@@ -2,7 +2,7 @@
 
 rule fig3_umap_plot:
     input:
-        "input/any___sc{umap}seq___none.csv"
+        "input/any___sc{umap}seq_umap___none.csv"
     output:
         "fig3/sc{umap}seq/umap_plot.svg",
         "fig3/sc{umap}seq/umap_plot.pdf",

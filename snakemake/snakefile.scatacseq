@@ -19,7 +19,7 @@ wildcard_constraints:
 
 rule scatacseq_extract_mapfile:
     input:
-        "input/any___scatacseq_summary___none.csv"
+        "input/any___scatacseq_umap___none.csv"
     output:
         "data/scatacseq/auxiliary/sample_to_cell_map.txt"
     resources:

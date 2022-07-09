@@ -140,15 +140,16 @@ rule all:
         # 3b
         expand("fig3/scatacseq/umap_plot.{output}",
             output=[ 'svg', 'pdf', 'jpeg' ]),
-        #expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            #celltype=celltypes_to_compute,
-            #qualtype=all_qualtypes,
-            #qualtype=[ 'AB', 'indel_AB' ],
-            #nquantiles=qsizes,
+        expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            celltype=celltypes_to_compute,
+            qualtype=all_qualtypes,
+            qualtype=[ 'AB', 'indel_AB' ],
+            nquantiles=qsizes,
             # just to reduce snakemake runtime for later analyses
             # XXX: ADD REPLISEQ (removed replichip)
+            datasource=[ 'nott' ],
             #datasource=[ 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'cancer_snvdens' ],
-            #output=[ 'svg', 'pdf', 'csv' ]),
+            output=[ 'svg', 'pdf', 'csv' ]),
         # GTEx enrichment plots with multiple levels of signal coverage
         #expand('plots/enrichment/gtex_expression_mc{mincov}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             #celltype=celltypes_to_compute,

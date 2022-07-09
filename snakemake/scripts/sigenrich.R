@@ -77,7 +77,7 @@ results <- command.line.analysis(function(genome, bed.files) {
         print(attr(gbed, 'bed.metadata'))
         enrich.data(gbed=gbed, count.fn=sigs.by.feature, use.mutclass=colname.for.sig, signature.catalog=cosmic)
     },
-    genome="BSgenome.Hsapiens.UCSC.hg19",
+    genome="GRCh37.p13",
     args=passthrough.args)
 Rprof(NULL)
 

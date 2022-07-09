@@ -58,7 +58,7 @@ results <- command.line.analysis(function(genome, bed.files) {
         print(gbed)
         enrich.data(gbed=gbed)
     },
-    genome="BSgenome.Hsapiens.UCSC.hg19",
+    genome="GRCh37.p13",
     args=commandArgs(trailingOnly=TRUE))
 
 str(results)

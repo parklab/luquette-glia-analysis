@@ -11,10 +11,10 @@ kgflag=''
 flags=''
 drmaaflag="--drmaa \' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log\'"
 
-if [ "x$word" == 'dry' ]; then
+if [ "x$word" == 'xdry' ]; then
     flags="--dryrun --quiet" # --reason"
     drmaaflag=''
-elif [ "x$word" == 'test' ]; then
+elif [ "x$word" == 'xtest' ]; then
     jobflag='-j 1'
     kgflag=''
     drmaaflag=''

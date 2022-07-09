@@ -44,6 +44,7 @@ if [ $usedrmaa == "true" ]; then
     snakemake $flags \
         --dir . \
         --latency-wait 60 $kgflag \
+        --rerun-incomplete \
         -s snakemake/Snakefile \
         --max-threads 12 $jobflag \
         --drmaa ' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'
@@ -51,6 +52,8 @@ else
     snakemake $flags \
         --dir . \
         --latency-wait 60 $kgflag \
+        --rerun-incomplete \
+        -s snakemake/Snakefile \
         -s snakemake/Snakefile \
         --max-threads 12 $jobflag \
         #--max-inventory-time 0 \

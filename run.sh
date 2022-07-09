@@ -13,9 +13,11 @@ drmaaflag="--drmaa \' -p priopark -A park_contrib --mem={resources.mem} -c {thre
 
 if [ "x$word" == 'dry' ]; then
     flags="--dryrun --quiet" # --reason"
+    drmaaflag=''
 elif [ "x$word" == 'test' ]; then
     jobflag='-j 1'
     kgflag=''
+    drmaaflag=''
 else
     kgflag='--keep-going'
 fi

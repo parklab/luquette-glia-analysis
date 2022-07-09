@@ -237,10 +237,10 @@ use rule enrichment_bed_plot from enrichment_roadmap_histone_narrowpeak as enric
         ygroup='datasource',
         highlight='eid=E073'
     output:
-        expand('plots/enrichment/roadmap_histone_narrowpeak/{{mutclass}}.{output}',
+        expand('enrichment/roadmap_histone_narrowpeak/{{mutclass}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/roadmap_histone_narrowpeak/{mutclass}.log'
+        'enrichment/roadmap_histone_narrowpeak/{mutclass}.log'
 
 
 ########################################################################
@@ -273,10 +273,10 @@ use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_road
         ygroup='model',
         highlight='eid=E073'
     output:
-        expand('plots/enrichment/roadmap_chromhmm/{{mutclass}}.{output}',
+        expand('enrichment/roadmap_chromhmm/{{mutclass}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/roadmap_chromhmm/{mutclass}.log'
+        'enrichment/roadmap_chromhmm/{mutclass}.log'
 
 
 
@@ -308,10 +308,10 @@ use rule enrichment_plot from enrichment_roadmap_histone_signal as enrichment_ro
         ignore='enrichment_grid_R_ignore_none',
         group='mark'
     output:
-        expand('plots/enrichment/roadmap_histone_signal/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/roadmap_histone_signal/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/roadmap_histone_signal/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/roadmap_histone_signal/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -334,10 +334,10 @@ use rule enrichment_plot from enrichment_roadmap_dnamethyl as enrichment_roadmap
         ignore='enrichment_grid_R_ignore_none',
         group='experiment_type,signal_type'
     output:
-        expand('plots/enrichment/roadmap_dnamethyl/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/roadmap_dnamethyl/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/roadmap_dnamethyl/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/roadmap_dnamethyl/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -364,10 +364,10 @@ use rule enrichment_plot from enrichment_encode_replichip as enrichment_encode_r
         ignore='BINSIZE=1000',
         group='datasource'
     output:
-        expand('plots/enrichment/encode_replichip/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/encode_replichip/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/encode_replichip/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/encode_replichip/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -397,10 +397,10 @@ use rule enrichment_plot from enrichment_conservation as enrichment_conservation
         ignore='enrichment_grid_R_ignore_none',
         group='track'
     output:
-        expand('plots/enrichment/conservation/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/conservation/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -429,10 +429,10 @@ use rule enrichment_plot from enrichment_boca as enrichment_boca_enrichment_plot
         ignore='enrichment_grid_R_ignore_none',
         group='datasource,celltype,region'
     output:
-        expand('plots/enrichment/boca/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/boca/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/boca/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/boca/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -455,10 +455,10 @@ use rule enrichment_plot from enrichment_depth as enrichment_depth_enrichment_pl
         ignore='enrichment_grid_R_ignore_none',
         group='celltype'
     output:
-        expand('plots/enrichment/depth/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/depth/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/depth/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/depth/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -481,10 +481,10 @@ use rule enrichment_plot from enrichment_nott as enrichment_nott_enrichment_plot
         ignore='enrichment_grid_R_ignore_none',
         group='celltype,mark'
     output:
-        expand('plots/enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -512,10 +512,10 @@ use rule enrichment_plot from enrichment_rizzardi as enrichment_rizzardi_enrichm
         ignore='enrichment_grid_R_ignore_none',
         group='region,methyltype,smoothing'
     output:
-        expand('plots/enrichment/rizzardi/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/rizzardi/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/rizzardi/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/rizzardi/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -542,10 +542,10 @@ use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enric
         ignore='enrichment_grid_R_ignore_none',
         group='celltype',
     output:
-        expand('plots/enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################
@@ -585,10 +585,10 @@ use rule enrichment_plot from enrichment_gtex_expression_mc02 as enrichment_gtex
         group='datasource',
         highlight='group=Brain'
     output:
-        expand('plots/enrichment/gtex_expression_mc02/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/gtex_expression_mc02/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/gtex_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/gtex_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 # Min. signal coverage: _mc04
 enrichment_gtex_expression_mc04_config = dict(
@@ -613,10 +613,10 @@ use rule enrichment_plot from enrichment_gtex_expression_mc04 as enrichment_gtex
         group='datasource',
         highlight='group=Brain'
     output:
-        expand('plots/enrichment/gtex_expression_mc04/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/gtex_expression_mc04/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/gtex_expression_mc04/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/gtex_expression_mc04/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 # Min. signal coverage: _mc06
 enrichment_gtex_expression_mc06_config = dict(
@@ -641,10 +641,10 @@ use rule enrichment_plot from enrichment_gtex_expression_mc06 as enrichment_gtex
         group='datasource',
         highlight='group=Brain'
     output:
-        expand('plots/enrichment/gtex_expression_mc06/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/gtex_expression_mc06/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/gtex_expression_mc06/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/gtex_expression_mc06/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 # Min. signal coverage: _mc08
 enrichment_gtex_expression_mc08_config = dict(
@@ -669,10 +669,10 @@ use rule enrichment_plot from enrichment_gtex_expression_mc08 as enrichment_gtex
         group='datasource',
         highlight='group=Brain'
     output:
-        expand('plots/enrichment/gtex_expression_mc08/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/gtex_expression_mc08/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/gtex_expression_mc08/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/gtex_expression_mc08/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 # Trying scRNA-seq expression mapped to the GTEx gene model
@@ -698,10 +698,10 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc02 as enrichment_
         ignore='enrichment_grid_R_ignore_none',
         group='donor,selection,celltype'
     output:
-        expand('plots/enrichment/scrnaseq_expression_mc02/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/scrnaseq_expression_mc02/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/scrnaseq_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/scrnaseq_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 # Min. signal coverage: _mc08
 enrichment_scrnaseq_expression_mc08_config = dict(
@@ -725,10 +725,10 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc08 as enrichment_
         ignore='enrichment_grid_R_ignore_none',
         group='donor,selection,celltype'
     output:
-        expand('plots/enrichment/scrnaseq_expression_mc08/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/scrnaseq_expression_mc08/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/scrnaseq_expression_mc08/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/scrnaseq_expression_mc08/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 
@@ -751,7 +751,7 @@ use rule enrichment_plot from enrichment_cancer as enrichment_cancer_enrichment_
         ignore='enrichment_grid_R_ignore_none',
         group='signal_type'
     output:
-        expand('plots/enrichment/cancer_snvdens/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/cancer_snvdens/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'plots/enrichment/cancer_snvdens/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/cancer_snvdens/quantile/{mutclass}.{nquantiles}quantiles.log'

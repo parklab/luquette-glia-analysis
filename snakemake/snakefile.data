@@ -336,6 +336,26 @@ rule download_gencode_genes:
         """
 
 
+
+rule make_gtex_gene_model:
+    input:
+        "data/gencode/gencode.v26lift37.annotation.gtf"
+    output:
+        script="data/gtex/collapse_annotation.py",
+        gtf="data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.gtf",
+        gtf_genes="data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output.script} \
+            "https://raw.githubusercontent.com/broadinstitute/gtex-pipeline/master/gene_model/collapse_annotation.py"
+        python {output.script} {input} {output.gtf}
+        awk '$0 ~ /^#/ || $3 == "gene"' {output.gtf} > {output.gtf_genes}
+        """
+
+
+
 rule download_nott_bigwigs:
     input:
     output:
@@ -349,4 +369,19 @@ rule download_nott_bigwigs:
         """
         wget -O {output} \
             "http://homer.ucsd.edu/hubs/nuclei_{params.mark}_hg19_pooled/hg19/{params.file}"
+        """
+
+
+
+rule download_gtex_expression:
+    input:
+    output:
+        "data/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output}.gz \
+            "https://storage.googleapis.com/gtex_analysis_v8/rna_seq_data/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct.gz"
+        gunzip -c {output}.gz > {output}
         """

@@ -31,8 +31,8 @@ any	scatacseq_frags	none	tsv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/frag
 any	scrnaseq_umap	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/snRNA_1465a_table.csv
 any	scrnaseq_mean_expression	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/rds/combined_mean_expr.csv
 # GTEx files for creating tissue specific expression signals
-#any	gtex_gene_model	none	gtf	/n/data1/hms/dbmi/park/jluquette/pta/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf
-#any	gtex_expression_tpm	none	gct	/n/data1/hms/dbmi/park/jluquette/pta/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct
+any	gtex_gene_model	none	gtf	data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf
+any	gtex_expression_tpm	none	gct	data/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct
 # Cancer SNV mutation data frames
 #any	cancer_icgc	none	maf	/n/data1/hms/dbmi/park/jluquette/glia/icgc/final_consensus_passonly.snv_mnv_indel.icgc.public.maf
 #any	cancer_tcga	none	maf	/n/data1/hms/dbmi/park/jluquette/glia/icgc/final_consensus_passonly.snv_mnv_indel.tcga.controlled.maf

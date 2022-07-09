@@ -147,7 +147,7 @@ rule all:
             # XXX: ADD REPLISEQ (removed replichip)
             datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
-                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'depth' ],
+                [ 'nott', 'encode_replichip', 'repliseq', 'conservation' ],
             #datasource=[ 'roadmap_histone_signal', 'scatacseq', 'boca', 'depth', 'cancer_snvdens' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # GTEx enrichment plots with multiple levels of signal coverage

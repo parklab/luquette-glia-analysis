@@ -9,7 +9,7 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@input[1:2], snakemake@output[1]
+        snakemake@input[1], snakemake@output[1]
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())

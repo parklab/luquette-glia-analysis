@@ -51,10 +51,10 @@ for (i in 1:2) {
 
     layout(1:2)
     par(mar=c(1,4,3,1))
-    n <- as.spectrum(id83(get(load(nfile))$mutsig)
-    g <- as.spectrum(id83(get(load(gfile))$mutsig)
-    plot.id83(x=1, spectrum=n, eps=0), main='Neurons')
-    plot.id83(x=1, spectrum=g, eps=0), main='Oligo')
+    n <- as.spectrum(id83(get(load(nfile))$mutsig), eps=0)
+    g <- as.spectrum(id83(get(load(gfile))$mutsig), eps=0)
+    plot.id83(x=1, spectrum=n, main='Neurons')
+    plot.id83(x=1, spectrum=g, main='Oligo')
 }
 
 d <- data.table(MutType=names(n), Neurons=n, Oligo=g)

@@ -36,6 +36,7 @@ if (file.exists(out.expo.csv))
     stop(paste('output file', out.expo.csv, 'already exists, please delete it first'))
 
 library(scan2)       # for df.to.sbs96
+library(pracma)
 
 # Given a list of mutation dataframes, calculate exposure to the supplied
 # COSMIC database (which may have been subsetted to contain only spectra

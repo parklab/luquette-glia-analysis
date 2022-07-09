@@ -1,0 +1,17 @@
+datasource,celltype,geoid,file
+repliseq,BG02ES,GSM923453,data/repliseq/bigwig/wgEncodeUwRepliSeqBg02esWaveSignalRep1.bigWig
+repliseq,BJ,GSM923444,data/repliseq/bigwig/wgEncodeUwRepliSeqBjWaveSignalRep1.bigWig
+repliseq,BJ,GSM923444,data/repliseq/bigwig/wgEncodeUwRepliSeqBjWaveSignalRep2.bigWig
+repliseq,GM06990,GSM923443,data/repliseq/bigwig/wgEncodeUwRepliSeqGm06990WaveSignalRep1.bigWig
+repliseq,GM12801,GSM923440,data/repliseq/bigwig/wgEncodeUwRepliSeqGm12801WaveSignalRep1.bigWig
+repliseq,GM12812,GSM923439,data/repliseq/bigwig/wgEncodeUwRepliSeqGm12812WaveSignalRep1.bigWig
+repliseq,GM12813,GSM923450,data/repliseq/bigwig/wgEncodeUwRepliSeqGm12813WaveSignalRep1.bigWig
+repliseq,GM12878,GSM923451,data/repliseq/bigwig/wgEncodeUwRepliSeqGm12878WaveSignalRep1.bigWig
+repliseq,HUVEC,GSM923452,data/repliseq/bigwig/wgEncodeUwRepliSeqHuvecWaveSignalRep1.bigWig
+repliseq,HeLa-S3,GSM923449,data/repliseq/bigwig/wgEncodeUwRepliSeqHelas3WaveSignalRep1.bigWig
+repliseq,HepG2,GSM923446,data/repliseq/bigwig/wgEncodeUwRepliSeqHepg2WaveSignalRep1.bigWig
+repliseq,IMR90,GSM923447,data/repliseq/bigwig/wgEncodeUwRepliSeqImr90WaveSignalRep1.bigWig
+repliseq,K562,GSM923448,data/repliseq/bigwig/wgEncodeUwRepliSeqK562WaveSignalRep1.bigWig
+repliseq,MCF-7,GSM923442,data/repliseq/bigwig/wgEncodeUwRepliSeqMcf7WaveSignalRep1.bigWig
+repliseq,NHEK,GSM923445,data/repliseq/bigwig/wgEncodeUwRepliSeqNhekWaveSignalRep1.bigWig
+repliseq,SK-N-SH,GSM923441,data/repliseq/bigwig/wgEncodeUwRepliSeqSknshWaveSignalRep1.bigWig

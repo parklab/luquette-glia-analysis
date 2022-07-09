@@ -16,7 +16,7 @@ if ('snakemake' %in% ls()) {
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) != 3) {
+if (length(args) != 2) {
     stop("usage: make_cosmic_snv_table.R in_cosmic.csv out.csv")
 }
 

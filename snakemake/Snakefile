@@ -143,7 +143,7 @@ rule all:
         expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
-            nquantiles=qsizes,
+            nquantiles=[ 5, 10 ],
             datasource=[ 'nott' ],
             # XXX: ADD REPLISEQ (removed replichip)
             #datasource=[ 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'cancer_snvdens' ],

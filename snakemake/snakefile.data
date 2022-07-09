@@ -406,10 +406,12 @@ rule download_repliseq:
     input:
     output:
         "data/repliseq/bigwig/{file}"
+    params:
+        file="{file}"
     resources:
         mem=1000
     shell:
         """
-        wget -O {output} \
+        wget -O {params.file} \
             "http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeUwRepliSeq/{output}"
         """

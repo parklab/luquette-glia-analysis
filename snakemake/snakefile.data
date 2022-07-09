@@ -405,7 +405,7 @@ rule download_ucsc_conservation:
 rule download_repliseq:
     input:
     output:
-        "data/repliseq/bigwig/{file}
+        "data/repliseq/bigwig/{file}"
     resources:
         mem=1000
     shell:

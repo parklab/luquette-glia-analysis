@@ -9,17 +9,21 @@ word=$1
 jobflag='-j 20'
 kgflag=''
 flags=''
-drmaaflag="--drmaa \' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log\'"
+drmaaflag=''
 
 if [ "x$word" == 'xdry' ]; then
     flags="--dryrun --quiet" # --reason"
-    drmaaflag=''
 elif [ "x$word" == 'xtest' ]; then
     jobflag='-j 1'
     kgflag=''
-    drmaaflag=''
-else
+elif [ "x$word" == 'xlocal' ]; then
+    jobflag='-j 20'
     kgflag='--keep-going'
+else
+    jobflag='-j 1000'
+    kgflag='--keep-going'
+    drmaaflag="--drmaa ' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'"
+    flags="--max-status-checks-per-second 0.1"# --restart-times 2"
 fi
 
 #module load slurm-drmaa
@@ -33,7 +37,5 @@ snakemake $flags \
     --dir . \
     --latency-wait 60 $kgflag \
     -s snakemake/Snakefile \
-    --max-inventory-time 0 \
     --max-threads 12 $jobflag $drmaaflag \
-    #--restart-times 2 \
-    #--max-status-checks-per-second 0.1 \
+    #--max-inventory-time 0 \

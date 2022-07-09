@@ -144,9 +144,8 @@ rule all:
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
             nquantiles=qsizes,
-            # just to reduce snakemake runtime for later analyses
-            # XXX: ADD REPLISEQ (removed replichip)
             datasource=[ 'nott' ],
+            # XXX: ADD REPLISEQ (removed replichip)
             #datasource=[ 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'cancer_snvdens' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # GTEx enrichment plots with multiple levels of signal coverage

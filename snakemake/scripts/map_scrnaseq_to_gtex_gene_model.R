@@ -41,6 +41,8 @@ g <- fread(gtex.median.tpm.file, skip=2)[,1:2]
 s <- fread(scrnaseq.csv)
 # Join puts column 1 of g on the far right side; we want it as the first column
 new.mat <- s[g, on=c('gene'='Description')]
+# But we want the column to still be named Description, not become gene
+colnames(new.mat)[colnames(new.mat) == 'gene'] <- 'Description'
 setcolorder(new.mat, c(ncol(new.mat),1:(ncol(new.mat)-1)))
 new.mat[is.na(new.mat)] <- 0
 

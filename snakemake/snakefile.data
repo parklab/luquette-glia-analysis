@@ -287,6 +287,19 @@ rule download_roadmap_histone_peaks:
         """
 
 
+rule download_icgc_muts:
+    input:
+    output:
+        "data/icgc/final_consensus_passonly.snv_mnv_indel.icgc.public.maf"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output} \
+            "https://dcc.icgc.org/api/v1/download?fn=/PCAWG/consensus_snv_indel/final_consensus_passonly.snv_mnv_indel.icgc.public.maf.gz"
+        """
+
+
 rule split_cancer_muts_by_type:
     input:
         tcga="input/any___cancer_tcga___none.maf",

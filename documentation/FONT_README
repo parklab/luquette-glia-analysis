@@ -1,0 +1,15 @@
+Installing Arial:
+
+conda: extrafont, svglite, mscorefonts
+
+run in R:
+library(extrafont)
+library(remote)
+# i had to run the line below twice; first time said 1.3.8 was invalid, second worked for some reason
+remotes::install_version("Rttf2pt1", version = "1.3.8")
+remotes::install_version("Rttf2pt1", version = "1.3.8")
+font_import(paths="path/to/env/pkgs/mscorefonts-0.0.1-3/fonts/")
+
+
+now check:
+'Arial' %in% fonts()

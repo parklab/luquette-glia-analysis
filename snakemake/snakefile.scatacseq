@@ -43,7 +43,7 @@ rule scatacseq_frags_to_beds:
         mem=4000
     shell:
         """
-        scripts/scatacseq_10x_frags_to_bed.py \
+        snakemake/scripts/scatacseq_10x_frags_to_bed.py \
             {input.frags} {input.mapfile} data/scatacseq/bed/transpositions
         """
 
@@ -61,6 +61,6 @@ rule scatacseq_bedgraph_to_bigwig:
         mem=4000
     shell:
         """
-        scripts/scatacseq_fragbed_to_bigwig.sh \
+        snakemake/scripts/scatacseq_fragbed_to_bigwig.sh \
             {input.bed} {input.genome} {output.bw} {output.tmp}
         """

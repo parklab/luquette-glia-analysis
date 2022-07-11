@@ -48,13 +48,14 @@ if [ $usedrmaa == "true" ]; then
         -s snakemake/Snakefile \
         --max-threads 12 $jobflag \
         --drmaa ' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'
+        #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
 else
     snakemake $flags \
         --dir . \
         --latency-wait 60 $kgflag \
         --rerun-incomplete \
         -s snakemake/Snakefile \
-        -s snakemake/Snakefile \
         --max-threads 12 $jobflag \
+        #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
         #--max-inventory-time 0 \
 fi

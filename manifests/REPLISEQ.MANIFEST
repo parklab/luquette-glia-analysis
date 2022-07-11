@@ -1,7 +1,6 @@
 datasource,celltype,geoid,file
 repliseq,BG02ES,GSM923453,data/repliseq/bigwig/wgEncodeUwRepliSeqBg02esWaveSignalRep1.bigWig
 repliseq,BJ,GSM923444,data/repliseq/bigwig/wgEncodeUwRepliSeqBjWaveSignalRep1.bigWig
-repliseq,BJ,GSM923444,data/repliseq/bigwig/wgEncodeUwRepliSeqBjWaveSignalRep2.bigWig
 repliseq,GM06990,GSM923443,data/repliseq/bigwig/wgEncodeUwRepliSeqGm06990WaveSignalRep1.bigWig
 repliseq,GM12801,GSM923440,data/repliseq/bigwig/wgEncodeUwRepliSeqGm12801WaveSignalRep1.bigWig
 repliseq,GM12812,GSM923439,data/repliseq/bigwig/wgEncodeUwRepliSeqGm12812WaveSignalRep1.bigWig

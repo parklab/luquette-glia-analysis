@@ -331,7 +331,8 @@ rule make_cancer_snvdens_bigwigs:
         # this extreme memory req is because a 100bp bin x #samples matrix is built
         # cancer types with 200+ samples fail at 96G and I don't know how much memory is truly needed
         # so this very large number is to avoid yet another failure.
-        mem=lambda wildcards, attempt: 32000 if attempt==1 else 196000
+        #mem=lambda wildcards, attempt: 32000 if attempt==1 else 196000
+        mem=196000
     script:
         "scripts/make_cancer_mutdens_bigwigs.R"
 

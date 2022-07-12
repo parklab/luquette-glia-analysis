@@ -74,7 +74,6 @@ wildcard_constraints:
     qualtype='|'.join(qualtypes),
     cosmic='cosmic_full|cosmic_reduced',
     umap='atac|rna',
-    #datasource="roadmap|encode/replication_timing"  # still used?
 
 
 rule all:
@@ -146,14 +145,14 @@ rule all:
             nquantiles=[ 5, 10 ],
             datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
-                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal' ],
+                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ],
             #datasource=[ 'depth' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # Enrichment analysis, but not quantile based (qbeds)
         expand('enrichment/{datasource}/{celltype}___{qualtype}.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
-            datasource=[ 'roadmap_chromhmm' ], #, 'roadmap_histone_narrowpeak' ],
+            datasource=[ 'roadmap_chromhmm_brain' ], #, 'roadmap_histone_narrowpeak' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # Signature-based enrichment
         #expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
@@ -235,8 +234,8 @@ use rule enrichment_bed_plot from enrichment_roadmap_histone_narrowpeak as enric
 # Roadmap epigenomics chromHMM  state models
 ########################################################################
 enrichment_roadmap_chromhmm_config = dict(
-    **{ 'output_dir': 'enrichment/roadmap_chromhmm',
-        'SIGNAL_MANIFEST': 'manifests/ROADMAP_CHROMHMM.MANIFEST' },
+    **{ 'output_dir': 'enrichment/roadmap_chromhmm_brain',
+        'SIGNAL_MANIFEST': 'manifests/ROADMAP_CHROMHMM_BRAIN.MANIFEST' },
     **enrichment_config
 )
 
@@ -261,10 +260,10 @@ use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_road
         ygroup='model',
         highlight='eid=E073'
     output:
-        expand('enrichment/roadmap_chromhmm/{{mutclass}}.{output}',
+        expand('enrichment/roadmap_chromhmm_brain/{{mutclass}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/roadmap_chromhmm/{mutclass}.log'
+        'enrichment/roadmap_chromhmm_brain/{mutclass}.log'
 
 
 
@@ -276,8 +275,8 @@ use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_road
 # Roadmap epigenomics histones
 ########################################################################
 enrichment_roadmap_histone_signal_config = dict(
-    **{ 'output_dir': 'enrichment/roadmap_histone_signal',
-        'SIGNAL_MANIFEST': 'manifests/ROADMAP_HISTONE_BIGWIG.MANIFEST' },
+    **{ 'output_dir': 'enrichment/roadmap_histone_signal_brain',
+        'SIGNAL_MANIFEST': 'manifests/ROADMAP_HISTONE_BIGWIG_BRAIN.MANIFEST' },
     **enrichment_config
 )
 
@@ -296,10 +295,10 @@ use rule enrichment_plot from enrichment_roadmap_histone_signal as enrichment_ro
         ignore='enrichment_grid_R_ignore_none',
         group='mark'
     output:
-        expand('enrichment/roadmap_histone_signal/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/roadmap_histone_signal_brain/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/roadmap_histone_signal/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/roadmap_histone_signal_brain/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################

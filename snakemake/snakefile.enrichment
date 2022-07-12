@@ -151,7 +151,7 @@ rule sigenrichment_qbed_analysis:
         # because rescue can introduce signature biases.
         cosmic=lambda wildcards: 'analysis/tables/cosmic_reduced___' + ('indel_A' if wildcards.mutclass.split('___')[1].split('_')[0] == 'indel' else 'A') + '.csv',
         mut=lambda wildcards: mut_manifest.loc[mut_manifest['__class__'] == wildcards.mutclass, 'file'],
-        perm=lambda wildcards: config['mut_to_perm'][wildcards.mutclass].replace('___perm___','___perm_full___'),
+        perm=lambda wildcards: config['mut_to_perm'][wildcards.mutclass],
         qbeds=expand(outroot + "/qbed/{signalclass}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
             signalclass=signal_classes)
     output:

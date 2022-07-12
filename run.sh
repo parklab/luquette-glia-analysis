@@ -26,7 +26,8 @@ else
     usedrmaa='true'
     jobflag='-j 1000'
     kgflag='--keep-going'
-    flags="--max-jobs-per-second 0.05 --max-status-checks-per-second 0.1 --restart-times 2"
+    flags="--max-status-checks-per-second 0.1 --restart-times 2"
+    #flags="--max-jobs-per-second 0.05 --max-status-checks-per-second 0.1 --restart-times 2"
         #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
 fi
 

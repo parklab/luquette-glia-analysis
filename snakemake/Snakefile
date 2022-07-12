@@ -155,34 +155,20 @@ rule all:
             datasource=[ 'roadmap_chromhmm_brain' ], #, 'roadmap_histone_narrowpeak' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # Signature-based enrichment
-        #expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
-            # just to reduce snakemake runtime for later analyses
-            #datasource=[ 'encode_replichip', 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
-            #datasource=[ 'cancer_snvdens' ],
-            #celltype=celltypes_to_compute,
-            #qualtype=[ 'A' ],
-            #nquantiles=[ 3, 5, 10 ]),
+        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
+            datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
+                [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
+                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ],
+            #datasource=[ 'depth' ],
+            celltype=celltypes_to_compute,
+            qualtype=[ 'A', 'indel_A' ],
+            nquantiles=[ 3, 5 ])
         #expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
             #datasource=[ 'encode_replichip', 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
             #celltype=celltypes_to_compute,
             #qualtype=[ 'A' ],
             #nquantiles=[ 3, 5, 10 ],
             #output=[ 'svg', 'pdf', 'csv' ]),
-        #expand('enrichment/gtex_expression_mc{mincov}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
-            #celltype=celltypes_to_compute,
-            #qualtype=[ 'A' ],
-            #nquantiles=[ 3, 5, 10 ],
-            #mincov=[ '02', '04', '06', '08' ]),
-            # for quick analysis of neuron indels ID4 vs. txn (Nature 2022 paper)
-            #celltype=[ 'neuron', 'neuron_als', 'neuron_als_no_outlier', 'neuron_alz', 'neuron_alz_no_outlier', 'neuron_ba6' ],
-            #qualtype=[ 'indel_AB' ],
-            #nquantiles=[ 5, 10 ],
-            #mincov=[ '02', '08' ]),
-        #expand('enrichment/scrnaseq_expression_mc{mincov}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
-            #celltype=celltypes_to_compute,
-            #qualtype=[ 'A' ],
-            #nquantiles=[ 3, 5, 10 ],
-            #mincov=[ '02', '08' ])
 
 
 

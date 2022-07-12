@@ -2,7 +2,7 @@
 #SBATCH -p priopark
 #SBATCH -A park_contrib
 #SBATCH -t 120:00:00
-#SBATCH --mem=7G
+#SBATCH --mem=12G
 
 word=$1
 

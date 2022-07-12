@@ -26,7 +26,8 @@ else
     usedrmaa='true'
     jobflag='-j 1000'
     kgflag='--keep-going'
-    flags="--max-status-checks-per-second 0.1" # --restart-times 2"
+    flags="--max-jobs-per-second 0.05 --max-status-checks-per-second 0.1 --restart-times 2"
+        #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
 fi
 
 #module load slurm-drmaa
@@ -48,7 +49,6 @@ if [ $usedrmaa == "true" ]; then
         -s snakemake/Snakefile \
         --max-threads 12 $jobflag \
         --drmaa ' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'
-        #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
 else
     snakemake $flags \
         --dir . \
@@ -56,6 +56,5 @@ else
         --rerun-incomplete \
         -s snakemake/Snakefile \
         --max-threads 12 $jobflag \
-        #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
         #--max-inventory-time 0 \
 fi

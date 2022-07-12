@@ -81,7 +81,7 @@ rule rda_to_vcf:
 rule download_roadmap_narrowpeak:
     input:
     output:
-        "data/roadmap/narrowPeak/{eid}-{mark}.narrowPeak"
+        "data/roadmap/histone_marks/narrowPeak/{eid}-{mark}.narrowPeak"
     resources:
         mem=1000
     shell:
@@ -94,7 +94,7 @@ rule download_roadmap_narrowpeak:
 rule download_roadmap_bigwig:
     input:
     output:
-        "data/roadmap/bigwig/{eid}-{mark}.fc.signal.bigwig"
+        "data/roadmap/histone_marks/bigwig/{eid}-{mark}.fc.signal.bigwig"
     resources:
         mem=1000
     shell:
@@ -430,3 +430,10 @@ rule download_repliseq:
         wget -O {output} \
             "http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeUwRepliSeq/{params.file}"
         """
+
+
+
+#rule make_depth_bigwig:
+    #input:
+    #output:
+        #"data/depth/bigwig/

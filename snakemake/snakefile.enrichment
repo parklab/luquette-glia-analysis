@@ -149,7 +149,7 @@ rule sigenrichment_qbed_analysis:
         # enable indel sigenrich for Nat. 2022 paper on ID4
         # COSMIC reduction is always performed on the non-rescue calls (="A" or "indel_A"),
         # because rescue can introduce signature biases.
-        cosmic=lambda wildcards: 'analysis/tables/cosmic_reduced___' + ('indel_A' if wildcards.mutclass.split('___')[1].split('_')[0] == 'indel' else 'A') + '.csv',
+        cosmic=lambda wildcards: 'tables/cosmic_reduced___' + ('indel_A' if wildcards.mutclass.split('___')[1].split('_')[0] == 'indel' else 'A') + '.csv',
         mut=lambda wildcards: mut_manifest.loc[mut_manifest['__class__'] == wildcards.mutclass, 'file'],
         perm=lambda wildcards: config['mut_to_perm'][wildcards.mutclass],
         qbeds=expand(outroot + "/qbed/{signalclass}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
@@ -160,10 +160,7 @@ rule sigenrichment_qbed_analysis:
     params:
         # bootstraps on sigenrich is not yet supported
         nbootstraps=0,
-        # unfortunately i haven't standardized the column name for mutation signatures
-        # this relies on mutation classes being called "A", "AB", etc. for SNVs and
-        # "indel_A", "indel_AB", etc. for indels.
-        colname_for_sig=lambda wildcards: 'muttype' if wildcards.mutclass.split('___')[1].split('_')[0]=='indel' else 'mutclass'
+        colname_for_sig="mutsig"
     resources:
         # XXX: update me: so far, these RAM values work with my data.
         mem=lambda wildcards: 40000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 20000

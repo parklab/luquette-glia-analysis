@@ -340,7 +340,6 @@ use rule sigenrichment_qbed_analysis from enrichment_repliseq as enrichment_repl
 
 use rule enrichment_plot from enrichment_repliseq as enrichment_repliseq_enrichment_plot with:
     params:
-        ignore='BINSIZE=1000',
         group='datasource'
     output:
         expand('enrichment/repliseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',

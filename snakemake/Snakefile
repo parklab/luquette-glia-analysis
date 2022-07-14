@@ -155,7 +155,7 @@ rule all:
             datasource=[ 'roadmap_chromhmm_brain' ], #, 'roadmap_histone_narrowpeak' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # Signature-based enrichment
-        expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
+        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
             #expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
             datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +

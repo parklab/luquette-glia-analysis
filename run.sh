@@ -6,16 +6,18 @@
 
 word=$1
 
+# $flags is always built added to, never taken from
+flags='--dir . --latency-wait 60' #--rerun-incomplete'
+        #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
 jobflag='-j 20'
 kgflag=''
-flags=''
 drmaaflag=''
 usedrmaa='false'
 
 if [ "x$word" == 'xdry' ]; then
-    flags="--dryrun --quiet" # --reason"
+    flags="$flags --dryrun --quiet" # --reason"
 elif [ "x$word" == 'xunlock' ]; then
-    flags='--unlock'
+    flags='$flags --unlock'
 elif [ "x$word" == 'xtest' ]; then
     jobflag='-j 1'
     kgflag=''
@@ -26,9 +28,8 @@ else
     usedrmaa='true'
     jobflag='-j 1000'
     kgflag='--keep-going'
-    flags="--max-status-checks-per-second 0.1 --restart-times 2"
+    flags="$flags --max-status-checks-per-second 0.1 --restart-times 2"
     #flags="--max-jobs-per-second 0.05 --max-status-checks-per-second 0.1 --restart-times 2"
-        #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
 fi
 
 #module load slurm-drmaa
@@ -46,15 +47,13 @@ if [ $usedrmaa == "true" ]; then
     snakemake $flags \
         --dir . \
         --latency-wait 60 $kgflag \
-        --rerun-incomplete \
         -s snakemake/Snakefile \
         --max-threads 12 $jobflag \
         --drmaa ' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'
 else
     snakemake $flags \
         --dir . \
-        --latency-wait 60 $kgflag \
-        --rerun-incomplete \
+        $kgflag \
         -s snakemake/Snakefile \
         --max-threads 12 $jobflag \
         #--max-inventory-time 0 \

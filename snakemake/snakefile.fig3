@@ -13,3 +13,18 @@ rule fig3_umap_plot:
         "fig3/sc{umap}seq/umap_plot.log"
     script:
         "scripts/plot_umap.R"
+
+
+rule fig3a:
+    input:
+        neuron_snv="enrichment/gtex_expression_mc08/quantile/neuron___AB.10quantiles.csv",
+        neuron_indel="enrichment/gtex_expression_mc08/quantile/neuron___indel_AB.10quantiles.csv",
+        oligo_snv="enrichment/gtex_expression_mc08/quantile/oligo___AB.10quantiles.csv",
+        oligo_indel="enrichment/gtex_expression_mc08/quantile/oligo___indel_AB.10quantiles.csv"
+    output:
+        pdf="fig3/panel_a.pdf",
+        svg="fig3/panel_a.svg"
+    log:
+    resources:
+        mem=4000
+    script:

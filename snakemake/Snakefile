@@ -261,6 +261,17 @@ use rule enrichment_plot from enrichment_roadmap_histone_signal as enrichment_ro
         'enrichment/roadmap_histone_signal_brain/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
+use rule sigenrichment_plot from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='mark'
+    output:
+        expand('enrichment/roadmap_histone_signal_brain/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/roadmap_histone_signal_brain/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+
+
 ########################################################################
 # ENCODE replication timing measured by Repli-chip
 ########################################################################
@@ -290,6 +301,17 @@ use rule enrichment_plot from enrichment_encode_replichip as enrichment_encode_r
     log:
         'enrichment/encode_replichip/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+use rule sigenrichment_plot from enrichment_encode_replichip as enrichment_encode_replichip_sigenrichment_plot with:
+    params:
+        ignore='BINSIZE=1000',
+        group='datasource'
+    output:
+        expand('enrichment/encode_replichip/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/encode_replichip/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+
+
 ########################################################################
 # Replication timing measured by Repliseq
 ########################################################################
@@ -318,6 +340,16 @@ use rule enrichment_plot from enrichment_repliseq as enrichment_repliseq_enrichm
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'enrichment/repliseq/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+use rule sigenrichment_plot from enrichment_repliseq as enrichment_repliseq_sigenrichment_plot with:
+    params:
+        ignore='BINSIZE=1000',
+        group='datasource'
+    output:
+        expand('enrichment/repliseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/repliseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
 
 
 ########################################################################
@@ -352,6 +384,16 @@ use rule enrichment_plot from enrichment_conservation as enrichment_conservation
     log:
         'enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+use rule sigenrichment_plot from enrichment_conservation as enrichment_conservation_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='track'
+    output:
+        expand('enrichment/conservation/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+
 
 ########################################################################
 # Nott et al histone ChIP-seq and ATAC-seq
@@ -377,6 +419,17 @@ use rule enrichment_plot from enrichment_nott as enrichment_nott_enrichment_plot
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+use rule sigenrichment_plot from enrichment_nott as enrichment_nott_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype,mark'
+    output:
+        expand('enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+
 
 
 
@@ -409,6 +462,16 @@ use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enric
     log:
         'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+use rule sigenrichment_plot from enrichment_scatacseq as enrichment_scatacseq_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype',
+    output:
+        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+
 
 
 # Cancer SNV density
@@ -433,3 +496,13 @@ use rule enrichment_plot from enrichment_cancer as enrichment_cancer_enrichment_
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'enrichment/cancer_snvdens/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+use rule sigenrichment_plot from enrichment_cancer as enrichment_cancer_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='signal_type'
+    output:
+        expand('enrichment/cancer_snvdens/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/cancer_snvdens/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'

@@ -85,20 +85,20 @@ plot.1mb <- FALSE
 #        ENCFF702XRT -> ENCFF907YXU
 
 # set pdev=NULL to allow the caller to layout the panel
-make.panel <- function(sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
+make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
     ourcell <- match.arg(ourcell)
     col <- ifelse(ourcell == 'neuron', 1, 2)
 
-    hst <- fread(paste0('histone_', ourcell, '_A_3quantiles.csv'))[eid=='E073' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    hst <- fread(files['histone'])[eid=='E073' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
 
     nott_celltype <- ourcell
-    nott <- fread(paste0('nott_', ourcell, '_A_3quantiles.csv'))[celltype == nott_celltype & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    nott <- fread(files['nott'])[celltype == nott_celltype & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
 
     atac_celltypes <- if (ourcell == 'oligo') c('OPC', 'oligo') else c('excitatory_neuron', 'inhibitory_neuron')
-    atac <- fread(paste0('scatacseq_', ourcell, '_A_3quantiles.csv'))[libid=='librarymerged' & celltype %in% atac_celltypes & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    atac <- fread(files['scatacseq'])[libid=='librarymerged' & celltype %in% atac_celltypes & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
 
     rna_celltypes <- if (ourcell == 'oligo') c('OPCs', 'Oligodendrocytes') else c('Excitatory-Neurons', 'Inhibitory-Neurons')
-    rna <- fread(paste0('scrnaseq08_', ourcell, '_A_3quantiles.csv'))[celltype %in% rna_celltypes & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    rna <- fread(files['scrnaseq'])[celltype %in% rna_celltypes & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
     # Make a line for each donor,selection.celltype combo
     #rna$linegroup <- paste(rna$donor, rna$selection, rna$celltype)
     # Make an average line for each celltype
@@ -107,14 +107,14 @@ make.panel <- function(sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
 
     # GTEx using just BA9
     #gtex <- fread(paste0('gtex08_', ourcell, '_A_3quantiles.csv'))[tissue=='Brain_-_Frontal_Cortex__BA9_' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))]
-    gtex <- fread(paste0('gtex08_', ourcell, '_A_3quantiles.csv'))[group=='Brain' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    gtex <- fread(files['gtex'])[group=='Brain' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
 
-    repli <- fread(paste0('replichip_', ourcell, '_A_3quantiles.csv'))[encid %in% c('ENCFF469TYS', 'ENCFF907YXU') & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    repli <- fread(files['replichip'])[encid %in% c('ENCFF469TYS', 'ENCFF907YXU') & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
     # have to reverse quantile to make 1=early .. N=late
     repli$quantile <- (3:1)[as.integer(repli$quantile)]
     repli <- repli[order(as.integer(quantile))]
 
-    repliseq <- fread(paste0('repliseq_', ourcell, '_A_3quantiles.csv'))[celltype == 'SK-N-SH' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    repliseq <- fread(files['repliseq'])[celltype == 'SK-N-SH' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
     # have to reverse quantile to make 1=early .. N=late
     repliseq$quantile <- (3:1)[as.integer(repliseq$quantile)]
 
@@ -293,14 +293,14 @@ for (i in 1:2) {
     for (sig in 'SBS1') {
         print(c('oligo', sig))
         #make.panel(sig=sig, ourcell='oligo', pdev=function(...) pdf(file=paste0('oligo_', sig, '_v2.pdf'), ...))
-        make.panel(sig=sig, ourcell='oligo', pdev=NULL)
+        make.panel(files=oligo.fs, sig=sig, ourcell='oligo', pdev=NULL)
         #dev.off()
     }
     #for (sig in c('SBS5', 'SBS12', 'SBS16', 'SBS89')) {
     for (sig in 'SBS16') {
         print(c('neuron', sig))
         #make.panel(sig=sig, ourcell='neuron', pdev=function(...) pdf(file=paste0('neuron', sig, '_v2.pdf'), ...))
-        make.panel(sig=sig, ourcell='neuron', pdev=NULL)
+        make.panel(files=neuron.fs, sig=sig, ourcell='neuron', pdev=NULL)
         #dev.off()
     }
 

@@ -103,3 +103,31 @@ rule fig3d:
         mem=4000
     script:
         "scripts/fig3_panel_d.R"
+
+
+rule fig3e:
+    input:
+        # would like to expand() this but also want to keep names of inputs
+        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron___AB.3quantiles.csv",
+        neuron_nott="enrichment/nott/quantile/neuron___AB.3quantiles.csv",
+        neuron_scatacseq="enrichment/scatacseq/quantile/neuron___AB.3quantiles.csv",
+        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/neuron___AB.3quantiles.csv",
+        neuron_gtex="enrichment/gtex_expression_mc08/quantile/neuron___AB.3quantiles.csv",
+        neuron_replichip="enrichment/encode_replichip/quantile/neuron___AB.3quantiles.csv",
+        neuron_repliseq="enrichment/repliseq/quantile/neuron___AB.3quantiles.csv",
+        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo___AB.3quantiles.csv",
+        oligo_nott="enrichment/nott/quantile/oligo___AB.3quantiles.csv",
+        oligo_scatacseq="enrichment/scatacseq/quantile/oligo___AB.3quantiles.csv",
+        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo___AB.3quantiles.csv",
+        oligo_gtex="enrichment/gtex_expression_mc08/quantile/oligo___AB.3quantiles.csv",
+        oligo_replichip="enrichment/encode_replichip/quantile/oligo___AB.3quantiles.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/oligo___AB.3quantiles.csv"
+    output:
+        pdf="fig3/panel_e.pdf",
+        svg="fig3/panel_e.svg"
+    log:
+        "fig3/panel_e.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig3_panel_e.R"

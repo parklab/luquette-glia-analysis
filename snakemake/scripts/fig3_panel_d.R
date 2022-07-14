@@ -105,7 +105,7 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=10, height=3, pointsize=5, file=outs[i])
+    devs[[i]](width=5, height=3, pointsize=5, file=outs[i])
     layout(matrix(1:8, nrow=2, byrow=T))
     par(mar=c(4,4,2,1))
     plotfn(n[mark %in% c('H3K27me3', 'H3K9me3')], g[mark %in% c('H3K27me3', 'H3K9me3')], labtype='number', xlab='Pentile', ylab='Obs/exp', main='Inactive marks SNV passA\n1kb bins', family='Arial')

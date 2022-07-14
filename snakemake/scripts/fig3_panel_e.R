@@ -36,15 +36,14 @@ if (length(args) != 16) {
 }
 
 
-neuron.snv <- args[1]
-neuron.indel <- args[2]
-oligo.snv <- args[3]
-oligo.indel <- args[4]
-out.pdf <- args[5]
-out.svg <- args[6]
-out.csv <- args[7]
+neuron.fs <- args[1:7]
+names(neuron.fs) <- c('histone', 'nott', 'scatacseq', 'scrnaseq', 'gtex', 'replichip', 'repliseq')
+oligo.fs <- args[8:14]
+names(oligo.fs) <- c('histone', 'nott', 'scatacseq', 'scrnaseq', 'gtex', 'replichip', 'repliseq')
+out.pdf <- args[15]
+out.svg <- args[16]
 
-for (f in c(out.pdf, out.svg, out.csv)) {
+for (f in c(out.pdf, out.svg)) {
     if (file.exists(f))
         stop(paste('output file', f, 'already exists, please delete it first'))
 }

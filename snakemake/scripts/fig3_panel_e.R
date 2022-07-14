@@ -222,6 +222,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.
                 labtype='number', linetype='average',
                 xlab='Thirds', ylab='', main='Replication timing (1 MB, RepliChIP)',
                 add.legend=!plot.1mb, col=col)
+        legend('topleft', legend='Average', pch=20, cex=0.8)
     if (plot.1mb) {
         plotfn(repli[BINSIZE==1000000],
                 typecol='encid',

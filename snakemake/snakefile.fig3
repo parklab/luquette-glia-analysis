@@ -23,7 +23,8 @@ rule fig3a:
         oligo_indel="enrichment/scrnaseq_expression_mc08/quantile/oligo___indel_AB.10quantiles.csv"
     output:
         pdf="fig3/panel_a.pdf",
-        svg="fig3/panel_a.svg"
+        svg="fig3/panel_a.svg",
+        csv="fig3/panel_a.csv"
     log:
         "fig3/panel_a.log"
     resources:

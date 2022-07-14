@@ -14,7 +14,8 @@ if ('snakemake' %in% ls()) {
         snakemake@input['oligo_snv'],
         snakemake@input['oligo_indel'],
         snakemake@output['pdf'],
-        snakemake@output['svg']
+        snakemake@output['svg'],
+        snakemake@output['csv']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())

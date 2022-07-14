@@ -37,8 +37,8 @@ for (f in c(out.pdf, out.svg)) {
         stop(paste('output file', f, 'already exists, please delete it first'))
 }
 
-suppressMessages(library(data.table)
-suppressMessages(library(mutenrich)
+suppressMessages(library(data.table))
+suppressMessages(library(mutenrich))
 
 # not using "NEUN" for neurons because "NEUN_Aug" is presumably the same
 # data but more up-to-date.

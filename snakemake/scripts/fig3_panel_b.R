@@ -46,11 +46,11 @@ suppressMessages(library(svglite))
 if (!("Arial" %in% fonts()))
     stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
-n <- fread(neuron.snv)[celltype=='excitatory_neuron' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))]
-ni <- fread(neuron.indel)[celltype=='excitatory_neuron' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))]
+n <- fread(neuron.snv)[celltype=='excitatory_neuron' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
+ni <- fread(neuron.indel)[celltype=='excitatory_neuron' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
 
-g <- fread(oligo.snv)[celltype=='oligo' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))]
-gi <- fread(oligo.indel)[celltype=='oligo' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))]
+g <- fread(oligo.snv)[celltype=='oligo' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
+gi <- fread(oligo.indel)[celltype=='oligo' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
 
 outtab <- rbind(n, ni, g, gi)
 fwrite(outtab, file=out.csv)

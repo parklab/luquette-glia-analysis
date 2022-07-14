@@ -50,14 +50,14 @@ library(data.table)
 
 
 # reversing quantiles so that high values = late replication timing
-n <- fread(neuron.snv)[BINSIZE==1000000 & quantile %in% 1:10][order(as.integer(quantile))]
+n <- fread(neuron.snv)[BINSIZE==1000000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
 n$quantile <- 10 - as.integer(n$quantile) + 1
-ni <- fread(neuron.indel)[BINSIZE==1000000 & quantile %in% 1:10][order(as.integer(quantile))]
+ni <- fread(neuron.indel)[BINSIZE==1000000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
 ni$quantile <- 10 - as.integer(ni$quantile) + 1
 
-g <- fread(oligo.snv)[BINSIZE==1000000 & quantile %in% 1:10][order(as.integer(quantile))]
+g <- fread(oligo.snv)[BINSIZE==1000000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
 g$quantile <- 10 - as.integer(g$quantile) + 1
-gi <- fread(oligo.indel)[BINSIZE==1000000 & quantile %in% 1:10][order(as.integer(quantile))]
+gi <- fread(oligo.indel)[BINSIZE==1000000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
 gi$quantile <- 10 - as.integer(gi$quantile) + 1
 
 outtab <- rbind(n, ni, g, gi)

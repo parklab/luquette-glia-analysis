@@ -28,6 +28,15 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc02 as enrichment_
     log:
         'enrichment/scrnaseq_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+use rule sigenrichment_plot from enrichment_scrnaseq_expression_mc02 as enrichment_scrnaseq_expression_mc02_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='donor,selection,celltype'
+    output:
+        expand('enrichment/scrnaseq_expression_mc02/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/scrnaseq_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
 
 
 # Min. signal coverage: _mc04
@@ -57,6 +66,15 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc04 as enrichment_
     log:
         'enrichment/scrnaseq_expression_mc04/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+use rule sigenrichment_plot from enrichment_scrnaseq_expression_mc04 as enrichment_scrnaseq_expression_mc04_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='donor,selection,celltype'
+    output:
+        expand('enrichment/scrnaseq_expression_mc04/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/scrnaseq_expression_mc04/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
 
 
 # Min. signal coverage: _mc06
@@ -87,6 +105,15 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc06 as enrichment_
         'enrichment/scrnaseq_expression_mc06/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
+use rule sigenrichment_plot from enrichment_scrnaseq_expression_mc06 as enrichment_scrnaseq_expression_mc06_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='donor,selection,celltype'
+    output:
+        expand('enrichment/scrnaseq_expression_mc06/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/scrnaseq_expression_mc06/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
 
 # Min. signal coverage: _mc08
 enrichment_scrnaseq_expression_mc08_config = dict(
@@ -114,3 +141,13 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc08 as enrichment_
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'enrichment/scrnaseq_expression_mc08/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+use rule sigenrichment_plot from enrichment_scrnaseq_expression_mc08 as enrichment_scrnaseq_expression_mc08_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='donor,selection,celltype'
+    output:
+        expand('enrichment/scrnaseq_expression_mc08/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/scrnaseq_expression_mc08/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'

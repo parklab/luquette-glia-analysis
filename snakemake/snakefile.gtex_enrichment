@@ -42,6 +42,18 @@ use rule enrichment_plot from enrichment_gtex_expression_mc02 as enrichment_gtex
     log:
         'enrichment/gtex_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+
+use rule sigenrichment_plot from enrichment_gtex_expression_mc02 as enrichment_gtex_expression_mc02_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource',
+        highlight='group=Brain'
+    output:
+        expand('enrichment/gtex_expression_mc02/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/gtex_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+
 # Min. signal coverage: _mc04
 enrichment_gtex_expression_mc04_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc04',
@@ -69,6 +81,17 @@ use rule enrichment_plot from enrichment_gtex_expression_mc04 as enrichment_gtex
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'enrichment/gtex_expression_mc04/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+use rule sigenrichment_plot from enrichment_gtex_expression_mc04 as enrichment_gtex_expression_mc04_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource',
+        highlight='group=Brain'
+    output:
+        expand('enrichment/gtex_expression_mc04/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/gtex_expression_mc04/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
 
 # Min. signal coverage: _mc06
 enrichment_gtex_expression_mc06_config = dict(
@@ -98,6 +121,17 @@ use rule enrichment_plot from enrichment_gtex_expression_mc06 as enrichment_gtex
     log:
         'enrichment/gtex_expression_mc06/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+use rule sigenrichment_plot from enrichment_gtex_expression_mc06 as enrichment_gtex_expression_mc06_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource',
+        highlight='group=Brain'
+    output:
+        expand('enrichment/gtex_expression_mc06/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/gtex_expression_mc06/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+
 # Min. signal coverage: _mc08
 enrichment_gtex_expression_mc08_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc08',
@@ -126,3 +160,13 @@ use rule enrichment_plot from enrichment_gtex_expression_mc08 as enrichment_gtex
     log:
         'enrichment/gtex_expression_mc08/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+use rule sigenrichment_plot from enrichment_gtex_expression_mc08 as enrichment_gtex_expression_mc08_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource',
+        highlight='group=Brain'
+    output:
+        expand('enrichment/gtex_expression_mc08/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/gtex_expression_mc08/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'

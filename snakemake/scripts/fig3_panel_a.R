@@ -50,13 +50,13 @@ if (!("Arial" %in% fonts()))
 
 # not using "NEUN" for neurons because "NEUN_Aug" is presumably the same
 # data but more up-to-date.
-n <- fread(neuron.snv)[celltype=='Excitatory-Neurons' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))]
-ni <- fread(neuron.indel)[celltype=='Excitatory-Neurons' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))]
+n <- fread(neuron.snv)[celltype=='Excitatory-Neurons' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
+ni <- fread(neuron.indel)[celltype=='Excitatory-Neurons' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
 
 # Also, not using NEUN for oligos, but for a different reason: NEUN sorting
 # presumably mostly removes them.
-g <- fread(oligo.snv)[celltype=='Oligodendrocytes' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))]
-gi <- fread(oligo.indel)[celltype=='Oligodendrocytes' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))]
+g <- fread(oligo.snv)[celltype=='Oligodendrocytes' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
+gi <- fread(oligo.indel)[celltype=='Oligodendrocytes' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
 
 outtab <- rbind(n, ni, g, gi)
 fwrite(outtab, file=out.csv)

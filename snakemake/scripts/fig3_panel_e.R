@@ -239,6 +239,9 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.
             labtype='number', linetype='average',
             xlab='Thirds', ylab='', main='Replication timing (RepliSeq)',
             add.legend=!plot.1mb, col=col)
+        # above is linetype=average, meaning add.legend never happens
+        plot(1, pch=NA, xlab='', ylab='', xaxt='n', yaxt='n', bty='n')
+        legend('topleft', legend='Average', pch=20, cex=0.8)
     if (plot.1mb) {
         plotfn(repli[BINSIZE==1000000],
                 typecol='celltype',

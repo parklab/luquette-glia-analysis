@@ -49,3 +49,21 @@ rule fig3b:
         mem=4000
     script:
         "scripts/fig3_panel_b.R"
+
+
+rule fig3b:
+    input:
+        neuron_snv="enrichment/roadmap_histone_signal_brain/quantile/neuron___AB.5quantiles.csv",
+        neuron_indel="enrichment/roadmap_histone_signal_brain/quantile/neuron___indel_AB.5quantiles.csv",
+        oligo_snv="enrichment/roadmap_histone_signal_brain/quantile/oligo___AB.5quantiles.csv",
+        oligo_indel="enrichment/roadmap_histone_signal_brain/quantile/oligo___indel_AB.5quantiles.csv"
+    output:
+        pdf="fig3/panel_c.pdf",
+        svg="fig3/panel_c.svg",
+        csv="fig3/panel_c.csv"
+    log:
+        "fig3/panel_c.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig3_panel_c.R"

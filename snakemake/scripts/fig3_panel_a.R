@@ -40,6 +40,11 @@ for (f in c(out.pdf, out.svg)) {
 
 suppressMessages(library(data.table))
 suppressMessages(library(mutenrich))
+suppressMessages(library(extrafont))
+suppressMessages(library(svglite))
+if (!("Arial" %in% fonts()))
+    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
+
 
 # not using "NEUN" for neurons because "NEUN_Aug" is presumably the same
 # data but more up-to-date.
@@ -101,15 +106,19 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
     }
 }
 
-layout(matrix(1:6, nrow=2, byrow=T))
-plotfn(n, g, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment SNV passA')
-plotfn(n, g, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library SNV passA')
-
-plotfn(ni, gi, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment Indel passA')
-plotfn(ni, gi, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library Indel passA')
-
-dev.print(dev=pdf, file=out.pdf)
-dev.print(dev=svg, file=out.svg)
+devs=list(pdf, svglite)
+outs=c(out.pdf, out.svg)
+for (i in 1:2) {
+    devs[[i]](width=5, height=4, pointsize=5, file=outs[i])
+    layout(matrix(1:6, nrow=2, byrow=T))
+    par(mar=c(4,4,1,1))
+    plotfn(n, g, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment SNV passA', family='Arial')
+    plotfn(n, g, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library SNV passA', family='Arial')
+    
+    plotfn(ni, gi, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment Indel passA', family='Arial')
+    plotfn(ni, gi, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library Indel passA', family='Arial')
+    dev.off()
+}
 
 if ('snakemake' %in% ls()) {
     sink()

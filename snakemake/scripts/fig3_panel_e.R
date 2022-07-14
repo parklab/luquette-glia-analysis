@@ -290,7 +290,9 @@ devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
     devs[[i]](width=10, height=6, pointsize=5, file=outs[i])
-    layout(matrix(1:36, nrow=4, byrow=T), height=c(2,3,2,3))
+    layout(rbind(
+        matrix(1:18, nrow=2, byrow=F),
+        18+matrix(1:18, nrow=2, byrow=F)), height=c(2,3,2,3))
     par(mar=c(5,2,3,0.1))
     # did more sigs for exploratory analysis, now just do panels for paper
     #for (sig in c('SBS1', 'SBS5', 'SBS32', 'SBS89')) {

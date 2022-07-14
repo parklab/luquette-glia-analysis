@@ -155,14 +155,16 @@ rule all:
             datasource=[ 'roadmap_chromhmm_brain' ], #, 'roadmap_histone_narrowpeak' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # Signature-based enrichment
-        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
+        expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
+            #expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
             datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ],
             #datasource=[ 'depth' ],
             celltype=celltypes_to_compute,
             qualtype=[ 'A', 'indel_A' ],
-            nquantiles=[ 3, 5 ])
+            nquantiles=[ 3, 5 ], #)
+            output=[ 'svg', 'pdf', 'csv' ]),
         #expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
             #datasource=[ 'encode_replichip', 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
             #celltype=celltypes_to_compute,

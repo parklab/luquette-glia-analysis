@@ -81,7 +81,8 @@ rule all:
         "fig3/panel_a.pdf",
         "fig3/panel_b.pdf",
         "fig3/panel_c.pdf",
-        "fig3/panel_c2.pdf"
+        "fig3/panel_c2.pdf",
+        "fig3/panel_d.pdf"
 
 rule actually_all_but_skipping_now:
     input:

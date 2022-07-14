@@ -25,6 +25,7 @@ rule fig3a:
         pdf="fig3/panel_a.pdf",
         svg="fig3/panel_a.svg"
     log:
+        "fig3/panel_a.log"
     resources:
         mem=4000
     script:

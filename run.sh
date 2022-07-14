@@ -7,7 +7,7 @@
 word=$1
 
 # $flags is always built added to, never taken from
-flags='--dir . --latency-wait 60' #--rerun-incomplete'
+flags='-s snakemake/Snakefile --dir . --latency-wait 60' #--rerun-incomplete'
         #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
 jobflag='-j 20'
 kgflag=''
@@ -25,6 +25,7 @@ elif [ "x$word" == 'xlocal' ]; then
     jobflag='-j 20'
     kgflag='--keep-going'
 else
+    echo "be sure to run: module load slurm-drmaa"
     usedrmaa='true'
     jobflag='-j 1000'
     kgflag='--keep-going'
@@ -32,29 +33,14 @@ else
     #flags="--max-jobs-per-second 0.05 --max-status-checks-per-second 0.1 --restart-times 2"
 fi
 
-#module load slurm-drmaa
-
-#export TMPDIR=$(realpath try3/tmp)
-#echo "TMPDIR=$TMPDIR"
-# tmpdir is necessary for using workflow.source to properly find
-# scripts from within module calls.
-# XXX: doesn't seem to be the case anymore?
-
-
 
 # I can't get $drmaaflags to substitute properly because of the internal 's
 if [ $usedrmaa == "true" ]; then
-    snakemake $flags \
-        --dir . \
-        --latency-wait 60 $kgflag \
-        -s snakemake/Snakefile \
+    snakemake $flags $kgflag \
         --max-threads 12 $jobflag \
         --drmaa ' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'
 else
-    snakemake $flags \
-        --dir . \
-        $kgflag \
-        -s snakemake/Snakefile \
+    snakemake $flags $kgflag \
         --max-threads 12 $jobflag \
         #--max-inventory-time 0 \
 fi

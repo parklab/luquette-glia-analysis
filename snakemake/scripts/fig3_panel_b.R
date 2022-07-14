@@ -108,7 +108,7 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=5, height=4, pointsize=5, file=outs[i])
+    devs[[i]](width=5, height=3, pointsize=5, file=outs[i])
     layout(matrix(1:6, nrow=2, byrow=T))
     par(mar=c(4,4,2,1))
     plotfn(n, g, linetype='average', xlab='scATACseq decile', ylab='Obs/exp', main='Merged libraries SNV passAB', family='Arial')

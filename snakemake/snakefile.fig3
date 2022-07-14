@@ -51,7 +51,7 @@ rule fig3b:
         "scripts/fig3_panel_b.R"
 
 
-rule fig3b:
+rule fig3c:
     input:
         neuron_snv="enrichment/roadmap_histone_signal_brain/quantile/neuron___AB.5quantiles.csv",
         neuron_indel="enrichment/roadmap_histone_signal_brain/quantile/neuron___indel_AB.5quantiles.csv",

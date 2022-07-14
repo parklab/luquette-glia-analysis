@@ -58,8 +58,6 @@ if (!("Arial" %in% fonts()))
 library(data.table)
 
 # BINSIZE = 1000   -- not doing 1000000 anymore
-plot.1mb <- FALSE
-
 # ourcell = neuron, oligo
 # IF <ourcell == neuron>
 #     sigclass = SBS5, SBS12, SBS16, SBS89
@@ -85,7 +83,7 @@ plot.1mb <- FALSE
 #        ENCFF702XRT -> ENCFF907YXU
 
 # set pdev=NULL to allow the caller to layout the panel
-make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
+make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.1mb=TRUE) {
     ourcell <- match.arg(ourcell)
     col <- ifelse(ourcell == 'neuron', 1, 2)
 
@@ -133,7 +131,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
     plotfn(hst[mark %in% c('H3K27me3', 'H3K9me3') & BINSIZE==1000],
             typecol='mark',
             labtype='number', xlab='Thirds', ylab='', main='Inactive marks',
-            add.legend=F, col=col)
+            add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(hst[mark %in% c('H3K27me3', 'H3K9me3') & BINSIZE==1000000],
                 typecol='mark',
@@ -145,7 +143,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
     plotfn(hst[!(mark %in% c('H3K27me3', 'H3K9me3')) & BINSIZE==1000],
             typecol='mark',
             labtype='number', xlab='Thirds', ylab='', main='Active marks',
-            add.legend=F, col=col)
+            add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(hst[!(mark %in% c('H3K27me3', 'H3K9me3')) & BINSIZE==1000000],
                 typecol='mark',
@@ -157,7 +155,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
     plotfn(nott[mark %in% c('H3K27ac', 'H3K4me3') & BINSIZE==1000],
             typecol='mark',
             labtype='number', xlab='Thirds', ylab='', main='Nott active marks',
-            add.legend=F, col=col)
+            add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(nott[mark %in% c('H3K27ac', 'H3K4me3') & BINSIZE==1000000],
                 typecol='mark',
@@ -169,7 +167,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
     plotfn(atac[BINSIZE==1000],
             typecol='celltype',
             labtype='number', xlab='Thirds', ylab='', main='scATAC-seq',
-            add.legend=F, col=col)
+            add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(atac[BINSIZE==1000000],
                 typecol='celltype',
@@ -181,7 +179,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
     plotfn(nott[mark == 'ATAC' & BINSIZE==1000],
             typecol='mark',
             labtype='number', xlab='Thirds', ylab='', main='Nott ATAC',
-            add.legend=F, col=col)
+            add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(nott[mark == 'ATAC' & BINSIZE==1000000],
                 typecol='mark',
@@ -194,7 +192,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
             #typecol='linegroup',
             typecol='celltype',
             labtype='number', xlab='Thirds', ylab='', main='scRNA-seq',
-            add.legend=F, col=col)
+            add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(rna[BINSIZE==1000000],
                 #typecol='linegroup',
@@ -207,7 +205,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
     plotfn(gtex[BINSIZE==1000],
             typecol='tissue',
             labtype='number', xlab='Thirds', ylab='', main='GTEx expression',
-            add.legend=F, col=col)
+            add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(gtex[BINSIZE==1000000],
                 typecol='tissue',
@@ -217,7 +215,13 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
 
     # RepliChip
     # there is no binsize=1kb because the probes are not dense enough
-    plot(1, pch=NA, xlab='', ylab='', xaxt='n', yaxt='n', bty='n')
+    #plot(1, pch=NA, xlab='', ylab='', xaxt='n', yaxt='n', bty='n')
+    # now always plot 1MB so we have some reference to compare RepliSeq to
+        plotfn(repli[BINSIZE==1000000],
+                typecol='encid',
+                labtype='number', linetype='average',
+                xlab='Thirds', ylab='', main='Replication timing (1 MB, RepliChIP)',
+                add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(repli[BINSIZE==1000000],
                 typecol='encid',
@@ -231,7 +235,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11) {
             typecol='celltype',
             labtype='number', linetype='average',
             xlab='Thirds', ylab='', main='Replication timing (RepliSeq)',
-            add.legend=T, col=col)
+            add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(repli[BINSIZE==1000000],
                 typecol='celltype',
@@ -285,22 +289,22 @@ plotfn <- function(n, typecol, linetype=c('separate', 'average'), labtype=c('poi
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=12, height=6, pointsize=5, file=outs[i])
-    layout(matrix(1:36, nrow=4, byrow=F), height=c(2,3,2,3))
+    devs[[i]](width=10, height=6, pointsize=5, file=outs[i])
+    layout(matrix(1:36, nrow=4, byrow=T), height=c(2,3,2,3))
     par(mar=c(5,2,3,0.1))
     # did more sigs for exploratory analysis, now just do panels for paper
     #for (sig in c('SBS1', 'SBS5', 'SBS32', 'SBS89')) {
     for (sig in 'SBS1') {
         print(c('oligo', sig))
         #make.panel(sig=sig, ourcell='oligo', pdev=function(...) pdf(file=paste0('oligo_', sig, '_v2.pdf'), ...))
-        make.panel(files=oligo.fs, sig=sig, ourcell='oligo', pdev=NULL)
+        make.panel(files=oligo.fs, sig=sig, ourcell='oligo', pdev=NULL, plot.1mb=FALSE)
         #dev.off()
     }
     #for (sig in c('SBS5', 'SBS12', 'SBS16', 'SBS89')) {
     for (sig in 'SBS16') {
         print(c('neuron', sig))
         #make.panel(sig=sig, ourcell='neuron', pdev=function(...) pdf(file=paste0('neuron', sig, '_v2.pdf'), ...))
-        make.panel(files=neuron.fs, sig=sig, ourcell='neuron', pdev=NULL)
+        make.panel(files=neuron.fs, sig=sig, ourcell='neuron', pdev=NULL, plot.1mb=FALSE)
         #dev.off()
     }
 

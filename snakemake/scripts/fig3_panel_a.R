@@ -32,8 +32,9 @@ oligo.snv <- args[3]
 oligo.indel <- args[4]
 out.pdf <- args[5]
 out.svg <- args[6]
+out.csv <- args[7]
 
-for (f in c(out.pdf, out.svg)) {
+for (f in c(out.pdf, out.svg, out.csv)) {
     if (file.exists(f))
         stop(paste('output file', f, 'already exists, please delete it first'))
 }
@@ -56,6 +57,8 @@ ni <- fread(neuron.indel)[celltype=='Excitatory-Neurons' & BINSIZE==1000 & quant
 g <- fread(oligo.snv)[celltype=='Oligodendrocytes' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))]
 gi <- fread(oligo.indel)[celltype=='Oligodendrocytes' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))]
 
+outtab <- rbind(n, ni, g, gi)
+fwrite(outtab, file=out.csv)
 
 plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','number'), ...) {
     labtype <- match.arg(labtype)

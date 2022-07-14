@@ -28,3 +28,4 @@ rule fig3a:
     resources:
         mem=4000
     script:
+        "scripts/fig3_panel_a.R"

@@ -78,7 +78,8 @@ wildcard_constraints:
 
 rule all:
     input:
-        "fig3/panel_a.pdf"
+        "fig3/panel_a.pdf",
+        "fig3/panel_b.pdf"
 
 rule actually_all_but_skipping_now:
     input:

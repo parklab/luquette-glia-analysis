@@ -31,3 +31,21 @@ rule fig3a:
         mem=4000
     script:
         "scripts/fig3_panel_a.R"
+
+
+rule fig3b:
+    input:
+        neuron_snv="enrichment/scatacseq/quantile/neuron___AB.10quantiles.csv",
+        neuron_indel="enrichment/scatacseq/quantile/neuron___indel_AB.10quantiles.csv",
+        oligo_snv="enrichment/scatacseq/quantile/oligo___AB.10quantiles.csv",
+        oligo_indel="enrichment/scatacseq/quantile/oligo___indel_AB.10quantiles.csv"
+    output:
+        pdf="fig3/panel_b.pdf",
+        svg="fig3/panel_b.svg",
+        csv="fig3/panel_b.csv"
+    log:
+        "fig3/panel_b.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig3_panel_b.R"

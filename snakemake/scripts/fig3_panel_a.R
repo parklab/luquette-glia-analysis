@@ -116,11 +116,11 @@ for (i in 1:2) {
     devs[[i]](width=5, height=4, pointsize=5, file=outs[i])
     layout(matrix(1:6, nrow=2, byrow=T))
     par(mar=c(4,4,2,1))
-    plotfn(n, g, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment SNV passA', family='Arial')
-    plotfn(n, g, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library SNV passA', family='Arial')
+    plotfn(n, g, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment SNV passAB', family='Arial')
+    plotfn(n, g, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library SNV passAB', family='Arial')
     
-    plotfn(ni, gi, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment Indel passA', family='Arial')
-    plotfn(ni, gi, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library Indel passA', family='Arial')
+    plotfn(ni, gi, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment Indel passAB', family='Arial')
+    plotfn(ni, gi, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library Indel passAB', family='Arial')
     dev.off()
 }
 

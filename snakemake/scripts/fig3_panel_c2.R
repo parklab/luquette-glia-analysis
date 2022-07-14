@@ -74,8 +74,8 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
 
     ylim <- range(n$enr, g$enr)*c(0.95,1.05)
     xlim <- range(c(n$quantile, g$quantile))
-    n$type <- paste(n$encid)
-    g$type <- paste(g$encid)
+    n$type <- paste(n$celltype)
+    g$type <- paste(g$celltype)
 
     if (linetype == 'average') {
         n$quantile <- as.integer(n$quantile)

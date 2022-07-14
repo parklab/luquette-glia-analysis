@@ -9,12 +9,12 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@params['chrom'],
-        snakemake@params['base_tile_size'],
-        snakemake@params['tiles_per_chunk'],
-        n_cores=snakemake@threads,
-        snakemake@output['rda'],
-        snakemake@input['matfiles'] # variable number of matrix files
+        snakemake@input['neuron_snv'],
+        snakemake@input['neuron_indel'],
+        snakemake@input['oligo_snv'],
+        snakemake@input['oligo_indel'],
+        snakemake@output['pdf'],
+        snakemake@output['svg']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())

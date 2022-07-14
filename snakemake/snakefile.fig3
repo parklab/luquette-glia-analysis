@@ -53,10 +53,10 @@ rule fig3b:
 
 rule fig3c:
     input:
-        neuron_snv="enrichment/encode_replichip/quantile/neuron___AB.5quantiles.csv",
-        neuron_indel="enrichment/encode_replichip/quantile/neuron___indel_AB.5quantiles.csv",
-        oligo_snv="enrichment/encode_replichip/quantile/oligo___AB.5quantiles.csv",
-        oligo_indel="enrichment/encode_replichip/quantile/oligo___indel_AB.5quantiles.csv"
+        neuron_snv="enrichment/encode_replichip/quantile/neuron___AB.10quantiles.csv",
+        neuron_indel="enrichment/encode_replichip/quantile/neuron___indel_AB.10quantiles.csv",
+        oligo_snv="enrichment/encode_replichip/quantile/oligo___AB.10quantiles.csv",
+        oligo_indel="enrichment/encode_replichip/quantile/oligo___indel_AB.10quantiles.csv"
     output:
         pdf="fig3/panel_c.pdf",
         svg="fig3/panel_c.svg",
@@ -71,10 +71,10 @@ rule fig3c:
 # Version of above but using RepliSeq rather than RepliChIP
 rule fig3c2:
     input:
-        neuron_snv="enrichment/repliseq/quantile/neuron___AB.5quantiles.csv",
-        neuron_indel="enrichment/repliseq/quantile/neuron___indel_AB.5quantiles.csv",
-        oligo_snv="enrichment/repliseq/quantile/oligo___AB.5quantiles.csv",
-        oligo_indel="enrichment/repliseq/quantile/oligo___indel_AB.5quantiles.csv"
+        neuron_snv="enrichment/repliseq/quantile/neuron___AB.10quantiles.csv",
+        neuron_indel="enrichment/repliseq/quantile/neuron___indel_AB.10quantiles.csv",
+        oligo_snv="enrichment/repliseq/quantile/oligo___AB.10quantiles.csv",
+        oligo_indel="enrichment/repliseq/quantile/oligo___indel_AB.10quantiles.csv"
     output:
         pdf="fig3/panel_c2.pdf",
         svg="fig3/panel_c2.svg",

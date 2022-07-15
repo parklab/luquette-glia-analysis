@@ -252,7 +252,7 @@ rule download_roadmap_chromhmm15:
         wget -O {output.tmp1} \
             "https://egg2.wustl.edu/roadmap/data/byFileType/chromhmmSegmentations/ChmmModels/coreMarks/jointModel/final/{wildcards.eid}_15_coreMarks_mnemonics.bed.gz"
         gunzip -c {output.tmp1} > {output.tmp2}
-        bedtools intersect -loj -a {input.tiles} -b {output.tmp2} | cut -f1-3,9 > {output.bed}
+        bedtools intersect -loj -a {input.tiles} -b {output.tmp2} | cut -f1-3,10 > {output.bed}
         """
 
 
@@ -270,7 +270,7 @@ rule download_roadmap_chromhmm18:
         wget -O {output.tmp1} \
             "https://egg2.wustl.edu/roadmap/data/byFileType/chromhmmSegmentations/ChmmModels/core_K27ac/jointModel/final/{wildcards.eid}_18_core_K27ac_mnemonics.bed.gz"
         gunzip -c {output.tmp1} > {output.tmp2}
-        bedtools intersect -loj -a {input.tiles} -b {output.tmp2} | cut -f1-3,9 > {output.bed}
+        bedtools intersect -loj -a {input.tiles} -b {output.tmp2} | cut -f1-3,10 > {output.bed}
         """
 
 

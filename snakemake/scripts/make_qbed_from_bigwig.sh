@@ -84,7 +84,7 @@ fi
 echo "Converting to quantiles (n=$nquantiles)"
 Rscript -e 'library(data.table); keep <- fread("'$tilesbed'")[[5]]; tmpout <- fread("'$tmpout'"); score <- tmpout[[5]]; coverage <- tmpout[[3]]/tmpout[[2]]; score[keep == 0 | coverage < '$mincov'] <- NA; q <- findInterval(score, quantile(score, na.rm=T, probs=1:'$nquantiles'/'$nquantiles'), rightmost.closed=TRUE)+1; cat("gc before writing\n"); print(gc()); write(paste(q, score, sep="\t"), ncolumns=1, file="'$tmpout2'"); cat("gc after writing\n"); print(gc())'
 
-# tilesbed has 5 columns, tmpout2 has 2
+# tilesbed has 6 columns, tmpout2 has 2
 echo "Writing qbed '$outqbed'.."
 (echo "$metatags" ;
- paste $tilesbed "$tmpout2" | cut -f1-3,6-7) > "$outqbed"
+ paste $tilesbed "$tmpout2" | cut -f1-3,7-8) > "$outqbed"

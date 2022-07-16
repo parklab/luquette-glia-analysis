@@ -1,0 +1,67 @@
+#!/usr/bin/env Rscript
+
+# detect script being run by snakemake
+# if so, make a mock commandArgs function
+if ('snakemake' %in% ls()) {
+    logfile <- snakemake@log[[1]]
+    con <- file(logfile, 'w')
+    sink(con, type='output')
+    sink(con, type='message')
+
+    commandArgs <- function(...) unlist(c(
+        snakemake@input[1:2], snakemake@output[1:4]
+    ))
+    cat('Got command line arguments from snakemake:\n')
+    print(commandArgs())
+}
+
+library(data.table)
+library(mutenrich)
+
+args <- commandArgs(trailingOnly=TRUE)
+if (length(args) < 2) {
+    stop("usage: make_foldchange_qbed.R output_file target_file background_file1 [ background_file2 ... background_fileN ]")
+}
+
+files <- unique(args[-1]) # just in case user supplies target as a background file
+target <- args[2]
+out.file <- args[1]
+
+if (file.exists(out.file))
+    stop(paste('output file', out.file, 'already exists, please delete it first'))
+
+#target <-  files[1]
+#files <- sprintf('../try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___%s.1000000binsize_10quantiles.qbed',
+    #c('OPC','astrocyte','excitatory_neuron','inhibitory_neuron','microglia','oligo'))
+
+
+ins <- lapply(files, function(f) {
+    list(metadata=readLines(f, n=1),
+        data=fread(f, skip=1))
+})
+names(ins) <- files
+
+out <- ins[[target]]$data
+out.metadata <- read.bed.metadata(target, is.qbed=TRUE)
+nq=as.integer(levels(out.metadata$QUANTILES))
+
+# don't include the target track in the background
+m <- sapply(ins[names(ins) != target], function(i) i$data[[5]])
+#print('before normalization')
+#print(colSums(m, na.rm=TRUE))
+background.matrix <- t(t(m)/colSums(m, na.rm=TRUE))  # normalize read counts per cell type
+#print('after normalization')
+#print(colSums(background.matrix, na.rm=TRUE))
+mean.background <- rowMeans(background.matrix, na.rm=TRUE)
+
+# convert the score to a fold change
+# use a small epsilon to avoid division by 0
+eps <- min(background.matrix[background.matrix>0], na.rm=TRUE)/2
+out[[5]] <- out[[5]]/sum(out[[5]], na.rm=TRUE) # not necessary for quantile based analysis, but nice to have for interpretation
+out[[5]] <- (out[[5]]+eps) / (mean.background+eps)
+# compute quantiles
+out[[4]] <- findInterval(out[[5]],
+    quantile(out[[5]], na.rm=T, probs=1:nq/nq), rightmost.closed=TRUE)+1
+
+writeLines(ins[[target]]$metadata, out.file)
+fwrite(out, file=out.file, append=TRUE, quote=FALSE, sep='\t', col.names=FALSE)

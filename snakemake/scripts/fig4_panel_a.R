@@ -131,7 +131,7 @@ npv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
         Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
 }))
 
-print(rbind(opv, npv))
+print(rbind(opv[order(opv$correlation),], npv[order(npv$correlation),]))
 
 if ('snakemake' %in% ls()) {
     sink()

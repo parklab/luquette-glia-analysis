@@ -99,7 +99,7 @@ devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
     devs[[i]](width=15, height=5, pointsize=5, file=outs[i])
-    layout(1:2)
+    layout(t(1:2))
     par(mar=c(8,4,3,1))
     barplot(ocor, col=colors[names(ocor)], border=F, las=3, ylim=c(-0.03,0.3),
         cex.names=0.8,

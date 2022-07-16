@@ -19,6 +19,8 @@ rule fig4a:
         pdf='fig4/panel_a.pdf',
         svg='fig4/panel_a.svg',
         csv='fig4/panel_a.csv'
+    log:
+        'fig4/panel_a.log'
     resources:
         mem=4000
     script:
@@ -40,6 +42,8 @@ rule fig4b:
         heatmap_pdf='fig4/panel_b_heatmap.pdf',
         heatmap_svg='fig4/panel_b_heatmap.svg',
         csv='fig4/panel_b.csv'
+    log:
+        'fig4/panel_b.log'
     resources:
         mem=4000
     script:

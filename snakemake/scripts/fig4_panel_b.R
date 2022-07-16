@@ -127,17 +127,21 @@ colors <- setNames(c('#f5c710', '#61d04f', 'black', '#28e2e5', '#cd0bbc', '#FF00
 
 
 devs=list(pdf, svglite)
-outs=c(out.pdf, out.svg)
+outs=c(barplot.pdf, barplot.svg)
 for (i in 1:2) {
-    devs[[i]](width=5, height=3, pointsize=5, file=outs[i])
-    layout(matrix(1:6, nrow=2, byrow=T))
-    par(mar=c(4,4,2,1))
-    #pheatmap(m[order(m[,'OPC'],decreasing=T),], cluster_row=F, cluster_cols=F)
-    heatmap(t(m[order(m[,'OPC'],decreasing=T),]), Rowv=NA, Colv=NA, scale='none')
-
+    devs[[i]](width=2, height=2, pointsize=5, file=outs[i])
     par(mar=c(8,4,3,1))
     barplot(m['CNS-GBM',], las=3, border=NA,
         ylab='R^2, GBM mutation density', col=colors[colnames(m)])
+    dev.off()
+}
+
+devs=list(pdf, svglite)
+outs=c(heatmap.pdf, heatmap.svg)
+for (i in 1:2) {
+    devs[[i]](width=7, height=2.5, pointsize=5, file=outs[i])
+    pheatmap(t(m[order(m[,'OPC'],decreasing=T),]), cluster_row=F, cluster_cols=F)
+    #heatmap(t(m[order(m[,'OPC'],decreasing=T),]), Rowv=NA, Colv=NA, scale='none')
     dev.off()
 }
 

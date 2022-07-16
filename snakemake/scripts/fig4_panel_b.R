@@ -78,11 +78,11 @@ qbeds <- lapply(qbed.files, function(f) {
 })
 
 cancer <- Filter(function(qbed) qbed$datasource == 'cancer_snvdens', qbeds)
-cancer.mat <- do.call(rbind, lapply(cancer, function(x) x$scores))
+cancer.mat <- sapply(cancer, function(x) x$scores)
 colnames(cancer.mat) <- sapply(cancer, function(x) x$value)
 
 atac <- Filter(function(qbed) qbed$datasource == 'scatacseq', qbeds)
-atac.mat <- do.call(rbind, lapply(atac, function(x) x$scores))
+atac.mat <- sapply(atac, function(x) x$scores)
 colnames(atac.mat) <- sapply(atac, function(x) x$value)
 
 #cancer.fs <- list.files(path='/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/cancer_snvdens/quantile/qbed',
@@ -136,13 +136,25 @@ for (i in 1:2) {
     dev.off()
 }
 
+# modified from stackoverflow:
+# https://stackoverflow.com/questions/43051525/how-to-draw-pheatmap-plot-to-screen-and-also-save-to-file
+save_pheatmap <- function(x, dev, filename, width=7, height=7, ...) {
+   stopifnot(!missing(x))
+   stopifnot(!missing(filename))
+   dev(filename, width=width, height=height, ...)
+   grid::grid.newpage()
+   grid::grid.draw(x$gtable)
+   dev.off()
+}
+
 devs=list(pdf, svglite)
 outs=c(heatmap.pdf, heatmap.svg)
 for (i in 1:2) {
-    devs[[i]](width=7, height=2.5, pointsize=5, file=outs[i])
-    pheatmap(t(m[order(m[,'OPC'],decreasing=T),]), cluster_row=F, cluster_cols=F)
+    #devs[[i]](width=7, height=2.5, pointsize=5, file=outs[i])
+    x <- pheatmap(t(m[order(m[,'OPC'],decreasing=T),]), cluster_row=F, cluster_cols=F)
+    save_pheatmap_pdf(x, dev=devs[[i]], filename=outs[i], width=7, height=2.5, pointsize=5)
     #heatmap(t(m[order(m[,'OPC'],decreasing=T),]), Rowv=NA, Colv=NA, scale='none')
-    dev.off()
+    #dev.off()
 }
 
 if ('snakemake' %in% ls()) {

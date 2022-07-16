@@ -1,0 +1,23 @@
+# vim: syntax=python
+
+import pandas as pd
+
+# Contains bigwig paths and metadata
+cancer_meta = pd.read_csv('manifests/CANCER_SNVDENS.MANIFEST')
+
+rule fig4a:
+    input:
+        neuron_muts="neuron___mut___A.rda",
+        oligo_muts="oligo___mut___A.rda",
+        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
+        # quantile is ignored. raw scores used.
+        cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
+            tumor=sorted(set(cancer_meta['tumor']))
+    output:
+        pdf='fig4/panel_a.pdf',
+        svg='fig4/panel_a.svg',
+        csv='fig4/panel_a.csv'
+    resources:
+        mem=4000
+    script:
+        "scripts/fig4_panel_a.R"

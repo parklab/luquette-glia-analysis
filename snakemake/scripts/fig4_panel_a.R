@@ -60,7 +60,7 @@ gr2 <- function (bed, seqinfo = NULL, add.chr.prefix = FALSE) {
     ret <- GenomicRanges::GRanges(seqnames = bed[[1]],
         ranges = IRanges::IRanges(start = bed[[2]], bed[[3]]))
     ret$keep <- bed[,5] != 0
-    ret$mean.dp <- bed[,6]
+    ret$mean.dp <- bed[[6]]
     ret
 }
 

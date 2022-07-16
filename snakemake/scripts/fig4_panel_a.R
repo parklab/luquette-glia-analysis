@@ -111,19 +111,27 @@ for (i in 1:2) {
 }
 
 
-# Get p-values for cor=0 t-tests
-opv <- apply(cancer.mat, 2, function(col) {
-    m <- summary(lm(cancer ~ normal, data=data.frame(
+# Get correlation, R^2, p-values for cor=0 t-tests
+opv <- docall(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
+    col <- cancer.mat[,colidx]
+    df <- data.frame(
         cancer=col[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90],
-        normal=oct[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90])))
-    c(m$r.squared, coef(m)['normal',4])
-})
-npv <- apply(cancer.mat, 2, function(col) {
-    m <- summary(lm(cancer ~ normal, data=data.frame(
+        normal=oct[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90])
+    m <- summary(lm(cancer ~ normal, data=df))
+    data.frame(Muts="Oligo",Cancer=colnames(cancer.mat)[colidx],
+        Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
+}))
+npv <- docall(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
+    col <- cancer.mat[,colidx]
+    df <- data.frame(
         cancer=col[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90],
-        normal=nct[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90])))
-    c(m$r.squared, coef(m)['normal',4])
-})
+        normal=nct[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90])
+    m <- summary(lm(cancer ~ normal, data=df))
+    data.frame(Muts="Neuron",Cancer=colnames(cancer.mat)[colidx],
+        Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
+}))
+
+print(rbind(opv, npv))
 
 if ('snakemake' %in% ls()) {
     sink()

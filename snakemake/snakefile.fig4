@@ -33,7 +33,7 @@ rule fig4b:
         # quantile is ignored. raw scores used.
         cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
             tumor=sorted(set(cancer_meta['tumor']))),
-        atac_qbeds=expand('scatacseq___librarymerged___merged___{celltype}.1000000binsize_10quantiles.qbed',
+        atac_qbeds=expand('enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{celltype}.1000000binsize_10quantiles.qbed',
 
             celltype=sorted(set(scatacseq_meta['celltype'])))
     output:

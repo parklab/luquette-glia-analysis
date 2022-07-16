@@ -22,7 +22,7 @@ if ('snakemake' %in% ls()) {
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) != 7) {
+if (length(args) < 8) {
     cat('qbed type is automatically determined by searching for datasource=scatacseq or datasource=cancer_snvdens\n')
     cat('quantiles are ignored; raw scores are used\n')
     stop('usage: fig4_panel_b.R tiles.bed barplot.pdf barplot.svg heatmap.pdf heatmap.svg out.csv qbed1 qbed2 [ qbed3 ... qbedN ]')

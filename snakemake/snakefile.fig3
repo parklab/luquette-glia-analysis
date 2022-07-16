@@ -9,7 +9,7 @@ rule fig3_umap_plot:
     resources:
         mem=24000
     log:
-        "fig3/sc{umap}seq/umap_plot.log"
+        "fig3/panel_{panel_letter}_umap_plot.log"
     script:
         "scripts/plot_umap.R"
 

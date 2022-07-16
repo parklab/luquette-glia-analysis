@@ -69,7 +69,7 @@ nct <- count.muts(tiles, nmut)
 oct <- count.muts(tiles, omut)
 
 cancer.mat <- sapply(cancer.fs, function(f) fread(f, skip=1)[[5]])
-colnames(cancer.mat) <- sapply(cancer.fs, function(f) mutenrich::read.bed.metadata(f, is.qbed=TRUE)['tumor'])
+colnames(cancer.mat) <- unname(sapply(cancer.fs, function(f) mutenrich::read.bed.metadata(f, is.qbed=TRUE)['tumor']))
 
 
 # Get correlation, R^2, p-values for cor=0 t-tests

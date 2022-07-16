@@ -9,13 +9,14 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@input['neuron_snv'],
-        snakemake@input['neuron_indel'],
-        snakemake@input['oligo_snv'],
-        snakemake@input['oligo_indel'],
-        snakemake@output['pdf'],
-        snakemake@output['svg'],
-        snakemake@output['csv']
+        snakemake@input['tiles'],
+        snakemake@output['barplot_pdf'],
+        snakemake@output['barplot_svg'],
+        snakemake@output['heatmap_pdf'],
+        snakemake@output['heatmap_svg'],
+        snakemake@output['csv'],
+        snakemake@input['cancer_qbeds'],
+        snakemake@input['atac_qbeds']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
@@ -65,10 +66,7 @@ tiles <- gr2(fread(tile.file))
 
 qbeds <- lapply(qbed.files, function(f) {
     x <- fread(f, skip=1)
-    metaline <- readLines(f, n=1)
-    # 2 column matrix of k,v pairs
-    metadata <- do.call(rbind, sapply(lapply(strsplit(metaline, ';')[[1]], strsplit, '='), head, 1))
-    metadata <- setNames(metadata[,2], metadata[,1])
+    metadata <- mutenrich::read.bed.metadata(f, is.qbed=TRUE)
     if (!(metadata['datasource'] %in% c('cancer_snvdens', 'scatacseq')))
         stop('only QBEDs with datasource=cancer_snvdens or scatacseq are allowed')
 

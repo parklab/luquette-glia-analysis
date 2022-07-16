@@ -83,14 +83,6 @@ atac <- Filter(function(qbed) qbed$datasource == 'scatacseq', qbeds)
 atac.mat <- sapply(atac, function(x) x$scores)
 colnames(atac.mat) <- unname(sapply(atac, function(x) x$value))
 
-#cancer.fs <- list.files(path='/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/cancer_snvdens/quantile/qbed',
-    #pattern='cancer_snvdens___.*___normdens.1000000binsize_10quantiles.qbed',
-    #full.names=T)
-
-#atac.fs <- c(
-    #'/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___*.1000000binsize_10quantiles.qbed',
-#)
-
 str(atac.mat)
 str(cancer.mat)
 
@@ -155,6 +147,8 @@ for (i in 1:2) {
     x <- pheatmap(t(m[order(m[,'OPC'],decreasing=T),]), cluster_row=F, cluster_cols=F, silent=TRUE, fontsize=5)
     save_pheatmap(x, dev=devs[[i]], filename=outs[i], width=4.5, height=1.5, pointsize=5)
 }
+
+fwrite(m[order(m[,'OPC'], decreasing=TRUE),], file=out.csv)
 
 if ('snakemake' %in% ls()) {
     sink()

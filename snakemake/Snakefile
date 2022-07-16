@@ -73,17 +73,23 @@ wildcard_constraints:
     collapsed='|COLLAPSED.',
     qualtype='|'.join(qualtypes),
     cosmic='cosmic_full|cosmic_reduced',
-    umap='atac|rna',
+    panel_letter='a|b|c|d|e|f'
+    #umap='atac|rna',
 
 
 rule all:
     input:
         "fig3/panel_a.pdf",
+        "fig3/panel_a_umap_plot.pdf",
         "fig3/panel_b.pdf",
+        "fig3/panel_b_umap_plot.pdf",
         "fig3/panel_c.pdf",
         "fig3/panel_c2.pdf",
         "fig3/panel_d.pdf",
-        "fig3/panel_e.pdf"
+        "fig3/panel_e.pdf",
+        "fig4/panel_a.pdf",
+        #"fig4/panel_b.pdf"
+
 
 rule actually_all_but_skipping_now:
     input:

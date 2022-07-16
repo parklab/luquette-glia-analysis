@@ -15,7 +15,7 @@ if ('snakemake' %in% ls()) {
         snakemake@output['pdf'],
         snakemake@output['svg'],
         snakemake@output['csv'],
-        snakemake@input['cancer_bigwigs']
+        snakemake@input['cancer_qbeds']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
@@ -23,7 +23,8 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) < 7) {
-    stop('usage: fig3_panel_a.R neuron_muts.csv oligo_muts.csv genome_tiles.bed out.pdf out.svg out.csv cancer1.bigwig [ cancer2.bigwig ... cancerN.bigwig ]')
+    cat('PASS A mutations should be used here because permutations are NOT used to control for signature bias of rescue\n')
+    stop('usage: fig4_panel_a.R neuron_muts.csv oligo_muts.csv genome_tiles.bed out.pdf out.svg out.csv cancer_snvdens_1.qbed [ cancer_snvdens2.qbed ... cancer_snvdensN.qbed ]')
 }
 
 
@@ -67,8 +68,8 @@ tiles <- gr2(fread(tile.file))
 nct <- count.muts(tiles, nmut)
 oct <- count.muts(tiles, omut)
 
-cancer.mat <- sapply(cancer.fs, function(f) fread(f,skip=1)[[5]])
-colnames(cancer.mat) <- sapply(strsplit(colnames(cancer.mat), '___'), function(x) x[[2]])
+cancer.mat <- sapply(cancer.fs, function(f) fread(f, skip=1)[[5]])
+colnames(cancer.mat) <- sapply(cancer.fs, function(f) mutenrich::read.bed.metadata(f, is.qbed=TRUE)['tumor'])
 
 
 # Get correlation, R^2, p-values for cor=0 t-tests

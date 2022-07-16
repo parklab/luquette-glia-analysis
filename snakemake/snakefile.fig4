@@ -32,7 +32,7 @@ rule fig4b:
         tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
         # quantile is ignored. raw scores used.
         cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
-            tumor=sorted(set(cancer_meta['tumor'])))
+            tumor=sorted(set(cancer_meta['tumor']))),
         atac_qbeds=expand('scatacseq___librarymerged___merged___{celltype}.1000000binsize_10quantiles.qbed',
 
             celltype=sorted(set(scatacseq_meta['celltype'])))

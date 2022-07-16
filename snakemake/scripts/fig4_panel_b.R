@@ -1,10 +1,57 @@
 #!/usr/bin/env Rscript
 
-library(GenomicRanges)
-library(mutenrich)
-library(data.table)
-library(svglite)
-library(pheatmap)
+# detect script being run by snakemake
+# if so, make a mock commandArgs function
+if ('snakemake' %in% ls()) {
+    logfile <- snakemake@log[[1]]
+    con <- file(logfile, 'w')
+    sink(con, type='output')
+    sink(con, type='message')
+
+    commandArgs <- function(...) unlist(c(
+        snakemake@input['neuron_snv'],
+        snakemake@input['neuron_indel'],
+        snakemake@input['oligo_snv'],
+        snakemake@input['oligo_indel'],
+        snakemake@output['pdf'],
+        snakemake@output['svg'],
+        snakemake@output['csv']
+    ))
+    cat('Got command line arguments from snakemake:\n')
+    print(commandArgs())
+}
+
+args <- commandArgs(trailingOnly=TRUE)
+if (length(args) != 7) {
+    cat('qbed type is automatically determined by searching for datasource=scatacseq or datasource=cancer_snvdens\n')
+    cat('quantiles are ignored; raw scores are used\n')
+    stop('usage: fig4_panel_b.R tiles.bed barplot.pdf barplot.svg heatmap.pdf heatmap.svg out.csv qbed1 qbed2 [ qbed3 ... qbedN ]')
+}
+
+
+tile.file <- args[1]
+barplot.pdf <- args[2]
+barplot.svg <- args[3]
+heatmap.pdf <- args[4]
+heatmap.svg <- args[5]
+out.csv <- args[6]
+qbed.files <- args[-(1:6)]
+
+for (f in c(barplot.pdf, barplot.svg, heatmap.pdf, heatmap.svg, out.csv)) {
+    if (file.exists(f))
+        stop(paste('output file', f, 'already exists, please delete it first'))
+}
+
+suppressMessages(library(GenomicRanges))
+suppressMessages(library(pheatmap))
+suppressMessages(library(data.table))
+suppressMessages(library(mutenrich))
+suppressMessages(library(extrafont))
+suppressMessages(library(svglite))
+suppressMessages(library(grid))
+suppressMessages(library(gridExtra))
+if (!("Arial" %in% fonts()))
+    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 
 gr2 <- function (bed, seqinfo = NULL, add.chr.prefix = FALSE) {
@@ -14,43 +61,37 @@ gr2 <- function (bed, seqinfo = NULL, add.chr.prefix = FALSE) {
     ret
 }
 
-tiles <- gr2(fread('/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/alignability/genome_tiles/genome_tiles_1000000binsize.bed'))
+tiles <- gr2(fread(tile.file))
 
-cancer.fs <- list.files(path='/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/cancer_snvdens/quantile/qbed',
-    pattern='cancer_snvdens___.*___normdens.1000000binsize_10quantiles.qbed',
-    full.names=T)
+qbeds <- lapply(qbed.files, function(f) {
+    x <- fread(f, skip=1)
+    metaline <- readLines(f, n=1)
+    # 2 column matrix of k,v pairs
+    metadata <- do.call(rbind, sapply(lapply(strsplit(metaline, ';')[[1]], strsplit, '='), head, 1))
+    metadata <- setNames(metadata[,2], metadata[,1])
+    if (!(metadata['datasource'] %in% c('cancer_snvdens', 'scatacseq')))
+        stop('only QBEDs with datasource=cancer_snvdens or scatacseq are allowed')
 
-cancer.mat <- sapply(cancer.fs, function(f) fread(f,skip=1)[[5]])
-colnames(cancer.mat) <- sapply(strsplit(colnames(cancer.mat), '___'), function(x) x[[2]])
+    list(datasource=metadata['datasource'],
+         value=ifelse(metadata['datasource'] == 'cancer_snvdenv', metadata['tumor'], metadata['celltype']),
+         scores=x[[5]])
+})
 
+cancer <- Filter(function(qbed) qbed$datasource == 'cancer_snvdens', qbeds)
+cancer.mat <- do.call(rbind, lapply(cancer, function(x) x$scores))
+colnames(cancer.mat) <- sapply(cancer, function(x) x$value)
 
+atac <- Filter(function(qbed) qbed$datasource == 'scatacseq', qbeds)
+atac.mat <- do.call(rbind, lapply(atac, function(x) x$scores))
+colnames(atac.mat) <- sapply(atac, function(x) x$value)
 
-atac.fs <- c(
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___OPC.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___astrocyte.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___endothelial.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___excitatory_neuron.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___inhibitory_neuron.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___microglia.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___oligo.1000000binsize_10quantiles.qbed'
-)
-atac.fc.fs <- c(
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/negbin_model/foldchange_qbedenrich/scatacseq_OPC.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/negbin_model/foldchange_qbedenrich/scatacseq_astrocyte.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/negbin_model/foldchange_qbedenrich/scatacseq_excitatory_neuron.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/negbin_model/foldchange_qbedenrich/scatacseq_inhibitory_neuron.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/negbin_model/foldchange_qbedenrich/scatacseq_microglia.1000000binsize_10quantiles.qbed',
-    '/n/data1/hms/dbmi/park/jluquette/glia/analysis/negbin_model/foldchange_qbedenrich/scatacseq_oligo.1000000binsize_10quantiles.qbed')
+#cancer.fs <- list.files(path='/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/cancer_snvdens/quantile/qbed',
+    #pattern='cancer_snvdens___.*___normdens.1000000binsize_10quantiles.qbed',
+    #full.names=T)
 
-
-# For absolute atac signal
-atac.mat <- sapply(atac.fs, function(f) fread(f,skip=1)[[5]])
-colnames(atac.mat) <- sapply(strsplit(sapply(strsplit(colnames(atac.mat), '___'), `[`, 4), '.', fixed=TRUE), head, 1)
-
-# For foldchange atac signal
-atac.fc.mat <- sapply(atac.fc.fs, function(f) fread(f,skip=1)[[5]])
-colnames(atac.fc.mat) <- sub(pattern='scatacseq_', replacement='', x=sapply(strsplit(basename(atac.fc.fs), '.', fixed=TRUE), head, 1))
-
+#atac.fs <- c(
+    #'/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___*.1000000binsize_10quantiles.qbed',
+#)
 
 
 # Discard the lower 2.5th percentile of ATAC sites (=top 2.5% after 1/x xform)
@@ -79,43 +120,27 @@ colnames(m) <- c('OPC', 'Oligodendrocyte',
       'Excitatory-Neuron', 'Inhibitory-Neuron',
       'Astrocyte', 'Microglia')
 
-# I sized this manually via X11
-pheatmap(m[order(m[,'OPC'],decreasing=T),], cluster_row=F, cluster_cols=F)
-#dev.print(dev=pdf, file='cancer_mut_predicted_by_atac.1mb_nobadbins_atac_gt_2.5pctile.pdf')
-#dev.print(dev=svglite, file='cancer_mut_predicted_by_atac.1mb_nobadbins_atac_gt_2.5pctile.svglite')
-
+# Match the colors from the UMAP plot
 colors <- setNames(c('#f5c710', '#61d04f', 'black', '#28e2e5', '#cd0bbc', '#FF0000', '#9e9e9e', 'black'),
     c('Astrocyte', 'Endothelial', 'Excitatory-Neuron', 'Inhibitory-Neuron',
-      'Microglia', 'Oligodendrocyte', 'OPC', 'Neuron'))
+    'Microglia', 'Oligodendrocyte', 'OPC', 'Neuron'))
 
 
-# Also manually sized with X11
-par(mar=c(8,4,3,1))
-barplot(m['CNS-GBM',], las=3, border=NA,
-    ylab='R^2, GBM mutation density', col=colors[colnames(m)])
-#dev.print(dev=pdf, file='cancer_mut_predicted_by_atac.1mb_nobadbins_atac_gt_2.5pctile.JUST_GBM.pdf')
-#dev.print(dev=svglite, file='cancer_mut_predicted_by_atac.1mb_nobadbins_atac_gt_2.5pctile.JUST_GBM.svglite')
+devs=list(pdf, svglite)
+outs=c(out.pdf, out.svg)
+for (i in 1:2) {
+    devs[[i]](width=5, height=3, pointsize=5, file=outs[i])
+    layout(matrix(1:6, nrow=2, byrow=T))
+    par(mar=c(4,4,2,1))
+    #pheatmap(m[order(m[,'OPC'],decreasing=T),], cluster_row=F, cluster_cols=F)
+    heatmap(t(m[order(m[,'OPC'],decreasing=T),]), Rowv=NA, Colv=NA, scale='none')
 
+    par(mar=c(8,4,3,1))
+    barplot(m['CNS-GBM',], las=3, border=NA,
+        ylab='R^2, GBM mutation density', col=colors[colnames(m)])
+    dev.off()
+}
 
-# Wasn't too interesting.
-if (FALSE) {
-# See what foldchange looks like
-mfc <- t(sapply(colnames(cancer.mat), function(cn) {
-    sapply(colnames(atac.fc.mat), function(an) {
-        x <- fit.cancer.to.atac(cancer.mat[,cn], atac.fc.mat[,an])
-        summary(x)$r.squared
-    })
-}))
-
-# Just reorder for plotting
-mfc <- mfc[,c('OPC','oligo','excitatory_neuron','inhibitory_neuron','astrocyte','microglia')]
-# Use prettier column names
-colnames(mfc) <- c('OPC', 'Oligodendrocyte',
-      'Excitatory-Neuron', 'Inhibitory-Neuron',
-      'Astrocyte', 'Microglia')
-
-# I sized this manually via X11
-pheatmap(mfc[order(mfc[,'OPC'],decreasing=T),], cluster_row=F, cluster_cols=F)
-dev.print(dev=pdf, file='cancer_mut_predicted_by_atac_FOLD_CHANGE.1mb_nobadbins_atac_gt_2.5pctile.pdf')
-dev.print(dev=svglite, file='cancer_mut_predicted_by_atac_FOLD_CHANGE.1mb_nobadbins_atac_gt_2.5pctile.svglite')
+if ('snakemake' %in% ls()) {
+    sink()
 }

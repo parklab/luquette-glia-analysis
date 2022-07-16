@@ -73,17 +73,17 @@ qbeds <- lapply(qbed.files, function(f) {
         stop('only QBEDs with datasource=cancer_snvdens or scatacseq are allowed')
 
     list(datasource=metadata['datasource'],
-         value=ifelse(metadata['datasource'] == 'cancer_snvdenv', metadata['tumor'], metadata['celltype']),
+         value=ifelse(metadata['datasource'] == 'cancer_snvdens', metadata['tumor'], metadata['celltype']),
          scores=x[[5]])
 })
 
 cancer <- Filter(function(qbed) qbed$datasource == 'cancer_snvdens', qbeds)
 cancer.mat <- sapply(cancer, function(x) x$scores)
-colnames(cancer.mat) <- sapply(cancer, function(x) x$value)
+colnames(cancer.mat) <- unname(sapply(cancer, function(x) x$value))
 
 atac <- Filter(function(qbed) qbed$datasource == 'scatacseq', qbeds)
 atac.mat <- sapply(atac, function(x) x$scores)
-colnames(atac.mat) <- sapply(atac, function(x) x$value)
+colnames(atac.mat) <- unname(sapply(atac, function(x) x$value))
 
 #cancer.fs <- list.files(path='/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/cancer_snvdens/quantile/qbed',
     #pattern='cancer_snvdens___.*___normdens.1000000binsize_10quantiles.qbed',
@@ -93,6 +93,8 @@ colnames(atac.mat) <- sapply(atac, function(x) x$value)
     #'/n/data1/hms/dbmi/park/jluquette/glia/analysis/try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___*.1000000binsize_10quantiles.qbed',
 #)
 
+str(atac.mat)
+str(cancer.mat)
 
 # Discard the lower 2.5th percentile of ATAC sites (=top 2.5% after 1/x xform)
 fit.cancer.to.atac <- function(cancer, atac, atac.eps=1e-3, cancer.eps=1e-7) {
@@ -113,6 +115,8 @@ m <- t(sapply(colnames(cancer.mat), function(cn) {
     })
 }))
 
+str(m)
+
 # Just reorder for plotting
 m <- m[,c('OPC','oligo','excitatory_neuron','inhibitory_neuron','astrocyte','microglia')]
 # Use prettier column names
@@ -129,7 +133,7 @@ colors <- setNames(c('#f5c710', '#61d04f', 'black', '#28e2e5', '#cd0bbc', '#FF00
 devs=list(pdf, svglite)
 outs=c(barplot.pdf, barplot.svg)
 for (i in 1:2) {
-    devs[[i]](width=2, height=2, pointsize=5, file=outs[i])
+    devs[[i]](width=1.25, height=2, pointsize=5, file=outs[i])
     par(mar=c(8,4,3,1))
     barplot(m['CNS-GBM',], las=3, border=NA,
         ylab='R^2, GBM mutation density', col=colors[colnames(m)])
@@ -150,11 +154,8 @@ save_pheatmap <- function(x, dev, filename, width=7, height=7, ...) {
 devs=list(pdf, svglite)
 outs=c(heatmap.pdf, heatmap.svg)
 for (i in 1:2) {
-    #devs[[i]](width=7, height=2.5, pointsize=5, file=outs[i])
-    x <- pheatmap(t(m[order(m[,'OPC'],decreasing=T),]), cluster_row=F, cluster_cols=F)
-    save_pheatmap_pdf(x, dev=devs[[i]], filename=outs[i], width=7, height=2.5, pointsize=5)
-    #heatmap(t(m[order(m[,'OPC'],decreasing=T),]), Rowv=NA, Colv=NA, scale='none')
-    #dev.off()
+    x <- pheatmap(t(m[order(m[,'OPC'],decreasing=T),]), cluster_row=F, cluster_cols=F, silent=TRUE, fontsize=5)
+    save_pheatmap(x, dev=devs[[i]], filename=outs[i], width=4.5, height=1.5, pointsize=5)
 }
 
 if ('snakemake' %in% ls()) {

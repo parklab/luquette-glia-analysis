@@ -87,7 +87,7 @@ opv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
     data.frame(Muts="Oligo",Cancer=colnames(cancer.mat)[colidx],
         Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
 }))
-opv <- opv[order(opv$Correlation, decreasing=TRUE),]
+opv <- opv[order(opv$Correlation, decreasing=FALSE),]
 npv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
     col <- cancer.mat[,colidx]
     df <- data.frame(
@@ -97,7 +97,7 @@ npv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
     data.frame(Muts="Neuron",Cancer=colnames(cancer.mat)[colidx],
         Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
 }))
-npv <- npv[order(npv$Correlation, decreasing=TRUE),]
+npv <- npv[order(npv$Correlation, decreasing=FALSE),]
 
 fwrite(rbind(opv, npv), file=out.csv)
 

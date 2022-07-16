@@ -75,6 +75,8 @@ mean.dp <- tiles$mean.dp
 
 dp.q10 <- quantile(mean.dp[tiles$keep], prob=1/10)
 dp.q90 <- quantile(mean.dp[tiles$keep], prob=9/10)
+dp.q10 <- -1
+dp.q90 <- Inf
 
 
 # Get correlation, R^2, p-values for cor=0 t-tests
@@ -112,10 +114,10 @@ for (i in 1:2) {
     layout(t(1:2))
     par(mar=c(8,4,3,1))
     barplot(opv$Correlation, col=colors[opv$Cancer], border=F, las=3, ylim=c(-0.03,0.3),
-        cex.names=0.8,
+        cex.names=0.8, names.arg=opv$Cancer,
         main='Oligo passA SNVs\nno bad bins, 10% <= DP <= 90%, 1 MB bins')
     barplot(npv$Correlation, col=colors[npv$Cancer], border=F, las=3, ylim=c(-0.03,0.3),
-        cex.names=0.8,
+        cex.names=0.8, names.arg=npv$Cancer,
         main='Neuron passA SNVs\nno bad bins, 10% <= DP <= 90%, 1 MB bins')
     dev.off()
 }

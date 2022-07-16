@@ -12,7 +12,7 @@ rule fig4a:
         tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
         # quantile is ignored. raw scores used.
         cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
-            tumor=sorted(set(cancer_meta['tumor']))
+            tumor=sorted(set(cancer_meta['tumor'])))
     output:
         pdf='fig4/panel_a.pdf',
         svg='fig4/panel_a.svg',

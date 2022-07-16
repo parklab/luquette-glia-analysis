@@ -4,7 +4,7 @@ rule fig3_umap_plot:
     input:
         lambda wildcards: "input/any___scatacseq_umap___none.csv" if wildcards.panel_letter == 'b' else "input/any___scrnaseq_umap___none.csv"
     output:
-        expand("fig3/panel_{panel_letter}_umap_plot.{ext}",
+        expand("fig3/panel_{{panel_letter}}_umap_plot.{ext}",
             ext=[ 'svg', 'pdf', 'jpeg' ])
     resources:
         mem=24000

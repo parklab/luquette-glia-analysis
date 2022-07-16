@@ -71,20 +71,10 @@ cancer.mat <- sapply(cancer.fs, function(f) fread(f,skip=1)[[5]])
 colnames(cancer.mat) <- sapply(strsplit(colnames(cancer.mat), '___'), function(x) x[[2]])
 
 
-mean.dp <- tiles$mean.dp
-
-dp.q10 <- quantile(mean.dp[tiles$keep], prob=1/10)
-dp.q90 <- quantile(mean.dp[tiles$keep], prob=9/10)
-dp.q10 <- -1
-dp.q90 <- Inf
-
-
 # Get correlation, R^2, p-values for cor=0 t-tests
 opv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
     col <- cancer.mat[,colidx]
-    df <- data.frame(
-        cancer=col[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90],
-        normal=oct[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90])
+    df <- data.frame(cancer=col[tiles$keep], normal=oct[tiles$keep])
     m <- summary(lm(cancer ~ normal, data=df))
     data.frame(Muts="Oligo",Cancer=colnames(cancer.mat)[colidx],
         Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
@@ -92,9 +82,7 @@ opv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
 opv <- opv[order(opv$Correlation, decreasing=FALSE),]
 npv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
     col <- cancer.mat[,colidx]
-    df <- data.frame(
-        cancer=col[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90],
-        normal=nct[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90])
+    df <- data.frame(cancer=col[tiles$keep], normal=nct[tiles$keep])
     m <- summary(lm(cancer ~ normal, data=df))
     data.frame(Muts="Neuron",Cancer=colnames(cancer.mat)[colidx],
         Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
@@ -115,10 +103,10 @@ for (i in 1:2) {
     par(mar=c(8,4,3,1))
     barplot(opv$Correlation, col=colors[opv$Cancer], border=F, las=3, ylim=c(-0.03,0.3),
         cex.names=0.8, names.arg=opv$Cancer,
-        main='Oligo passA SNVs\nno bad bins, 10% <= DP <= 90%, 1 MB bins')
+        main='Oligo passA SNVs\nno bad bins, 1 MB bins')
     barplot(npv$Correlation, col=colors[npv$Cancer], border=F, las=3, ylim=c(-0.03,0.3),
         cex.names=0.8, names.arg=npv$Cancer,
-        main='Neuron passA SNVs\nno bad bins, 10% <= DP <= 90%, 1 MB bins')
+        main='Neuron passA SNVs\nno bad bins, 1 MB bins')
     dev.off()
 }
 

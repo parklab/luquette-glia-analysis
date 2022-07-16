@@ -112,7 +112,7 @@ for (i in 1:2) {
 
 
 # Get correlation, R^2, p-values for cor=0 t-tests
-opv <- docall(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
+opv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
     col <- cancer.mat[,colidx]
     df <- data.frame(
         cancer=col[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90],
@@ -121,7 +121,7 @@ opv <- docall(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
     data.frame(Muts="Oligo",Cancer=colnames(cancer.mat)[colidx],
         Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
 }))
-npv <- docall(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
+npv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
     col <- cancer.mat[,colidx]
     df <- data.frame(
         cancer=col[tiles$keep & mean.dp >= dp.q10 & mean.dp <= dp.q90],

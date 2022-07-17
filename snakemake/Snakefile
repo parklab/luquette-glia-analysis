@@ -490,8 +490,49 @@ use rule sigenrichment_plot from enrichment_scatacseq as enrichment_scatacseq_si
         'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
 
 
+########################################################################
+# Our scATAC-seq data but using foldchange signals
+########################################################################
+enrichment_scatacseq_config = dict(
+    **{ 'output_dir': 'enrichment/scatacseq_foldchange',
+        'SIGNAL_MANIFEST': 'manifests/SCATACSEQ.MANIFEST' },
+    **enrichment_config
+)
 
+module enrichment_scatacseq:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_scatacseq_config
+
+use rule * from enrichment_scatacseq  as enrichment_scatacseq_*
+
+use rule make_qbed_from_bigwig from enrichment_scatacseq as enrichment_scatacseq_make_qbed_from_bigwig with:
+    resources:
+        mem=15000
+
+use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype',
+    output:
+        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+use rule sigenrichment_plot from enrichment_scatacseq as enrichment_scatacseq_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype',
+    output:
+        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+
+
+########################################################################
 # Cancer SNV density
+########################################################################
 enrichment_cancer_config = dict(
     **{ 'output_dir': 'enrichment/cancer_snvdens',
         'SIGNAL_MANIFEST': 'manifests/CANCER_SNVDENS.MANIFEST' },

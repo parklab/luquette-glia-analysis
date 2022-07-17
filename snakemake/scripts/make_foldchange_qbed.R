@@ -9,7 +9,9 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@input[1:2], snakemake@output[1:4]
+        snakemake@output['qbed'],
+        snakemake@input['target'],
+        snakemake@input['background'],
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
@@ -29,11 +31,6 @@ out.file <- args[1]
 
 if (file.exists(out.file))
     stop(paste('output file', out.file, 'already exists, please delete it first'))
-
-#target <-  files[1]
-#files <- sprintf('../try3/enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___%s.1000000binsize_10quantiles.qbed',
-    #c('OPC','astrocyte','excitatory_neuron','inhibitory_neuron','microglia','oligo'))
-
 
 ins <- lapply(files, function(f) {
     list(metadata=readLines(f, n=1),

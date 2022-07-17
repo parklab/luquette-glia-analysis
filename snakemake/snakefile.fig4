@@ -48,3 +48,6 @@ rule fig4b:
         mem=4000
     script:
         "scripts/fig4_panel_b.R"
+
+
+rule fig4c:

@@ -17,8 +17,8 @@ if ('snakemake' %in% ls()) {
     print(commandArgs())
 }
 
-library(data.table)
-library(mutenrich)
+suppressMessages(library(data.table))
+suppressMessages(library(mutenrich))
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) < 3) {
@@ -40,6 +40,8 @@ names(ins) <- files
 
 out <- ins[[target]]$data
 out.metadata <- read.bed.metadata(target, is.qbed=TRUE)
+# add _foldchange to the datasource
+out.metadata$datasource <- paste0(out.metadata$datasource, '_foldchange')
 nq=as.integer(out.metadata$QUANTILES)
 
 # don't include the target track in the background
@@ -62,3 +64,7 @@ out[[4]] <- findInterval(out[[5]],
 
 writeLines(ins[[target]]$metadata, out.file)
 fwrite(out, file=out.file, append=TRUE, quote=FALSE, sep='\t', col.names=FALSE)
+
+if ('snakemake' %in% ls()) {
+    sink()
+}

@@ -40,7 +40,7 @@ names(ins) <- files
 
 out <- ins[[target]]$data
 out.metadata <- read.bed.metadata(target, is.qbed=TRUE)
-nq=as.integer(levels(out.metadata$QUANTILES))
+nq=as.integer(out.metadata$QUANTILES)
 
 # don't include the target track in the background
 m <- sapply(ins[names(ins) != target], function(i) i$data[[5]])

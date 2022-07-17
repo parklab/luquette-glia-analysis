@@ -21,7 +21,7 @@ library(data.table)
 library(mutenrich)
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 2) {
+if (length(args) < 3) {
     stop("usage: make_foldchange_qbed.R output_file target_file background_file1 [ background_file2 ... background_fileN ]")
 }
 

@@ -601,9 +601,9 @@ rule pcawg_snpeff_singlecell:
     input:
         "vcfs/{celltype}___mut___{qualtype}.vcf"
     output:
-        "data/pcawg/snpeff_vcfs/{celltype}___mut___{qualtype}.snpeff.vcf"
+        "data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf"
     log:
-        "data/pcawg/snpeff_vcfs/{celltype}___mut___{qualtype}.snpeff.log"
+        "data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.log"
     resources:
         mem=8000
     shell:

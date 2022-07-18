@@ -5,9 +5,12 @@ The file metadata/pcawg_metadata.csv used to be created in the pipeline. But the
 the pipeline needed to be able to read it to generate rules. So it was generated and
 added to the code repo.
 
+OLD:
 The code to create the file is still in the pipeline and can be rerun if desired.
 Simply comment out all references to the python object pcawg_metadata in snakefile.data
 and run snakemake -s snakemake/Snakefile --until metadata/pcawg_metadata.csv.
+NEW:
+This file can now be created with ./run.sh make_pcawg_metadata
 
 
 Data sources

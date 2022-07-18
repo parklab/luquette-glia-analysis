@@ -69,6 +69,7 @@ rule fig4c:
 
 
 if 'make_pcawg_metadata' not in config.keys():
+    # not affected by 2 excluded samples
     pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
     pcawg_tumors = sorted(set(pcawg_meta['tumor']))
 else:

@@ -1,0 +1,8 @@
+datasource,libid,sample,celltype,file
+scatacseq_foldchange,librarymerged,merged,OPC,
+scatacseq_foldchange,librarymerged,merged,astrocyte,
+scatacseq_foldchange,librarymerged,merged,endothelial,
+scatacseq_foldchange,librarymerged,merged,excitatory_neuron,
+scatacseq_foldchange,librarymerged,merged,inhibitory_neuron,
+scatacseq_foldchange,librarymerged,merged,microglia,
+scatacseq_foldchange,librarymerged,merged,oligo,

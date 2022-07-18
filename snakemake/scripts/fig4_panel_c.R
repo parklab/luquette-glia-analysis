@@ -48,8 +48,10 @@ if (!("Arial" %in% fonts()))
 
 # ATACseq
 load(oligo.atac)
+oatactab <- do.call(rbind, lapply(1:nrow(emeta), function(i) { x <- data.frame(Assay='scATACseq', MutsFrom='Oligo', AssayCelltype=emeta$celltype[i], Quantile=rownames(es[[i]]), es[[i]]); x[as.character(1:10),] }))
 aoes <- lapply(es, function(e) e[as.character(1:10),])
 load(neuron.atac)
+natactab <- do.call(rbind, lapply(1:nrow(emeta), function(i) { x <- data.frame(Assay='scATACseq', MutsFrom='Neuron', AssayCelltype=emeta$celltype[i], Quantile=rownames(es[[i]]), es[[i]]); x[as.character(1:10),] }))
 anes <- lapply(es, function(e) e[as.character(1:10),])
 atacmeta <- emeta
 atacmap <- setNames(c('OPCs', 'Astrocytes', 'Excitatory-Neurons', 'Inhibitory-Neurons',
@@ -61,11 +63,15 @@ print(atacmeta$celltype)
 
 # RNAseq
 load(oligo.rna)
+ornatab <- do.call(rbind, lapply(1:nrow(emeta), function(i) { x <- data.frame(Assay='scRNAseq', MutsFrom='Oligo', AssayCelltype=emeta$celltype[i], Quantile=rownames(es[[i]]), es[[i]]); x[as.character(1:10),] }))
 roes <- lapply(es, function(e) e[as.character(1:10),])
 load(neuron.rna)
+nrnatab <- do.call(rbind, lapply(1:nrow(emeta), function(i) { x <- data.frame(Assay='scRNAseq', MutsFrom='Neuron', AssayCelltype=emeta$celltype[i], Quantile=rownames(es[[i]]), es[[i]]); x[as.character(1:10),] }))
 rnes <- lapply(es, function(e) e[as.character(1:10),])
 rnameta <- emeta
 
+
+fwrite(rbind(oatactab,ornatab, natactab,nrnatab), file=out.csv)
 
 # Match the UMAP figure colors
 colors <- setNames(c('#f5c710', '#61d04f', 'black', '#28e2e5', '#cd0bbc', '#FF0000', '#9e9e9e', 'black'),

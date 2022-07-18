@@ -611,7 +611,7 @@ rule pcawg_snpeff_singlecell:
         mem=8000
     shell:
         """
-        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=.;" $8; print $0 }}' {input} > {output.tmp} \
+        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=."; print $0 }}' {input} > {output.tmp} \
             | snakemake/scripts/run_snpeff_pcawg.sh {output.tmp} {output.vcf} > {log} 2>&1
         """
 

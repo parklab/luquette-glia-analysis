@@ -604,6 +604,8 @@ rule pcawg_snpeff_singlecell:
         "data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf"
     log:
         "data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.log"
+    params:
+        celltype='{celltype}'
     resources:
         mem=8000
     shell:

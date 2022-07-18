@@ -619,15 +619,17 @@ rule parse_singlecell_snpeff:
 
 rule pcawg_gene_mutation_odds_ratios:
     input:
-        "data/pcawg/neuron___{qualtype}.gene_mutations.txt",
-        "data/pcawg/oligo___{qualtype}.gene_mutations.txt",
-        "data/pcawg/{tumor}.gene_mutations.txt"
+        neuron="data/pcawg/neuron___AB.gene_mutations.txt",
+        oligo="data/pcawg/oligo___AB.gene_mutations.txt",
+        tumor="data/pcawg/{tumor}.gene_mutations.txt"
     output:
-        "data/pcawg/{tumor}.gene_mutation_odds_ratios.txt"
+        rda="data/pcawg/{tumor}.gene_mutation_odds_ratios.rda"
     log:
         "data/pcawg/{tumor}.gene_mutation_odds_ratios.log"
     resources:
         mem=8000
     shell:
         """
+        snakemake/scripts/pcawg_gene_odds_ratio.R \
+            {input.tumor} {input.neuron} {input.oligo} {output.rda} > {log} 2>&1
         """

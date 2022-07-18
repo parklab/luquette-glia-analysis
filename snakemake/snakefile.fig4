@@ -66,3 +66,22 @@ rule fig4c:
         mem=4000
     script:
         "scripts/fig4_panel_c.R"
+
+
+pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
+pcawg_tumors = sorted(set(pcawg_meta['tumor']))
+
+rule fig4d:
+    input:
+        cancer_ors=expand("data/pcawg/{tumor}.gene_mutation_odds_ratios.rda",
+            tumor=pcawg_tumors)
+    output:
+        pdf="fig4/panel_d.pdf",
+        svg="fig4/panel_d.svg",
+        csv="fig4/panel_d.csv"
+    log:
+        "fig4/panel_d.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig4_panel_d.R"

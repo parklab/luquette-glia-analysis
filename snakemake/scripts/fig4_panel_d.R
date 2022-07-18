@@ -74,8 +74,6 @@ for (i in 1:2) {
         lines(x=xaxis, y=odds.mat[,i], col=col, lwd=lwd)
     }
 
-print(types)
-print(emphasize)
     # legend in its own panel
     plot(x=0, y=0, pch=NA, bty='n', xaxt='n', yaxt='n', xlab='', ylab='')
     legend(x="center", legend=c(emphasize, types[!(types %in% emphasize)]),

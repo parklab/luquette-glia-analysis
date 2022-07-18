@@ -54,7 +54,7 @@ fwrite(x, file=out.csv)
 
 
 emphasize <- c('CNS-GBM','CNS-Medullo','CNS-Oligo', 'CNS-PiloAstro')
-colors <- setNames(rep('grey',37), colnames(cancer.mat))
+colors <- setNames(rep('grey',37), colnames(odds.mat))
 colors[emphasize] <- c('orange','black','red','purple')
 
 devs=list(pdf, svglite)

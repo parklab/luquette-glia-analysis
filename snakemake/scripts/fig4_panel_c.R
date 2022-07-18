@@ -55,10 +55,8 @@ atacmeta <- emeta
 atacmap <- setNames(c('OPCs', 'Astrocytes', 'Excitatory-Neurons', 'Inhibitory-Neurons',
     'Microglia', 'Oligodendrocytes'),
     c('OPC', 'astrocyte', 'excitatory_neuron', 'inhibitory_neuron', 'microglia', 'oligo'))
-print(str(atacmeta$celltype))
-print(str(levels(atacmeta$celltype)))
 print(atacmeta$celltype)
-atacmeta$celltype <- atacmap[levels(atacmeta$celltype)]
+atacmeta$celltype <- atacmap[atacmeta$celltype]
 print(atacmeta$celltype)
 
 # RNAseq
@@ -67,7 +65,6 @@ roes <- lapply(es, function(e) e[as.character(1:10),])
 load(neuron.rna)
 rnes <- lapply(es, function(e) e[as.character(1:10),])
 rnameta <- emeta
-rnameta$celltype <- levels(rnameta$celltype)
 
 
 # Match the UMAP figure colors

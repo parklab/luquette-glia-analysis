@@ -442,7 +442,7 @@ rule make_foldchange_qbed_scatacseq:
     input:
         target="enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{scatacseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed",
         background=expand("enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{scatacseq_celltype}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
-            celltype=sorted(set(scatacseq_meta['celltype'])))
+            scatacseq_celltype=sorted(set(scatacseq_meta['celltype'])))
     output:
         qbed="enrichment/scatacseq_foldchange/quantile/qbed/scatacseq_foldchange___librarymerged___merged___{scatacseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed"
     log:

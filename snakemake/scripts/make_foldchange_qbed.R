@@ -11,7 +11,7 @@ if ('snakemake' %in% ls()) {
     commandArgs <- function(...) unlist(c(
         snakemake@output['qbed'],
         snakemake@input['target'],
-        snakemake@input['background'],
+        snakemake@input['background']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())

@@ -591,10 +591,10 @@ rule pcawg_parse_snpeff:
     input:
         "data/pcawg/tumor_vcfs/{tumor}.snpeff.vcf"
     output:
-        "data/pcawg/{tumor}.gene_mutations.vcf"
+        "data/pcawg/{tumor}.gene_mutations.txt"
     resources:
         mem=8000
     shell:
         """
-        snakemake/scripts/parse_pcawg_snpeff.sh
+        snakemake/scripts/parse_pcawg_snpeff.sh {input} > {output}
         """

@@ -68,8 +68,9 @@ rule fig4c:
         "scripts/fig4_panel_c.R"
 
 
-pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
-pcawg_tumors = sorted(set(pcawg_meta['tumor']))
+if 'make_pcawg_metadata' not in config.keys():
+    pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
+    pcawg_tumors = sorted(set(pcawg_meta['tumor']))
 
 rule fig4d:
     input:

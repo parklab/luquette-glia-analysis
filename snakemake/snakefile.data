@@ -530,10 +530,13 @@ rule pcawg_make_metadata:
         "snakemake/scripts/make_pcawg_metadata.R {input.ss} {input.icgc} {input.tcga} {output}"
 
 
-pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
-# make a donor_id -> {tcga|icgc} mapping
-proj_map = dict(zip(list(pcawg_meta['icgc_donor_id']), list(pcawg_meta['project'])))
-pcawg_tumors = sorted(set(pcawg_meta['tumor']))
+# Allow script to run (and presumably create this file) by specifying
+# --config make_pcawg_metadata=1 --until metadata/pcawg_metadata.csv
+if 'make_pcawg_metadata' not in config.keys():
+    pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
+    # make a donor_id -> {tcga|icgc} mapping
+    proj_map = dict(zip(list(pcawg_meta['icgc_donor_id']), list(pcawg_meta['project'])))
+    pcawg_tumors = sorted(set(pcawg_meta['tumor']))
 
 rule pcawg_extract_sample_vcf:
     input:

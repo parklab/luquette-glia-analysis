@@ -583,20 +583,20 @@ rule pcawg_snpeff:
     input:
         "data/pcawg/tumor_vcfs/{tumor}.vcf"
     output:
-        "data/pcawg/tumor_vcfs/{tumor}.snpeff.vcf"
+        "data/pcawg/snpeff_vcfs/{tumor_or_celltype}.snpeff.vcf"
     log:
-        "data/pcawg/tumor_vcfs/{tumor}.snpeff.log"
+        "data/pcawg/snpeff_vcfs/{tumor_or_celltype}.snpeff.log"
     resources:
         mem=8000
     shell:
         """
-        snakemake/scripts/run_snpeff.sh {input} {output} > {log} 2>&1
+        snakemake/scripts/run_snpeff_pcawg.sh {input} {output} > {log} 2>&1
         """
 
 
 rule pcawg_parse_snpeff:
     input:
-        "data/pcawg/tumor_vcfs/{tumor}.snpeff.vcf"
+        "data/pcawg/snpeff_vcfs/{tumor_or_celltype}.snpeff.vcf"
     output:
         "data/pcawg/{tumor}.gene_mutations.txt"
     resources:
@@ -610,7 +610,7 @@ rule pcawg_parse_snpeff:
 ruleorder: parse_singlecell_snpeff > pcawg_parse_snpeff
 rule parse_singlecell_snpeff:
     input:
-        "fig1/snpeff_analysis/{celltype}___snpeff___{qualtype}.vcf"
+        "data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf"
     output:
         "data/pcawg/{celltype}___{qualtype}.gene_mutations.txt"
     params:

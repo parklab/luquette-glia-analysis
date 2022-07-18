@@ -502,7 +502,7 @@ rule pcawg_make_metadata:
 
 pcawg_meta = pd.read_csv('data/pcawg/metadata.csv')
 # make a donor_id -> {tcga|icgc} mapping
-proj_map = dict(zip(list(x['icgc_donor_id']), list(x['project'])))
+proj_map = dict(zip(list(pcawg_meta['icgc_donor_id']), list(pcawg_meta['project'])))
 
 rule pcawg_extract_sample_vcf:
     input:

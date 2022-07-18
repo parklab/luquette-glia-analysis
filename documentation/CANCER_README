@@ -1,3 +1,17 @@
+Creating PCAWG metadata:
+------------------------------------------------------------------------------------
+
+The file metadata/pcawg_metadata.csv used to be created in the pipeline. But then
+the pipeline needed to be able to read it to generate rules. So it was generated and
+added to the code repo.
+
+The code to create the file is still in the pipeline and can be rerun if desired.
+Simply comment out all references to the python object pcawg_metadata in snakefile.data
+and run snakemake -s snakemake/Snakefile --until metadata/pcawg_metadata.csv.
+
+
+Data sources
+------------------------------------------------------------------------------------
 Cancer somatic mutations come from the ICGC portal:
 
 https://dcc.icgc.org/releases/PCAWG/consensus_snv_indel

@@ -508,7 +508,7 @@ rule pcawg_extract_sample_vcf:
     input:
         lambda wildcards: "input/any___cancer_" + proj_map[wildcards.donor] + '___none.maf'
     output:
-        maf=temp("data/pcawg/vcfs/{donor}.vcf"),
+        maf=temp("data/pcawg/vcfs/{donor}.maf"),
         pairs=temp("data/pcawg/vcfs/{donor}.pairs.tsv"),
         vcf="data/pcawg/vcfs/{donor}.vcf"
     log:

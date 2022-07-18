@@ -461,7 +461,7 @@ scrnaseq_meta = pd.read_csv('manifests/SCRNASEQ_EXPRESSION_FOLDCHANGE.MANIFEST')
 rule make_foldchange_qbed_scrnaseq:
     input:
         target="enrichment/scrnaseq_expression_{mincov}/quantile/qbed/scrnaseq___expression___UMB1465___DAPI___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed",
-        background=expand("enrichment/scrnaseq_expression_{mincov}/quantile/qbed/scrnaseq___expression___UMB1465___DAPI___{scrnaseq_celltype}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
+        background=expand("enrichment/scrnaseq_expression_{{mincov}}/quantile/qbed/scrnaseq___expression___UMB1465___DAPI___{scrnaseq_celltype}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
             scrnaseq_celltype=sorted(set(scrnaseq_meta['celltype'])))
     output:
         qbed="enrichment/scrnaseq_expression_{mincov}_foldchange/quantile/qbed/scrnaseq_foldchange___expression___UMB1465___DAPI___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed"

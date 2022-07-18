@@ -484,7 +484,7 @@ rule pcawg_copy_icgc_maf:
         "input/any___cancer_icgc___none.maf"
     shell:
         """
-        cat {input} tr -d '\r' > {output}
+        cat {input} | tr -d '\r' > {output}
         """
 
 ruleorder: pcawg_copy_tcga_maf > copy_inputs

@@ -89,7 +89,8 @@ rule all:
         "fig3/panel_e.pdf",
         "fig4/panel_a.pdf",
         "fig4/panel_b_barplot.pdf",
-        "fig4/panel_b_heatmap.pdf"
+        "fig4/panel_b_heatmap.pdf",
+        "fig4/panel_c.pdf"
 
 
 rule actually_all_but_skipping_now:

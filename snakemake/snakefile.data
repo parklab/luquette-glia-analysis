@@ -473,6 +473,32 @@ rule make_foldchange_qbed_scrnaseq:
         "scripts/make_foldchange_qbed.R"
 
 
+
+# Both copy the MAF file and remove carriage returns because maf2vcf.pl
+# can't handle them.
+ruleorder: pcawg_copy_icgc_maf > copy_inputs
+rule pcawg_copy_icgc_maf:
+    input:
+        input_copy_mapping["any___cancer_icgc___none.maf"]
+    output:
+        "any___cancer_icgc___none.maf"
+    shell:
+        """
+        tr -d '\r' {input} > {output}
+        """
+
+ruleorder: pcawg_copy_tcga_maf > copy_inputs
+rule pcawg_copy_tcga_maf:
+    input:
+        input_copy_mapping["any___cancer_tcga___none.maf"]
+    output:
+        "any___cancer_tcga___none.maf"
+    shell:
+        """
+        tr -d '\r' {input} > {output}
+        """
+
+
 rule pcawg_get_donor_ids:
     input:
         "input/any___{project}___none.maf",
@@ -543,4 +569,19 @@ rule pcawg_make_tumor_vcf:
     shell:
         """
         snakemake/scripts/make_pcawg_tumor_vcf.sh {params.tumor} {input}
+        """
+
+
+rule pcawg_snpeff:
+    input:
+        "data/pcawg/tumor_vcfs/{tumor}.vcf"
+    output:
+        "data/pcawg/tumor_vcfs/{tumor}.snpeff.vcf"
+    log:
+        "data/pcawg/tumor_vcfs/{tumor}.snpeff.log"
+    resources:
+        mem=8000
+    shell:
+        """
+        snakemake/scripts/run_snpeff.sh {input} {output} > {log} 2>&1
         """

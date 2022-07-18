@@ -594,7 +594,9 @@ rule pcawg_snpeff:
         """
 
 
-# Same as above, but input format is different
+# Same as above, but input format is different. Also add some extra VCF
+# tags to the normal cell VCFs.
+ruleorder: pcawg_snpeff_singlecell > pcawg_snpeff
 rule pcawg_snpeff_singlecell:
     input:
         "vcfs/{celltype}___mut___{qualtype}.vcf"
@@ -606,7 +608,8 @@ rule pcawg_snpeff_singlecell:
         mem=8000
     shell:
         """
-        snakemake/scripts/run_snpeff_pcawg.sh {input} {output} > {log} 2>&1
+        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=.;" $8; print $0 }}' {input} \
+            | snakemake/scripts/run_snpeff_pcawg.sh /dev/stdin {output} > {log} 2>&1
         """
 
 
@@ -623,6 +626,7 @@ rule pcawg_parse_snpeff:
         """
 
 
+'''
 ruleorder: parse_singlecell_snpeff > pcawg_parse_snpeff
 rule parse_singlecell_snpeff:
     input:
@@ -638,6 +642,7 @@ rule parse_singlecell_snpeff:
         awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=.;" $8; print $0 }}' {input} \
             | snakemake/scripts/parse_pcawg_snpeff.sh /dev/stdin > {output}
         """
+'''
 
 
 rule pcawg_gene_mutation_odds_ratios:

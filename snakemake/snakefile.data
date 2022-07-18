@@ -503,6 +503,7 @@ rule pcawg_make_metadata:
 pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
 # make a donor_id -> {tcga|icgc} mapping
 proj_map = dict(zip(list(pcawg_meta['icgc_donor_id']), list(pcawg_meta['project'])))
+pcawg_tumors = sorted(set(pcawg_meta['tumor']))
 
 rule pcawg_extract_sample_vcf:
     input:
@@ -528,8 +529,6 @@ rule pcawg_extract_sample_vcf:
             data/pcawg/sample_vcfs
         """
 
-
-pcawg_tumors = sorted(set(pcawg_meta['tumor']))
 
 rule pcawg_make_tumor_vcf:
     input:

@@ -601,7 +601,8 @@ rule pcawg_snpeff_singlecell:
     input:
         "vcfs/{celltype}___mut___{qualtype}.vcf"
     output:
-        "data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf"
+        tmp=temp("data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf.tmp"),
+        vcf="data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf"
     log:
         "data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.log"
     params:
@@ -610,8 +611,8 @@ rule pcawg_snpeff_singlecell:
         mem=8000
     shell:
         """
-        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=.;" $8; print $0 }}' {input} \
-            | snakemake/scripts/run_snpeff_pcawg.sh /dev/stdin {output} > {log} 2>&1
+        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=.;" $8; print $0 }}' {input} > {output.tmp} \
+            | snakemake/scripts/run_snpeff_pcawg.sh {output.tmp} {output.vcf} > {log} 2>&1
         """
 
 

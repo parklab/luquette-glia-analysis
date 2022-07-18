@@ -612,7 +612,7 @@ rule parse_singlecell_snpeff:
         mem=8000
     shell:
         """
-        awk 'BEGIN { OFS="\t"; } { $8 = "TType={params.celltype};Origin=.;Sample=.;" $8; print $0 }' {input} \
+        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=.;" $8; print $0 }}' {input} \
             | snakemake/scripts/parse_pcawg_snpeff.sh /dev/stdin > {output}
         """
 

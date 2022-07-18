@@ -504,7 +504,7 @@ pcawg_meta = pd.read_csv('data/pcawg/metadata.csv')
 # make a donor_id -> {tcga|icgc} mapping
 proj_map = dict(zip(list(x['icgc_donor_id']), list(x['project'])))
 
-rule pcawg_extract_vcf:
+rule pcawg_extract_sample_vcf:
     input:
         lambda wildcards: "input/any___cancer_" + proj_map[wildcards.donor] + '___none.maf'
     output:
@@ -526,4 +526,22 @@ rule pcawg_extract_vcf:
             {input} \
             {output.maf} \
             data/pcawg/vcfs
+        """
+
+
+pcawg_tumors = sorted(set(pcawg_meta['tumor']))
+
+rule pcawg_make_tumor_vcf:
+    input:
+        vcfs=lambda wildcards: list(pcawg_meta.loc[pcawg_meta.tumor == wildcards.tumor, 'file'])
+    output:
+        "data/pcawg/{tumor}.vcf"
+    resources:
+        # needs the entire VCF in RAM for sort
+        mem=8000
+    params:
+        tumor="{tumor}"
+    shell:
+        """
+        snakemake/scripts/make_pcawg_tumor_vcf.sh {params.tumor} {input}
         """

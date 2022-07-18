@@ -52,8 +52,10 @@ rule fig4b:
 
 rule fig4c:
     input:
-        neuron_scatac="enrichment/scatacseq_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda",
-        oligo_scatac="enrichment/scatacseq_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda"
+        neuron_atac="enrichment/scatacseq_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda",
+        oligo_atac="enrichment/scatacseq_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda"
+        neuron_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda",
+        oligo_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda"
     output:
         pdf='fig4/panel_c.pdf',
         svg='fig4/panel_c.svg',

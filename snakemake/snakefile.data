@@ -498,3 +498,32 @@ rule pcawg_make_metadata:
         mem=4000
     shell:
         "snakemake/scripts/make_pcawg_metadata.R {input.ss} {input.icgc} {input.tcga} {output}"
+
+
+pcawg_meta = pd.read_csv('data/pcawg/metadata.csv')
+# make a donor_id -> {tcga|icgc} mapping
+proj_map = dict(zip(list(x['icgc_donor_id']), list(x['project'])))
+
+rule pcawg_extract_vcf:
+    input:
+        lambda wildcards: "input/any___cancer_" + proj_map[wildcards.donor] + '___none.maf'
+    output:
+        maf=temp("data/pcawg/vcfs/{donor}.vcf"),
+        pairs=temp("data/pcawg/vcfs/{donor}.pairs.tsv"),
+        vcf="data/pcawg/vcfs/{donor}.vcf"
+    log:
+        "data/pcawg/vcfs/{donor}.log"
+    benchmark:
+        "data/pcawg/vcfs/{donor}.benchmark.txt"
+    params:
+        donor_id='{donor}'
+    resources:
+        mem=4000
+    shell:
+        """
+        snakemake/scripts/pcawg_extract_one_maf.sh \
+            {params.donor_id} \
+            {input} \
+            {output.maf} \
+            data/pcawg/vcfs
+        """

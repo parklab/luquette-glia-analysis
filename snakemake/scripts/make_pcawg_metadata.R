@@ -29,6 +29,6 @@ x <- x[library_strategy=='WGS' & grepl('tumour', dcc_specimen_type) & donor_wgs_
 y <- rbind(icgc, tcga)
 x[y, tumor := Project_Code, on=c('icgc_donor_id'='Donor_ID')]
 
-x <- x[, .(icgc_donor_id, tumor, tumor_code=sapply(strsplit(dcc_project_code, '-'), head, 1), project, file=paste0('data/pcawg/sample_vcfs/', icgc_donor_id, '.vcf'))]
+x <- x[, .(icgc_donor_id, tumor, tumor_code=sapply(strsplit(dcc_project_code, '-'), head, 1), project, maf_processing_error=icgc_donor_id %in% c('DO51542', 'DO35577'), file=paste0('data/pcawg/sample_vcfs/', icgc_donor_id, '.vcf'))]
 
 fwrite(x, file=out.csv)

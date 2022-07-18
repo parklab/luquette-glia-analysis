@@ -471,3 +471,30 @@ rule make_foldchange_qbed_scrnaseq:
         mem=8000
     script:
         "scripts/make_foldchange_qbed.R"
+
+
+rule pcawg_get_donor_ids:
+    input:
+        "input/any___{project}___none.maf",
+    output:
+        "data/pcawg/any___{project}___donor_ids.txt"
+    resources:
+        mem=1000
+    shell:
+        """
+        ( head -1 {input} | cut -f42,43 ;
+          tail -n +2 {input} | cut -f42,43 | uniq | sort | uniq)  > {output}
+        """
+
+
+rule pcawg_make_metadata:
+    input:
+        ss="metadata/pcawg_sample_sheet.tsv",
+        icgc="data/pcawg/any___cancer_icgc___donor_ids.txt",
+        tcga="data/pcawg/any___cancer_tcga___donor_ids.txt"
+    output:
+        "data/pcawg/metadata.csv"
+    resources:
+        mem=4000
+    shell:
+        "scripts/make_pcawg_metadata.R {input.ss} {input.icgc} {input.tcga} {output}"

@@ -1,7 +1,7 @@
 datasource,dataclass,donor,selection,celltype,file
-scrnaseq,expression,UMB1465,DAPI,Oligodendrocytes,
-scrnaseq,expression,UMB1465,DAPI,Astrocytes,
-scrnaseq,expression,UMB1465,DAPI,OPCs,
-scrnaseq,expression,UMB1465,DAPI,Microglia,
-scrnaseq,expression,UMB1465,DAPI,Neurons,
-scrnaseq,expression,UMB1465,DAPI,Endothelial,
+scrnaseq_foldchange,expression,UMB1465,DAPI,Oligodendrocytes,
+scrnaseq_foldchange,expression,UMB1465,DAPI,Astrocytes,
+scrnaseq_foldchange,expression,UMB1465,DAPI,OPCs,
+scrnaseq_foldchange,expression,UMB1465,DAPI,Microglia,
+scrnaseq_foldchange,expression,UMB1465,DAPI,Neurons,
+scrnaseq_foldchange,expression,UMB1465,DAPI,Endothelial,

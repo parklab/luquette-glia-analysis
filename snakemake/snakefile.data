@@ -595,3 +595,6 @@ rule pcawg_parse_snpeff:
     resources:
         mem=8000
     shell:
+        """
+        snakemake/scripts/parse_pcawg_snpeff.sh
+        """

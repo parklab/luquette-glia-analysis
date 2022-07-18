@@ -600,6 +600,7 @@ rule pcawg_parse_snpeff:
         """
 
 
+ruleorder: parse_singlecell_snpeff > pcawg_parse_snpeff
 rule parse_singlecell_snpeff:
     input:
         "fig1/snpeff_analysis/{celltype}___snpeff___{qualtype}.vcf"

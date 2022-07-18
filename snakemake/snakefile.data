@@ -497,4 +497,4 @@ rule pcawg_make_metadata:
     resources:
         mem=4000
     shell:
-        "scripts/make_pcawg_metadata.R {input.ss} {input.icgc} {input.tcga} {output}"
+        "snakemake/scripts/make_pcawg_metadata.R {input.ss} {input.icgc} {input.tcga} {output}"

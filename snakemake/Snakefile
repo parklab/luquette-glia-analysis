@@ -73,7 +73,8 @@ wildcard_constraints:
     collapsed='|COLLAPSED.',
     qualtype='|'.join(qualtypes),
     cosmic='cosmic_full|cosmic_reduced',
-    panel_letter='a|b|c|d|e|f'
+    panel_letter='a|b|c|d|e|f',
+    tumor='[^\.]+'
     #umap='atac|rna',
 
 

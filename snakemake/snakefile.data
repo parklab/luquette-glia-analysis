@@ -565,7 +565,7 @@ rule pcawg_extract_sample_vcf:
 
 rule pcawg_make_tumor_vcf:
     input:
-        vcfs=lambda wildcards: list(pcawg_meta.loc[pcawg_meta.tumor == wildcards.tumor & pcawg_meta.maf_processing_error == False, 'file'])
+        vcfs=lambda wildcards: list(pcawg_meta.loc[(pcawg_meta.tumor == wildcards.tumor) & (pcawg_meta.maf_processing_error == False), 'file'])
     output:
         "data/pcawg/tumor_vcfs/{tumor}.vcf"
     resources:

@@ -71,6 +71,8 @@ rule fig4c:
 if 'make_pcawg_metadata' not in config.keys():
     pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
     pcawg_tumors = sorted(set(pcawg_meta['tumor']))
+else:
+    pcawg_tumors = []
 
 rule fig4d:
     input:

@@ -65,7 +65,7 @@ for (i in 1:2) {
     layout(t(1:2))  # second anel is for the massie legend
 
     xlim <- c(0,500)
-    ylim <- c(0.8,max(cancer.mat, na.rm=T))
+    ylim <- c(0.8,max(odds.mat, na.rm=T))
     plot(x=0,y=0, xlim=xlim, ylim=ylim, bty='n', pch=NA,
         xlab="Number of top genes",ylab="Odds ratio")
     for (i in c(1:length(ps), which(types %in% emphasize))) {

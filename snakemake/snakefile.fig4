@@ -51,3 +51,16 @@ rule fig4b:
 
 
 rule fig4c:
+    input:
+        neuron_scatac="enrichment/scatacseq_foldchange/quantile/neuron__AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda",
+        oligo_scatac="enrichment/scatacseq_foldchange/quantile/neuron__AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda"
+    output:
+        pdf='fig4/panel_c.pdf',
+        svg='fig4/panel_c.svg',
+        csv='fig4/panel_c.csv'
+    log:
+        'fig4/panel_c.log'
+    resources:
+        mem=4000
+    script:
+        "scripts/fig4_panel_c.R"

@@ -47,6 +47,7 @@ data <- lapply(cancer.fs, function(f) {
 })
 odds.mat <- sapply(1:length(data), function(i) data[[i]]$odds)
 colnames(odds.mat) <- sapply(data, function(d) d$types)
+types <- colnames(odds.mat)
 xaxis <- data[[1]]$tops
 
 x <- data.table(TopNGenes=xaxis, odds.mat)[order(TopNGenes)]
@@ -64,13 +65,13 @@ for (i in 1:2) {
     layout(t(1:2))  # second anel is for the massie legend
 
     xlim <- c(0,500)
-    ylim <- c(0.8,max(unlist(odds),na.rm=T))
+    ylim <- c(0.8,max(cancer.mat, na.rm=T))
     plot(x=0,y=0, xlim=xlim, ylim=ylim, bty='n', pch=NA,
         xlab="Number of top genes",ylab="Odds ratio")
     for (i in c(1:length(ps), which(types %in% emphasize))) {
-        col <- ifelse(types[i] %in% emphasize, thiscol[types[i]], 'grey')
+        col <- colors[types[i]]
         lwd <- ifelse(types[i] %in% emphasize, 2.5, 1/2)
-        lines(x=tops,y=odds[[i]],col=col,lwd=lwd)
+        lines(x=xaxis, y=odds.mat[,i], col=col, lwd=lwd)
     }
 
     # legend in its own panel

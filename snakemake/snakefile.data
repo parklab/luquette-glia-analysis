@@ -568,7 +568,7 @@ rule pcawg_make_tumor_vcf:
         tumor="{tumor}"
     shell:
         """
-        snakemake/scripts/make_pcawg_tumor_vcf.sh {params.tumor} {input}
+        snakemake/scripts/make_pcawg_tumor_vcf.sh {params.tumor} {input} > {output}
         """
 
 
@@ -585,3 +585,13 @@ rule pcawg_snpeff:
         """
         snakemake/scripts/run_snpeff.sh {input} {output} > {log} 2>&1
         """
+
+
+rule pcawg_parse_snpeff:
+    input:
+        "data/pcawg/tumor_vcfs/{tumor}.snpeff.vcf"
+    output:
+        "data/pcawg/{tumor}.gene_mutations.vcf"
+    resources:
+        mem=8000
+    shell:

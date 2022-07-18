@@ -508,13 +508,13 @@ rule pcawg_extract_sample_vcf:
     input:
         lambda wildcards: "input/any___cancer_" + proj_map[wildcards.donor] + '___none.maf'
     output:
-        maf=temp("data/pcawg/vcfs/{donor}.maf"),
-        pairs=temp("data/pcawg/vcfs/{donor}.pairs.tsv"),
-        vcf="data/pcawg/vcfs/{donor}.vcf"
+        maf=temp("data/pcawg/sample_vcfs/{donor}.maf"),
+        pairs=temp("data/pcawg/sample_vcfs/{donor}.pairs.tsv"),
+        vcf="data/pcawg/sample_vcfs/{donor}.vcf"
     log:
-        "data/pcawg/vcfs/{donor}.log"
+        "data/pcawg/sample_vcfs/{donor}.log"
     benchmark:
-        "data/pcawg/vcfs/{donor}.benchmark.txt"
+        "data/pcawg/sample_vcfs/{donor}.benchmark.txt"
     params:
         donor_id='{donor}'
     resources:
@@ -525,7 +525,7 @@ rule pcawg_extract_sample_vcf:
             {params.donor_id} \
             {input} \
             {output.maf} \
-            data/pcawg/vcfs
+            data/pcawg/sample_vcfs
         """
 
 
@@ -535,7 +535,7 @@ rule pcawg_make_tumor_vcf:
     input:
         vcfs=lambda wildcards: list(pcawg_meta.loc[pcawg_meta.tumor == wildcards.tumor, 'file'])
     output:
-        "data/pcawg/{tumor}.vcf"
+        "data/pcawg/tumor_vcfs/{tumor}.vcf"
     resources:
         # needs the entire VCF in RAM for sort
         mem=8000

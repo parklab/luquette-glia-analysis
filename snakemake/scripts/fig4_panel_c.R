@@ -94,7 +94,7 @@ for (i in 1:2) {
     # format:
     # row1: scRNAseq: neuron plot, oligo plot, legend 
     # row2: scATACseq: neuron plot, oligo plot, legend 
-    layout(matrix(1:6, nrow=2,byrow=T), width=c(2,2,1))
+    layout(matrix(1:6, nrow=2,byrow=T), width=c(2,2,2))
     par(mar=c(4,4,2,1))
 
     n=6

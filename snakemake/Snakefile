@@ -492,42 +492,34 @@ use rule sigenrichment_plot from enrichment_scatacseq as enrichment_scatacseq_si
 
 ########################################################################
 # Our scATAC-seq data but using foldchange signals
+#
+# This differs from typical qbed analysis because there is no base
+# bigwig signal files from which the qbeds are constructed. Instead,
+# qbeds are created from the non-foldchange scATAC-seq qbeds.
 ########################################################################
-enrichment_scatacseq_config = dict(
+enrichment_scatacseq_foldchange_config = dict(
     **{ 'output_dir': 'enrichment/scatacseq_foldchange',
-        'SIGNAL_MANIFEST': 'manifests/SCATACSEQ.MANIFEST' },
+        # This manifest is a dummy containing only metadata, not files
+        'SIGNAL_MANIFEST': 'manifests/SCATACSEQ_FOLDCHANGE.MANIFEST' },
     **enrichment_config
 )
 
-module enrichment_scatacseq:
+module enrichment_scatacseq_foldchange:
     snakefile: "snakefile.enrichment"
-    config: enrichment_scatacseq_config
+    config: enrichment_scatacseq_foldchange_config
 
-use rule * from enrichment_scatacseq  as enrichment_scatacseq_*
+# Only qbed analysis is relevant
+use rule enrichment_qbed_analysis from enrichment_scatacseq_foldchange as enrichment_scatacseq_foldchange_qbed_analysis
 
-use rule make_qbed_from_bigwig from enrichment_scatacseq as enrichment_scatacseq_make_qbed_from_bigwig with:
-    resources:
-        mem=15000
-
-use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enrichment_plot with:
+use rule enrichment_plot from enrichment_scatacseq_foldchange as enrichment_scatacseq_foldchange_enrichment_plot with:
     params:
         ignore='enrichment_grid_R_ignore_none',
         group='celltype',
     output:
-        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+        expand('enrichment/scatacseq_foldchange/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles.log'
-
-use rule sigenrichment_plot from enrichment_scatacseq as enrichment_scatacseq_sigenrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='celltype',
-    output:
-        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+        'enrichment/scatacseq_foldchange/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
 ########################################################################

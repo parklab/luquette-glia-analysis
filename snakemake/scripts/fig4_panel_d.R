@@ -61,8 +61,8 @@ colors[emphasize] <- c('orange','black','red','purple')
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=3.5, height=2.5, pointsize=5, file=outs[i])
-    layout(t(1:2))  # second anel is for the massie legend
+    devs[[i]](width=4, height=3, pointsize=5, file=outs[i])
+    layout(t(1:2), widths=c(3,2))  # second panel is for the massive legend
 
     xlim <- c(0,500)
     ylim <- c(0.8,max(odds.mat, na.rm=T))
@@ -74,10 +74,12 @@ for (i in 1:2) {
         lines(x=xaxis, y=odds.mat[,i], col=col, lwd=lwd)
     }
 
+print(types)
+print(emphasize)
     # legend in its own panel
     plot(x=0, y=0, pch=NA, bty='n', xaxt='n', yaxt='n', xlab='', ylab='')
-    legend(x="topright", legend=c(emphasize, types[!(types %in% emphasize)]),
-        col=c(colors[emphasize], rep('grey', length(types)-length(emphasize))),
+    legend(x="center", legend=c(emphasize, types[!(types %in% emphasize)]),
+        col=c(colors[emphasize], rep('grey', length(setdiff(types, emphasize)))),
         lwd=2, bty="n")
 
     dev.off()

@@ -18,7 +18,7 @@ if [ "x$word" == 'xdry' ]; then
     flags="$flags --dryrun --quiet" # --reason"
 elif [ "x$word" == 'xunlock' ]; then
     flags='$flags --unlock'
-elif [ "x$word" == 'xpcawg_metadata' ]; then
+elif [ "x$word" == 'xmake_pcawg_metadata' ]; then
     flags="$flags --config make_pcawg_metadata=1 --until metadata/pcawg_metadata.csv"
 elif [ "x$word" == 'xtest' ]; then
     jobflag='-j 1'

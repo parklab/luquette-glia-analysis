@@ -18,5 +18,5 @@ for f in $files; do
     bcftools view -v snps $f 2> /dev/null \
         | vcfkeepinfo - . \
         | grep -v '#' \
-        | awk 'BEGIN { OFS="\t"; }{ print $1,$2,$3,$4,$5,$6,$7,"TType='$tumor';Origin='$f';Sample=."}'
+        | awk 'BEGIN { OFS="\t"; }{ print $1,$2,$3,$4,$5,$6,$7,"TType='$tumor';Origin='$(basename $f)';Sample=."}'
 done | sort -V

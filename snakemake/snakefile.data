@@ -481,7 +481,7 @@ rule pcawg_copy_icgc_maf:
     input:
         input_copy_mapping["any___cancer_icgc___none.maf"]
     output:
-        "any___cancer_icgc___none.maf"
+        "input/any___cancer_icgc___none.maf"
     shell:
         """
         tr -d '\r' {input} > {output}
@@ -492,7 +492,7 @@ rule pcawg_copy_tcga_maf:
     input:
         input_copy_mapping["any___cancer_tcga___none.maf"]
     output:
-        "any___cancer_tcga___none.maf"
+        "input/any___cancer_tcga___none.maf"
     shell:
         """
         tr -d '\r' {input} > {output}

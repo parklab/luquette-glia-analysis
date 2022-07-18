@@ -68,7 +68,7 @@ for (i in 1:2) {
     ylim <- c(0.8,max(odds.mat, na.rm=T))
     plot(x=0,y=0, xlim=xlim, ylim=ylim, bty='n', pch=NA,
         xlab="Number of top genes",ylab="Odds ratio")
-    for (i in c(1:length(ps), which(types %in% emphasize))) {
+    for (i in c(1:ncol(odds.mat), which(types %in% emphasize))) {
         col <- colors[types[i]]
         lwd <- ifelse(types[i] %in% emphasize, 2.5, 1/2)
         lines(x=xaxis, y=odds.mat[,i], col=col, lwd=lwd)

@@ -606,9 +606,28 @@ rule parse_singlecell_snpeff:
         "fig1/snpeff_analysis/{celltype}___snpeff___{qualtype}.vcf"
     output:
         "data/pcawg/{celltype}___{qualtype}.gene_mutations.txt"
+    params:
+        celltype='{celltype}'
     resources:
         mem=8000
     shell:
         """
-        snakemake/scripts/parse_pcawg_snpeff.sh {input} > {output}
+        awk '{ $8 = "TType={params.celltype};Origin=.;Sample=.;" $8; print $0 }' {input} \
+            | snakemake/scripts/parse_pcawg_snpeff.sh /dev/stdin > {output}
+        """
+
+
+rule pcawg_gene_mutation_odds_ratios:
+    input:
+        "data/pcawg/neuron___{qualtype}.gene_mutations.txt",
+        "data/pcawg/oligo___{qualtype}.gene_mutations.txt",
+        "data/pcawg/{tumor}.gene_mutations.txt"
+    output:
+        "data/pcawg/{tumor}.gene_mutation_odds_ratios.txt"
+    log:
+        "data/pcawg/{tumor}.gene_mutation_odds_ratios.log"
+    resources:
+        mem=8000
+    shell:
+        """
         """

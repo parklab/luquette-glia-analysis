@@ -440,13 +440,13 @@ scatacseq_meta = pd.read_csv('manifests/SCATACSEQ.MANIFEST')
 # needs to be known.
 rule make_foldchange_qbed_scatacseq:
     input:
-        target="enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{celltype}.{binsize}binsize_{nquantiles}quantiles.qbed",
-        background=expand("enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{celltype}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
+        target="enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{scatacseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed",
+        background=expand("enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{scatacseq_celltype}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
             celltype=sorted(set(scatacseq_meta['celltype'])))
     output:
-        qbed="enrichment/scatacseq_foldchange/quantile/qbed/scatacseq_foldchange___librarymerged___merged___{celltype}.{binsize}binsize_{nquantiles}quantiles.qbed"
+        qbed="enrichment/scatacseq_foldchange/quantile/qbed/scatacseq_foldchange___librarymerged___merged___{scatacseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed"
     log:
-        "enrichment/scatacseq_foldchange/quantile/qbed/scatacseq_foldchange___librarymerged___merged___{celltype}.{binsize}binsize_{nquantiles}quantiles.log"
+        "enrichment/scatacseq_foldchange/quantile/qbed/scatacseq_foldchange___librarymerged___merged___{scatacseq_celltype}.{binsize}binsize_{nquantiles}quantiles.log"
     resources:
         mem=8000
     script:

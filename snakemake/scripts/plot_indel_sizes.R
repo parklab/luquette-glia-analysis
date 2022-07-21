@@ -16,7 +16,7 @@ if ('snakemake' %in% ls()) {
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) != 4) {
+if (length(args) != 5) {
     cat('assumes in.rda contains only one object\n')
     stop("usage: plot_indel_sizes.R neuron_indels.rda oligo_indels.rda out.svg out.pdf out.csv")
 }

@@ -68,14 +68,15 @@ enrichment_config = {
     }
 }
 
+
 wildcard_constraints:
     celltype='|'.join(celltypes),
-    collapsed='|COLLAPSED.',
     qualtype='|'.join(qualtypes),
     cosmic='cosmic_full|cosmic_reduced',
     panel_letter='a|b|c|d|e|f',
     tumor='[^\.]+'  # No longer need this -[^\.]'   # Tumor codes are formatted XXXX-YYYY 
     #umap='atac|rna',
+    #collapsed='|COLLAPSED.',
 
 
 rule all:
@@ -251,6 +252,8 @@ use rule enrichment_bed_plot from enrichment_gencode_gene_regions as enrichment_
 # ones to improve power.
 #
 # XXX: this should just be a new BED file in the manifest
+# XXX2: this rule does not match when celltype=neuron. wildcard constraints is
+# celltype=oligo|neuron|any or any reordering of that
 rule gencode_gene_regions_collapsed:
     input:
         rda="enrichment/gencode/bed_regions/{celltype}___{qualtype}/bedenrich/FULL.rda"
@@ -269,7 +272,26 @@ rule gencode_gene_regions_collapsed:
         "enrichment/gencode/bed_regions/{celltype}___{qualtype}/bedenrich/COLLAPSED.log"
     script:
         "scripts/collapse_enrichment.R"
-    
+
+# XXX2: hack for now to get celltype=neuron to work
+rule gencode_gene_regions_collapsed_neuron:
+    input:
+        rda="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/FULL.rda"
+    output:
+        fullrda="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/FULL.COLLAPSED.rda",
+        rda="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/SUMMARY.COLLAPSED.rda"
+    params:
+        "Exonic=cds,utr3,utr5",
+        "Intronic=intron",
+        "Intergenic=intergenic,downstream,upstream",
+        "Other=other",
+        "Outside=outside"
+    resources:
+        mem=4000
+    log:
+        "enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/COLLAPSED.log"
+    script:
+        "scripts/collapse_enrichment.R"
 
 
 ########################################################################

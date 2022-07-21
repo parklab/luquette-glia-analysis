@@ -52,9 +52,9 @@ for (i in 1:2) {
     layout(1:2)
     par(mar=c(1,4,3,1))
     n <- as.spectrum(sbs96(get(load(nfile))$mutsig), fraction=TRUE)
-    plot.sbs96(n, main='Neurons')
+    plot.sbs96(spectrum=n, main='Neurons')
     g <- as.spectrum(sbs96(get(load(gfile))$mutsig), fraction=TRUE)
-    plot.sbs96(g, main='Oligo')
+    plot.sbs96(spectrum=g, main='Oligo')
 }
 
 d <- data.table(MutType=names(n), Neurons=unname(n), Oligo=unname(g))

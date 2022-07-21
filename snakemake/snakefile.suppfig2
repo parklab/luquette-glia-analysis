@@ -1,0 +1,17 @@
+# vim: syntax=python
+
+rule fig1_indel_size_analysis:
+    input:
+        "input/neuron___mut___indel_A.rda",
+        "input/oligo___mut___indel_A.rda"
+    output:
+        "suppfig2/panel_a.svg",
+        "suppfig2/panel_a.pdf",
+        "suppfig2/panel_a.csv"
+    resources:
+        mem=4000
+    log:
+        "suppfig2/panel_a.log"
+    script:
+        "scripts/plot_indel_sizes.R"
+

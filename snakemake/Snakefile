@@ -92,19 +92,19 @@ rule all:
         "suppfig2/panel_a.pdf",     # Indel size dist'n
         "suppfig2/panel_a.csv",
         #"suppfig2/panel_b.pdf",     # Insertion/deletion separate vs. age
-        "fig3/panel_a.pdf",
-        "fig3/panel_a_umap_plot.pdf",
-        "fig3/panel_b.pdf",
-        "fig3/panel_b_umap_plot.pdf",
-        "fig3/panel_c.pdf",
-        "fig3/panel_c2.pdf",
-        "fig3/panel_d.pdf",
-        "fig3/panel_e.pdf",
-        "fig4/panel_a.pdf",
-        "fig4/panel_b_barplot.pdf",
-        "fig4/panel_b_heatmap.pdf",
-        "fig4/panel_c.pdf",
-        "fig4/panel_d.pdf"
+        #"fig3/panel_a.pdf",
+        #"fig3/panel_a_umap_plot.pdf",
+        #"fig3/panel_b.pdf",
+        #"fig3/panel_b_umap_plot.pdf",
+        #"fig3/panel_c.pdf",
+        #"fig3/panel_c2.pdf",
+        #"fig3/panel_d.pdf",
+        #"fig3/panel_e.pdf",
+        #"fig4/panel_a.pdf",
+        #"fig4/panel_b_barplot.pdf",
+        #"fig4/panel_b_heatmap.pdf",
+        #"fig4/panel_c.pdf",
+        #"fig4/panel_d.pdf"
 
 
 rule actually_all_but_skipping_now:

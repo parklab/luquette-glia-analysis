@@ -52,12 +52,12 @@ for (i in 1:2) {
     layout(1:2)
     par(mar=c(1,4,3,1))
     n <- as.spectrum(sbs96(get(load(nfile))$mutsig), fraction=TRUE)
-    plot.sbs96(n, fraction=T, main='Neurons')
+    plot.sbs96(n, main='Neurons')
     g <- as.spectrum(sbs96(get(load(gfile))$mutsig), fraction=TRUE)
-    plot.sbs96(g, fraction=T, main='Oligo')
+    plot.sbs96(g, main='Oligo')
 }
 
-d <- data.table(MutType=names(n), Neurons=n, Oligo=g)
+d <- data.table(MutType=names(n), Neurons=unname(n), Oligo=unname(g))
 fwrite(d, file=outcsv)
 
 if ('snakemake' %in% ls()) {

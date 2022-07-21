@@ -2,18 +2,18 @@
 
 rule fig1_distribution_plot:
     input:
-        nmut="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/FULL.COLLAPSED.rda",
-        ni="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/FULL.COLLAPSED.rda",
-        gmut="enrichment/gencode/bed_regions/oligo___{qualtype}/bedenrich/FULL.COLLAPSED.rda",
-        gi="enrichment/gencode/bed_regions/oligo___{qualtype}/bedenrich/FULL.COLLAPSED.rda"
+        nmut="enrichment/gencode/bed_regions/neuron___AB/bedenrich/FULL.COLLAPSED.rda",
+        ni="enrichment/gencode/bed_regions/neuron___indel_AB/bedenrich/FULL.COLLAPSED.rda",
+        gmut="enrichment/gencode/bed_regions/oligo___AB/bedenrich/FULL.COLLAPSED.rda",
+        gi="enrichment/gencode/bed_regions/oligo___indel_AB/bedenrich/FULL.COLLAPSED.rda"
     output:
-        svg="fig1/panel_c_{qualtype}.svg",
-        pdf="fig1/panel_c_{qualtype}.pdf",
-        tsv="fig1/panel_c_{qualtype}.csv"
+        svg="fig1/panel_c.svg",
+        pdf="fig1/panel_c.pdf",
+        tsv="fig1/panel_c.csv"
     resources:
         mem=4000
     log:
-        "fig1/panel_c_{qualtype}.log"
+        "fig1/panel_c.log"
     script:
         "scripts/barplot_enrich_2x2.R"
 

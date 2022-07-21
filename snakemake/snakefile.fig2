@@ -5,13 +5,13 @@ rule fig2_raw_snv_spectrum:
         "input/neuron___mut___A.rda",
         "input/oligo___mut___A.rda"
     output:
-        "fig2/raw_spectrum/snv_spectrum.svg",
-        "fig2/raw_spectrum/snv_spectrum.pdf",
-        "fig2/raw_spectrum/snv_spectrum.tsv"
+        "fig2/panel_a.svg",
+        "fig2/panel_a.pdf",
+        "fig2/panel_a.csv"
     resources:
         mem=4000
     log:
-        "fig2/raw_spectrum/plot_snv_raw_spectrum.log"
+        "fig2/panel_a.log"
     script:
         "scripts/plot_raw_snv.R"
 
@@ -21,9 +21,9 @@ rule fig2_raw_indel_spectrum:
         "input/neuron___mut___indel_A.rda",
         "input/oligo___mut___indel_A.rda"
     output:
-        "fig2/raw_spectrum/indel_spectrum.svg",
-        "fig2/raw_spectrum/indel_spectrum.pdf",
-        "fig2/raw_spectrum/indel_spectrum.tsv"
+        "fig2/panel_e.svg",
+        "fig2/panel_e.pdf",
+        "fig2/panel_e.csv"
     resources:
         mem=4000
     log:
@@ -44,11 +44,11 @@ rule fig2_make_cosmic_indel_table:
     input:
         cosmic="input/any___cosmic___indel_A.csv",
     output:
-        "tables/cosmic_full___indel_A.csv"
+        "mutsigs/cosmic_full___indel_A.csv"
     resources:
         mem=4000
     log:
-        "tables/cosmic_full___indel_A.log"
+        "mutsigs/cosmic_full___indel_A.log"
     script:
         "scripts/make_cosmic_indel_table.R"
 
@@ -57,11 +57,11 @@ rule fig2_make_cosmic_snv_table:
     input:
         cosmic="input/any___cosmic___A.csv",
     output:
-        "tables/cosmic_full___{qualtype}.csv"
+        "mutsigs/cosmic_full___{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "tables/cosmic_full___{qualtype}.log"
+        "mutsigs/cosmic_full___{qualtype}.log"
     script:
         "scripts/make_cosmic_snv_table.R"
 
@@ -69,30 +69,30 @@ rule fig2_make_cosmic_snv_table:
 rule fig2_cosmic_fit:
     input:
         "tables/{celltype}___mut___{qualtype}.csv",
-        "fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv",
-        "tables/{cosmic}___{qualtype}.csv"
+        "aging_rates/{celltype}___mutburden___{qualtype}.csv",
+        "mutsigs/{cosmic}___{qualtype}.csv"
     output:
-        "fig2/{cosmic}/{celltype}___mutmat___{qualtype}.csv",
-        "fig2/{cosmic}/{celltype}___expomat___{qualtype}.csv"
+        "mutsigs/{cosmic}/{celltype}___mutmat___{qualtype}.csv",
+        "mutsigs/{cosmic}/{celltype}___expomat___{qualtype}.csv"
     params:
         muttype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV'
     resources:
         mem=4000
     log:
-        "fig2/{cosmic}/{celltype}___cosmic_fit___{qualtype}.log"
+        "mutsigs/{cosmic}/{celltype}___cosmic_fit___{qualtype}.log"
     script:
         "scripts/fit_cosmic.R"
 
 
 rule fig2_score_cosmic_analysis:
     input:
-        "fig2/cosmic_full/{celltype}___mutmat___{qualtype}.csv",
-        "fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv",
-        "tables/cosmic_full___{qualtype}.csv"
+        "mutsigs/cosmic_full/{celltype}___mutmat___{qualtype}.csv",
+        "aging_rates/{celltype}___mutburden___{qualtype}.csv",
+        "mutsigs/cosmic_full___{qualtype}.csv"
     output:
-        "fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv"
+        "mutsigs/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv"
     log:
-        "fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.log"
+        "mutsigs/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.log"
     resources:
         mem=8000
     params:
@@ -104,12 +104,12 @@ rule fig2_score_cosmic_analysis:
 
 rule fig2_select_cosmic_sigs:
     input:
-        "fig2/cosmic_signature_inclusion/neuron_signature_scores_{qualtype}.csv",
-        "fig2/cosmic_signature_inclusion/oligo_signature_scores_{qualtype}.csv"
+        "mutsigs/cosmic_signature_inclusion/neuron_signature_scores_{qualtype}.csv",
+        "mutsigs/cosmic_signature_inclusion/oligo_signature_scores_{qualtype}.csv"
     output:
-        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.svg",
-        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.pdf",
-        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv"
+        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.svg",
+        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.pdf",
+        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv"
     params:
         # these values were determined MANUALLY by looking at the plots
         # generated above and considering the signatures detected.
@@ -125,7 +125,7 @@ rule fig2_select_cosmic_sigs:
     resources:
         mem=8000
     log:
-        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.log"
+        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.log"
     script:
         "scripts/select_cosmic_sigs.R"
 
@@ -134,46 +134,48 @@ rule fig2_select_cosmic_sigs:
 # the selected signatures.
 rule fig2_make_reduced_cosmic_table:
     input:
-        "fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv",
-        "tables/cosmic_full___{qualtype}.csv"
+        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv",
+        "mutsigs/cosmic_full___{qualtype}.csv"
     output:
-        "tables/cosmic_reduced___{qualtype}.csv"
+        "mutsigs/cosmic_reduced___{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "tables/cosmic_reduced___{qualtype}.log"
+        "mutsigs/cosmic_reduced___{qualtype}.log"
     script:
         "scripts/reduce_cosmic.R"
 
 
 rule fig2_cosmic_barplots:
     input:
-        "fig2/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
-        "fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
+        "mutsigs/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
+        "aging_rates/{celltype}___mutburden___{qualtype}.csv"
     output:
-        "fig2/cosmic_aging/{celltype}_barplots_{qualtype}.svg",
-        "fig2/cosmic_aging/{celltype}_barplots_{qualtype}.pdf"
+        svg=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}__{qualtype}.svg",
+        pdf=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}__{qualtype}.pdf",
+        csv=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}__{qualtype}.csv",
     resources:
         mem=4000
     log:
-        "fig2/cosmic_aging/{celltype}_barplots_{qualtype}.log"
+        log=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}__{qualtype}.log",
     script:
         "scripts/plot_cosmic_barplots.R"
 
 
 rule fig2_cosmic_vs_age_plots:
     input:
-        "fig2/cosmic_reduced/neuron___expomat___{qualtype}.csv",
-        "fig1/aging_rate_analysis/neuron___mutburden___{qualtype}.csv",
-        "fig2/cosmic_reduced/oligo___expomat___{qualtype}.csv",
-        "fig1/aging_rate_analysis/oligo___mutburden___{qualtype}.csv"
+        "mutsigs/cosmic_reduced/neuron___expomat___{qualtype}.csv",
+        "aging_rates/neuron___mutburden___{qualtype}.csv",
+        "mutsigs/cosmic_reduced/oligo___expomat___{qualtype}.csv",
+        "aging_rates/oligo___mutburden___{qualtype}.csv"
     output:
-        "fig2/cosmic_aging/scatterplots_{qualtype}.svg",
-        "fig2/cosmic_aging/scatterplots_{qualtype}.pdf",
-        "fig2/cosmic_aging/scatterplots_{qualtype}.csv"
+        "fig2/scatterplots_{qualtype}.svg",
+        svg=lambda wildcards: "fig2/" + ('panel_c' if wildcards.qualtype == 'A' else 'panel_g') + "_{qualtype}.svg",
+        pdf=lambda wildcards: "fig2/" + ('panel_c' if wildcards.qualtype == 'A' else 'panel_g') + "_{qualtype}.pdf",
+        csv=lambda wildcards: "fig2/" + ('panel_c' if wildcards.qualtype == 'A' else 'panel_g') + "_{qualtype}.csv",
     resources:
         mem=4000
     log:
-        "fig2/cosmic_aging/scatterplots_{qualtype}.log"
+        log=lambda wildcards: "fig2/" + ('panel_c' if wildcards.qualtype == 'A' else 'panel_g') + "_{qualtype}.log",
     script:
         "scripts/plot_cosmic_vs_age.R"

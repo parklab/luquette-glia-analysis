@@ -10,21 +10,22 @@ if ('snakemake' %in% ls()) {
 
     # tags come from params
     commandArgs <- function(...) unlist(c(
-        snakemake@input[1:2], snakemake@output[1:2]
+        snakemake@input[1:2], snakemake@output[1:3]
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) != 4) {
-    stop("usage: plot_cosmic_barplots.R expomat.csv mutburden.csv out.svg out.pdf")
+if (length(args) != 5) {
+    stop("usage: plot_cosmic_barplots.R expomat.csv mutburden.csv out.svg out.pdf out.csv")
 }
 
 expomat.csv <- args[1]
 mutburden.csv <- args[2]
 out.svg <- args[3]
 out.pdf <- args[4]
+out.csv <- args[5]
 
 if (file.exists(out.svg))
     stop(paste('output file', out.svg, 'already exists, please delete it first'))
@@ -74,6 +75,8 @@ figheight <- 2*(3.5 + xheight*em + 2*em)
 
 # 4 - y axis, 1 - right margin
 figwidth <- (4 + 1)*em + ncol(E)*em*1.2  # in inches
+
+fwrite(E, file=out.csv)
 
 # Loop over devices to save both pdf and svgs
 devs <- list(svglite, pdf)

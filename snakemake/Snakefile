@@ -73,7 +73,7 @@ wildcard_constraints:
     celltype='|'.join(celltypes),
     qualtype='|'.join(qualtypes),
     cosmic='cosmic_full|cosmic_reduced',
-    panel_letter='a|b|c|d|e|f',
+    panel_letter='a|b|c|d|e|f|g|h|i|j|k|l',
     tumor='[^\.]+'  # No longer need this -[^\.]'   # Tumor codes are formatted XXXX-YYYY 
     #umap='atac|rna',
     #collapsed='|COLLAPSED.',

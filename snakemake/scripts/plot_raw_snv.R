@@ -57,7 +57,7 @@ for (i in 1:2) {
     plot.sbs96(x=1, spectrum=g, main='Oligo')
 }
 
-d <- data.table(MutType=names(n), Neurons=unname(n), Oligo=unname(g))
+d <- data.table(MutType=names(n), Neurons=as.vector(n), Oligo=as.vector(g))
 fwrite(d, file=outcsv)
 
 if ('snakemake' %in% ls()) {

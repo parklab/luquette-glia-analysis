@@ -17,7 +17,7 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 7)
-    stop("usage: barplot_enrich_2x2 nmut.enrich.rda ni.enrich.rda gmut.enrich.rda gi.enrich.rda output.svg output.pdf output.tsv")
+    stop("usage: barplot_enrich_2x2 nmut.enrich.rda ni.enrich.rda gmut.enrich.rda gi.enrich.rda output.svg output.pdf output.csv")
 
 nefile <- args[1]
 neifile <- args[2]
@@ -25,17 +25,18 @@ gefile <- args[3]
 geifile <- args[4]
 outsvg <- args[5]
 outpdf <- args[6]
-outtsv <- args[7]
+outcsv <- args[7]
 
 
 if (file.exists(outsvg))
-    stop(paste('outut file', outsvg, 'already exists, please delete it first'))
+    stop(paste('output file', outsvg, 'already exists, please delete it first'))
 if (file.exists(outpdf))
-    stop(paste('outut file', outpdf, 'already exists, please delete it first'))
-if (file.exists(outtsv))
-    stop(paste('outut file', outtsv, 'already exists, please delete it first'))
+    stop(paste('output file', outpdf, 'already exists, please delete it first'))
+if (file.exists(outcsv))
+    stop(paste('output file', outcsv, 'already exists, please delete it first'))
 
 suppressMessages(library(GenomicRanges))
+suppressMessages(library(data.table))
 suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(mutenrich))
@@ -99,7 +100,8 @@ stat.table <- do.call(rbind, lapply(1:length(dlist), function(i) {
     label <- names(dlist)[i]
     cbind(label, class=rownames(es), es)
 }))
-write.table(stat.table, quote=F, sep='\t', row.names=F, col.names=T, file=outtsv)
+#write.table(stat.table, quote=F, sep='\t', row.names=F, col.names=T, file=outtsv)
+fwrite(stat.table, file=outcsv)
 
 if ('snakemake' %in% ls()) {
     sink()

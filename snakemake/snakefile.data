@@ -664,3 +664,15 @@ rule pcawg_gene_mutation_odds_ratios:
         snakemake/scripts/pcawg_gene_odds_ratio.R \
             {input.tumor} {input.neuron} {input.oligo} {output.rda} > {log} 2>&1
         """
+
+
+rule make_gencode_gene_regions:
+    input:
+        "data/gencode/gencode.v26lift37.annotation.gtf"
+    output:
+        "data/gencode/gene_regions.bed"
+    resources:
+        mem=8000
+    shell:
+        "snakemake/scripts/make_gene_regions.R {input} {output}"
+

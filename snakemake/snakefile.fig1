@@ -1,81 +1,26 @@
 # vim: syntax=python
 
-rule fig1_make_gene_regions:
-    input:
-        "data/gencode/gencode.v26lift37.annotation.gtf"
-    output:
-        "data/gencode/gene_regions.bed"
-    resources:
-        mem=8000
-    shell:
-        "snakemake/scripts/make_gene_regions.R {input} {output}"
-
-
-rule fig1_distribution_analysis:
-    input:
-        mut="input/{celltype}___mut___{qualtype}.rda",
-        perm="input/{celltype}___perm___{qualtype}.rda",
-        bed="data/gencode/gene_regions.bed"
-    output:
-        fullrda="fig1/distribution_analysis/{celltype}___{qualtype}.FULL.rda",
-        rda="fig1/distribution_analysis/{celltype}___{qualtype}.rda"
-    resources:
-        mem=8000
-    log:
-        "fig1/distribution_analysis/{celltype}___{qualtype}.log"
-    benchmark:
-        "fig1/distribution_analysis/{celltype}___{qualtype}.benchmark.txt"
-    shell:
-        """
-        snakemake/scripts/bedenrich.R \
-            10000 \
-            {input.mut} \
-            {input.perm} \
-            {output.fullrda} \
-            {output.rda} \
-            {input.bed} > {log} 2>&1
-        """
-
-
-rule fig1_distribution_collapsed:
-    input:
-        rda="fig1/distribution_analysis/{celltype}___{qualtype}.FULL.rda"
-    output:
-        fullrda="fig1/distribution_analysis/{celltype}___{qualtype}.FULL.COLLAPSED.rda",
-        rda="fig1/distribution_analysis/{celltype}___{qualtype}.COLLAPSED.rda"
-    params:
-        "Exonic=cds,utr3,utr5",
-        "Intronic=intron",
-        "Intergenic=intergenic,downstream,upstream",
-        "Other=other",
-        "Outside=outside"
-    resources:
-        mem=4000
-    log:
-        "fig1/distribution_analysis/{celltype}___{qualtype}.COLLAPSED.log"
-    script:
-        "scripts/collapse_enrichment.R"
-    
-
 rule fig1_distribution_plot:
     input:
-        nmut="fig1/distribution_analysis/neuron___{qualtype}.FULL.{collapsed}rda",
-        ni="fig1/distribution_analysis/neuron___{qualtype}.FULL.{collapsed}rda",
-        gmut="fig1/distribution_analysis/oligo___{qualtype}.FULL.{collapsed}rda",
-        gi="fig1/distribution_analysis/oligo___{qualtype}.FULL.{collapsed}rda"
+        nmut="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/FULL.COLLAPSED.rda",
+        ni="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/FULL.COLLAPSED.rda",
+        gmut="enrichment/gencode/bed_regions/oligo___{qualtype}/bedenrich/FULL.COLLAPSED.rda",
+        gi="enrichment/gencode/bed_regions/oligo___{qualtype}/bedenrich/FULL.COLLAPSED.rda"
     output:
-        svg="fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}svg",
-        pdf="fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}pdf",
-        tsv="fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}tsv"
+        svg="fig1/panel_c_{qualtype}.svg",
+        pdf="fig1/panel_c_{qualtype}.pdf",
+        tsv="fig1/panel_c_{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "fig1/distribution_analysis/{qualtype}_plot_gene_classes.{collapsed}log"
+        "fig1/panel_c_{qualtype}.log"
     script:
         "scripts/barplot_enrich_2x2.R"
 
 
-# only specify prevburdens for neurons
+# only specify prevburdens for neurons, which refers to the 15 PTA
+# neurons from UMBXXXX donors that did not have matched oligos and
+# were thus not re-analyzed in this study.
 def mut_burden_analysis_input(wildcards):
     d = { 'meta' : "input/{celltype}___meta___{qualtype}.csv",
           'objects' : scan2_objects[wildcards.celltype].values() }
@@ -89,56 +34,42 @@ rule fig1_mut_burden_analysis:
     input:
         unpack(mut_burden_analysis_input)
     output:
-        csv="fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.csv"
+        csv="aging_rates/{celltype}___mutburden___{qualtype}.csv"
     params:
         muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel_') else 'snv',
     resources:
         mem=1000
     log:
-        "fig1/aging_rate_analysis/{celltype}___mutburden___{qualtype}.log"
+        "aging_rates/{celltype}___mutburden___{qualtype}.log"
     script:
         "scripts/make_mutburden_tables.R"
 
 
 rule fig1_aging_rate_analysis:
     input:
-        neuron="fig1/aging_rate_analysis/neuron___mutburden___{qualtype}.csv",
-        oligo="fig1/aging_rate_analysis/oligo___mutburden___{qualtype}.csv"
+        neuron="aging_rates/neuron___mutburden___{qualtype}.csv",
+        oligo="aging_rates/oligo___mutburden___{qualtype}.csv"
     output:
-        svg='fig1/aging_rate_analysis/{qualtype}.svg',
-        pdf='fig1/aging_rate_analysis/{qualtype}.pdf',
-        tsv='fig1/aging_rate_analysis/{qualtype}_burdens.csv',
-        tsv2='fig1/aging_rate_analysis/{qualtype}_model.csv'
+        svg='fig1/panel_b_{qualtype}.svg',
+        pdf='fig1/panel_b_{qualtype}.pdf',
+        tsv='fig1/panel_b_{qualtype}_burdens.csv',
+        tsv2='fig1/panel_b_{qualtype}_model.csv'
     resources:
         mem=4000
     log:
-        'fig1/aging_rate_analysis/{qualtype}.log'
+        'fig1/panel_b_{qualtype}.log'
     script:
         "scripts/plot_aging.R"
 
-
-rule fig1_indel_size_analysis:
-    input:
-        "input/neuron___mut___indel_A.rda",
-        "input/oligo___mut___indel_A.rda"
-    output:
-        "fig1/indel_size_analysis/indel_size.svg",
-        "fig1/indel_size_analysis/indel_size.pdf"
-    resources:
-        mem=4000
-    log:
-        "fig1/indel_size_analysis/indel_size.log"
-    script:
-        "scripts/plot_indel_sizes.R"
 
 
 rule fig1_run_snpeff:
     input:
         vcf="vcfs/{celltype}___mut___{qualtype}.vcf"
     output:
-        vcf="fig1/snpeff_analysis/{celltype}___snpeff___{qualtype}.vcf"
+        vcf="snpeff/{celltype}___snpeff___{qualtype}.vcf"
     log:
-        "fig1/snpeff_analysis/{celltype}___snpeff___{qualtype}.run_snpeff.log"
+        "snpeff/{celltype}___snpeff___{qualtype}.run_snpeff.log"
     resources:
         mem=8000
     shell:
@@ -147,19 +78,20 @@ rule fig1_run_snpeff:
             {input.vcf} {output.vcf} > {log} 2>&1
         """
 
+
 rule fig1_snpeff_analysis:
     input:
-        "fig1/snpeff_analysis/neuron___snpeff___AB.vcf",
-        "fig1/snpeff_analysis/neuron___snpeff___indel_AB.vcf",
-        "fig1/snpeff_analysis/oligo___snpeff___AB.vcf",
-        "fig1/snpeff_analysis/oligo___snpeff___indel_AB.vcf"
+        "snpeff/neuron___snpeff___AB.vcf",
+        "snpeff/neuron___snpeff___indel_AB.vcf",
+        "snpeff/oligo___snpeff___AB.vcf",
+        "snpeff/oligo___snpeff___indel_AB.vcf"
     output:
-        svg="fig1/snpeff_analysis/AB_snpeff_analysis.svg",
-        pdf="fig1/snpeff_analysis/AB_snpeff_analysis.pdf",
-        tsv="fig1/snpeff_analysis/AB_snpeff_analysis.tsv"
+        svg="fig1/panel_d.svg",
+        pdf="fig1/panel_d.pdf",
+        csv="fig1/panel_d.csv"
     resources:
         mem=4000
     log:
-        "fig1/snpeff_analysis/snpeff_analysis.log"
+        "fig1/panel_d.log"
     script:
         "scripts/plot_snpeff.R"

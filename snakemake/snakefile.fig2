@@ -151,9 +151,9 @@ rule fig2_cosmic_barplots:
         "mutsigs/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
         "aging_rates/{celltype}___mutburden___{qualtype}.csv"
     output:
-        svg=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}__{qualtype}.svg",
-        pdf=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}__{qualtype}.pdf",
-        csv=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}__{qualtype}.csv",
+        svg=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}___{qualtype}.svg",
+        pdf=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}___{qualtype}.pdf",
+        csv=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}___{qualtype}.csv",
     resources:
         mem=4000
     log:

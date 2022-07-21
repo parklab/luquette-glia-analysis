@@ -146,22 +146,24 @@ rule fig2_make_reduced_cosmic_table:
         "scripts/reduce_cosmic.R"
 
 
+# panels b and f
 rule fig2_cosmic_barplots:
     input:
         "mutsigs/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
         "aging_rates/{celltype}___mutburden___{qualtype}.csv"
     output:
-        svg=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}___{qualtype}.svg",
-        pdf=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}___{qualtype}.pdf",
-        csv=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}___{qualtype}.csv",
+        svg="fig2/panel_{panel_letter}___{celltype}___{qualtype}.svg",
+        pdf="fig2/panel_{panel_letter}___{celltype}___{qualtype}.pdf",
+        csv="fig2/panel_{panel_letter}___{celltype}___{qualtype}.csv"
     resources:
         mem=4000
     log:
-        log=lambda wildcards: "fig2/" + ('panel_b' if wildcards.qualtype == 'A' else 'panel_f') + "_{celltype}__{qualtype}.log",
+        "fig2/panel_{panel_letter}___{celltype}___{qualtype}.csv"
     script:
         "scripts/plot_cosmic_barplots.R"
 
 
+# panels c and g
 rule fig2_cosmic_vs_age_plots:
     input:
         "mutsigs/cosmic_reduced/neuron___expomat___{qualtype}.csv",
@@ -169,13 +171,12 @@ rule fig2_cosmic_vs_age_plots:
         "mutsigs/cosmic_reduced/oligo___expomat___{qualtype}.csv",
         "aging_rates/oligo___mutburden___{qualtype}.csv"
     output:
-        "fig2/scatterplots_{qualtype}.svg",
-        svg=lambda wildcards: "fig2/" + ('panel_c' if wildcards.qualtype == 'A' else 'panel_g') + "_{qualtype}.svg",
-        pdf=lambda wildcards: "fig2/" + ('panel_c' if wildcards.qualtype == 'A' else 'panel_g') + "_{qualtype}.pdf",
-        csv=lambda wildcards: "fig2/" + ('panel_c' if wildcards.qualtype == 'A' else 'panel_g') + "_{qualtype}.csv",
+        svg="fig2/panel_{panel_letter}_{qualtype}.svg",
+        pdf="fig2/panel_{panel_letter}_{qualtype}.pdf",
+        csv="fig2/panel_{panel_letter}_{qualtype}.csv"
     resources:
         mem=4000
     log:
-        log=lambda wildcards: "fig2/" + ('panel_c' if wildcards.qualtype == 'A' else 'panel_g') + "_{qualtype}.log",
+        "fig2/panel_{panel_letter}_{qualtype}.log"
     script:
         "scripts/plot_cosmic_vs_age.R"

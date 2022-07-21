@@ -51,9 +51,9 @@ for (i in 1:2) {
 
     layout(1:2)
     par(mar=c(1,4,3,1))
-    n <- sbs96(get(load(nfile))$mutsig)
+    n <- as.spectrum(sbs96(get(load(nfile))$mutsig), fraction=TRUE)
     n <- plot.sbs96(n, fraction=T, main='Neurons')
-    g <- sbs96(get(load(gfile))$mutsig)
+    g <- as.spectrum(sbs96(get(load(gfile))$mutsig), fraction=TRUE)
     g <- plot.sbs96(g, fraction=T, main='Oligo')
 }
 

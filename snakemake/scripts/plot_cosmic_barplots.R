@@ -76,7 +76,7 @@ figheight <- 2*(3.5 + xheight*em + 2*em)
 # 4 - y axis, 1 - right margin
 figwidth <- (4 + 1)*em + ncol(E)*em*1.2  # in inches
 
-fwrite(E, file=out.csv, row.names=TRUE)
+fwrite(data.table(SigName=signames, E), file=out.csv)
 
 # Loop over devices to save both pdf and svgs
 devs <- list(svglite, pdf)

@@ -180,3 +180,68 @@ rule fig2_cosmic_vs_age_plots:
         "fig2/panel_{panel_letter}_{qualtype}.log"
     script:
         "scripts/plot_cosmic_vs_age.R"
+
+
+# panel d - shared oligo mutations
+# these two pairs were discovered manually
+# 5657 - GliaLC-4-F11, GliaLC-4-G10 (MDA)
+# 5559 - 5559-Oligo-5, 5559-Oligo-8
+rule fig2_shared_snv_analysis:
+    input:
+        object1=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-5_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-F11_scan2_object.rda'),
+        object2=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-8_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-G10_scan2_object.rda'),
+        cosmic="mutsigs/cosmic_reduced___A.csv",
+        sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv",
+        aging_model="fig1/panel_b_A_model.csv",
+        aging_model_sigs="fig2/panel_c_A.csv"
+    output:
+        muts="fig2/oligo_pair_{sample_id}_mutations.csv",
+        fits="fig2/oligo_pair_{sample_id}_mrca.csv"
+    log:
+        "fig2/oligo_pair_{sample_id}.log"
+    params:
+        amptype=lambda wildcards: 'pta' if wildcards.sample_id == '5559' else 'mda'
+    resources:
+        # The SCAN2 objects are big
+        mem=8000
+    script:
+        "scripts/fit_mrca.R"
+
+
+rule fig2_panel_d:
+    input:
+        cosmic="mutsigs/cosmic_reduced___A.csv",
+        sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv",
+        muts=expand('fig2/oligo_pair_{sample_id}_mutations.csv',
+            sample_id=[ '5559', '5657' ])
+    output:
+        pdf='fig2/panel_d.pdf',
+        svg='fig2/panel_d.svg',
+        suppl_pdf='fig2/panel_d_supplement.pdf',
+        suppl_svg='fig2/panel_d_supplement.svg',
+        spectra_csv='fig2/panel_d_spectra.csv',
+        expo_csv='fig2/panel_d_exposures.csv'
+    log:
+        'fig2/panel_d.log'
+    resources:
+        mem=4000
+    script:
+        "scripts/fig2_panel_d.R"
+
+
+rule fig2_panel_d_infant:
+    input:
+        neuron_muts='tables/neuron___mut___A.csv',
+        oligo_muts='tables/oligo___mut___A.csv',
+        cosmic="mutsigs/cosmic_reduced___A.csv",
+    output:
+        pdf='fig2/panel_d_infant.pdf',
+        svg='fig2/panel_d_infant.svg',
+        spectra_csv='fig2/panel_d_spectra_infant.csv',
+        expo_csv='fig2/panel_d_exposures_infant.csv'
+    log:
+        'fig2/panel_d_infant.log'
+    resources:
+        mem=4000
+    script:
+        "scripts/fig2_panel_d_infant.R"

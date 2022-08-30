@@ -7,15 +7,16 @@
 word=$1
 
 # $flags is always built added to, never taken from
-flags='-s snakemake/Snakefile --dir . --latency-wait 60' #--rerun-incomplete'
+flags='-s snakemake/Snakefile --dir . --latency-wait 60 --rerun-incomplete --rerun-triggers mtime'
         #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
-jobflag='-j 20'
+jobflag='-j 10'
 kgflag=''
 drmaaflag=''
 usedrmaa='false'
 
 if [ "x$word" == 'xdry' ]; then
     flags="$flags --dryrun --quiet" # --reason"
+    #flags="$flags --dryrun --reason"
 elif [ "x$word" == 'xunlock' ]; then
     flags='$flags --unlock'
 elif [ "x$word" == 'xmake_pcawg_metadata' ]; then

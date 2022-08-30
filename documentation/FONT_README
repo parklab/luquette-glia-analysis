@@ -8,6 +8,14 @@ library(remotes)
 # i had to run the line below twice; first time said 1.3.8 was invalid, second worked for some reason
 remotes::install_version("Rttf2pt1", version = "1.3.8")
 remotes::install_version("Rttf2pt1", version = "1.3.8")
+
+# RESTART R (maybe don't need to load extrafont before install_version - but I haven't tested.
+# Loading extrafont above imports a newer version of Rttf2pt1, which fails on
+# font extraction. The older version can't replace the newer version; i.e,
+# > library(Rttf2pt1)
+# Error in value[[3L]](cond) : 
+#  Package 'Rttf2pt1' version 1.3.10 cannot be unloaded:
+# Error in unloadNamespace(package) : namespace 'Rttf2pt1' is imported by 'extrafont' so cannot be unloaded
 font_import(paths="path/to/env/pkgs/mscorefonts-0.0.1-3/fonts/")
 
 

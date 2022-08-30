@@ -58,6 +58,9 @@ cosmic$PTA <- snv.artifact.signature.v3
 # These 3 subjects are the infant brains (age: 0.4, 0.6, 2.0)
 nmuts <- fread(neuron.csv)[subject %in% c(1278, 5817, 5871)]
 omuts <- fread(oligo.csv)[subject %in% c(1278, 5817, 5871)]
+# for a manual check of teenage spectra
+#nmuts <- fread(neuron.csv)[subject %in% c(1465, 4638, 5559)]
+#omuts <- fread(oligo.csv)[subject %in% c(1465, 4638, 5559)]
 
 raw.neuron.spectrum <- setNames(as.vector(table(sbs96(nmuts[muttype=='snv']$mutsig))), levels(sbs96(c())))
 neuron.exposures <- setNames(lsqnonneg(as.matrix(cosmic[,-1]), raw.neuron.spectrum)$x, names(cosmic)[-1])

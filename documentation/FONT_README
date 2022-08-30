@@ -1,6 +1,6 @@
 Installing Arial:
 
-conda: extrafont, svglite, mscorefonts
+conda: r-extrafont, r-svglite, mscorefonts
 
 run in R:
 library(extrafont)

@@ -92,7 +92,7 @@ write.csv(cbind(raw.shared.spectrum, reconstructed.shared.spectrum,
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=3, height=2.25, pointsize=5, file=outs[i])
+    devs[[i]](width=3, height=2, pointsize=5, file=outs[i])
     layout(1:2)
     par(mar=c(1,4,2,1))
     plot.sbs96(x=0, spectrum=reconstructed.shared.spectrum, main='Shared sSNVs (sigB removed)')
@@ -103,7 +103,7 @@ for (i in 1:2) {
 devs=list(pdf, svglite)
 outs=c(out.suppl.pdf, out.suppl.svg)
 for (i in 1:2) {
-    devs[[i]](width=3, height=2.25, pointsize=5, file=outs[i])
+    devs[[i]](width=3, height=2, pointsize=5, file=outs[i])
     layout(1:2)
     par(mar=c(1,4,2,1))
     plot.sbs96(x=0, spectrum=raw.shared.spectrum, main='Shared sSNVs (raw)')

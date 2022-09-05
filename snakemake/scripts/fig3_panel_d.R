@@ -23,7 +23,7 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 7) {
-    stop('usage: fig3_panel_a.R neuron_snvs.csv neuron_indels.csv oligo_snvs.csv oligo_indels.csv out.pdf out.svg out.csv')
+    stop('usage: fig3_panel_d.R neuron_snvs.csv neuron_indels.csv oligo_snvs.csv oligo_indels.csv out.pdf out.svg out.csv')
 }
 
 

@@ -18,7 +18,7 @@ if [ "x$word" == 'xdry' ]; then
     flags="$flags --dryrun --quiet" # --reason"
     #flags="$flags --dryrun --reason"
 elif [ "x$word" == 'xunlock' ]; then
-    flags='$flags --unlock'
+    flags="$flags --unlock"
 elif [ "x$word" == 'xmake_pcawg_metadata' ]; then
     flags="$flags --config make_pcawg_metadata=1 --until metadata/pcawg_metadata.csv"
 elif [ "x$word" == 'xtest' ]; then
@@ -32,7 +32,7 @@ else
     usedrmaa='true'
     jobflag='-j 1000'
     kgflag='--keep-going'
-    flags="$flags --max-status-checks-per-second 0.1 --restart-times 2"
+    flags="$flags --max-status-checks-per-second 0.1" # --restart-times 2"
     #flags="--max-jobs-per-second 0.05 --max-status-checks-per-second 0.1 --restart-times 2"
 fi
 

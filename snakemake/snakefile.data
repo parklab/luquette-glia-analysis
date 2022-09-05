@@ -676,3 +676,18 @@ rule make_gencode_gene_regions:
     shell:
         "snakemake/scripts/make_gene_regions.R {input} {output}"
 
+
+ruleorder: subset_by_mutsig > copy_inputs
+rule subset_by_mutsig:
+    input:
+        rda="input/{celltype}___{filetype}___{qualtype}.{fileext}"
+    output:
+        rda="input/{celltype}_{sig}___{filetype}___{qualtype}.{fileext}"
+    log:
+        "input/{celltype}_{sig}___{filetype}___{qualtype}.{fileext}.log"
+    params:
+        sig='{sig}'
+    resources:
+        mem=12000
+    script:
+        "scripts/subset_by_mutsig.R"

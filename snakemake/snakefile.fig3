@@ -130,3 +130,32 @@ rule fig3e:
         mem=4000
     script:
         "scripts/fig3_panel_e.R"
+
+
+
+rule fig3e_supplement:
+    input:
+        # would like to expand() this but also want to keep names of inputs
+        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron_sbs16___A.{nq}quantiles.csv",
+        neuron_nott="enrichment/nott/quantile/neuron_sbs16___A.{nq}quantiles.csv",
+        neuron_scatacseq="enrichment/scatacseq/quantile/neuron_sbs16___A.{nq}quantiles.csv",
+        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/neuron_sbs16___A.{nq}quantiles.csv",
+        neuron_gtex="enrichment/gtex_expression_mc08/quantile/neuron_sbs16___A.{nq}quantiles.csv",
+        neuron_replichip="enrichment/encode_replichip/quantile/neuron_sbs16___A.{nq}quantiles.csv",
+        neuron_repliseq="enrichment/repliseq/quantile/neuron_sbs16___A.{nq}quantiles.csv",
+        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo_sbs1___A.{nq}quantiles.csv",
+        oligo_nott="enrichment/nott/quantile/oligo_sbs1___A.{nq}quantiles.csv",
+        oligo_scatacseq="enrichment/scatacseq/quantile/oligo_sbs1___A.{nq}quantiles.csv",
+        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo_sbs1___A.{nq}quantiles.csv",
+        oligo_gtex="enrichment/gtex_expression_mc08/quantile/oligo_sbs1___A.{nq}quantiles.csv",
+        oligo_replichip="enrichment/encode_replichip/quantile/oligo_sbs1___A.{nq}quantiles.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/oligo_sbs1___A.{nq}quantiles.csv"
+    output:
+        pdf="fig3/panel_e_supplement_{nq}quantiles.pdf",
+        svg="fig3/panel_e_supplement_{nq}quantiles.svg"
+    log:
+        "fig3/panel_e_supplement_{nq}quantiles.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig3_panel_e_supplement.R"

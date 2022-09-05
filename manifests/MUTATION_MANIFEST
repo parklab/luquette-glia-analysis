@@ -7,3 +7,7 @@ oligo,A,input/oligo___mut___A.rda
 oligo,AB,input/oligo___mut___AB.rda
 oligo,indel_A,input/oligo___mut___indel_A.rda
 oligo,indel_AB,input/oligo___mut___indel_AB.rda
+neuron_sbs1,A,input/neuron_sbs1___mut___A.rda
+neuron_sbs16,A,input/neuron_sbs16___mut___A.rda
+oligo_sbs1,A,input/oligo_sbs1___mut___A.rda
+oligo_sbs16,A,input/oligo_sbs16___mut___A.rda

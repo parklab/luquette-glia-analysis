@@ -57,7 +57,7 @@ if ('data.table' %in% class(original) | 'data.frame' %in% class(original)) {
     subsetted <- original[grep(grep.pattern, original$mutsig),]
 } else if ('GenomicRanges' %in% class(original) | 'CompressedGRangesList' %in% class(original)) {
     cat('detected permutation list\n')
-    subsetted <- lapply(original, function(x) x[grep(grep.pattern, x$mutsig),])
+    subsetted <- GenomicRanges::GRangesList(lapply(original, function(x) x[grep(grep.pattern, x$mutsig),]))
 } else {
     stop(paste0('object "', o.name, '" of class ', class(original), ' is not one of the recognized class types (data.table, data.frame, GenomicRanges, CompressedGRangesList)'))
 }

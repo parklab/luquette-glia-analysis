@@ -65,6 +65,10 @@ enrichment_config = {
         'oligo___AB': 'input/oligo___perm___AB.rda',
         'oligo___indel_A': 'input/oligo___perm___indel_A.rda',
         'oligo___indel_AB': 'input/oligo___perm___indel_AB.rda',
+        'neuron_sbs1___A': 'input/neuron_sbs1___perm___A.rda',
+        'neuron_sbs16___A': 'input/neuron_sbs16___perm___A.rda',
+        'oligo_sbs1___A': 'input/oligo_sbs1___perm___A.rda',
+        'oligo_sbs16___A': 'input/oligo_sbs16___perm___A.rda'
     }
 }
 
@@ -74,7 +78,8 @@ wildcard_constraints:
     qualtype='|'.join(qualtypes),
     cosmic='cosmic_full|cosmic_reduced',
     panel_letter='a|b|c|d|e|f|g|h|i|j|k|l',
-    tumor='[^\.]+'  # No longer need this -[^\.]'   # Tumor codes are formatted XXXX-YYYY 
+    tumor='[^\.]+',  # No longer need this -[^\.]'   # Tumor codes are formatted XXXX-YYYY 
+    sig='sbs1|sbs16'  # for "simplified" analysis of sbs1 and sbs16 enrichment using CG:C>T and ATN:T>C rather than signature fitting
     #umap='atac|rna',
     #collapsed='|COLLAPSED.',
 
@@ -124,6 +129,9 @@ rule all:
         #"fig3/panel_c2.pdf",
         #"fig3/panel_d.pdf",
         "fig3/panel_e.pdf",
+        "fig3/panel_e_supplement_3quantiles.pdf",
+        "fig3/panel_e_supplement_5quantiles.pdf",
+        "fig3/panel_e_supplement_10quantiles.pdf",
         #"fig4/panel_a.pdf",
         #"fig4/panel_b_barplot.pdf",
         #"fig4/panel_b_heatmap.pdf",

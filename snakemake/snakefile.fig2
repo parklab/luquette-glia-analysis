@@ -27,7 +27,7 @@ rule fig2_raw_indel_spectrum:
     resources:
         mem=4000
     log:
-        "fig2/raw_spectrum/plot_indel_raw_spectrum.log"
+        "fig2/panel_e.log"
     script:
         "scripts/plot_raw_indel.R"
 

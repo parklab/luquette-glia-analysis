@@ -32,7 +32,7 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 16) {
-    stop('usage: fig3_panel_a.R {neuron signals: histone, nott, scatacseq, scrnaseq, gtex, replichip, repliseq} {oligo signals: <same as neuron>} out.pdf out.svg')
+    stop('usage: fig3_panel_e.R {neuron signals: histone, nott, scatacseq, scrnaseq, gtex, replichip, repliseq} {oligo signals: <same as neuron>} out.pdf out.svg')
 }
 
 

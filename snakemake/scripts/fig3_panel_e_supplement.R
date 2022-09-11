@@ -124,12 +124,12 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.
 
     repli <- wrap.fread(files['replichip'])[encid %in% c('ENCFF469TYS', 'ENCFF907YXU') & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
     # have to reverse quantile to make 1=early .. N=late
-    repli$quantile <- (3:1)[as.integer(repli$quantile)]
+    repli$quantile <- (max(repli$quantile):1)[as.integer(repli$quantile)]
     repli <- repli[order(as.integer(quantile))]
 
     repliseq <- wrap.fread(files['repliseq'])[celltype == 'SK-N-SH' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
     # have to reverse quantile to make 1=early .. N=late
-    repliseq$quantile <- (3:1)[as.integer(repliseq$quantile)]
+    repliseq$quantile <- (max(repliseq$quantile):1)[as.integer(repliseq$quantile)]
 
     if (!is.null(pdev)) {
         if (plot.1mb) {

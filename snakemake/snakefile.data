@@ -38,7 +38,7 @@ rule copy_inputs:
 # to do this but it isn't worth reworking the entire pipeline.
 rule mut_csv_to_rda:
     input:
-        "scan2_output/{celltype}_snv_indel_pass_rescue.txt"
+        "scan2_output/{celltype}_snv_indel_pass_rescue.FILTERED.txt"
     output:
         "input/{celltype}___mut___{qualtype}.rda"
     params:

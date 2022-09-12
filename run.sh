@@ -32,7 +32,7 @@ else
     usedrmaa='true'
     jobflag='-j 1000'
     kgflag='--keep-going'
-    flags="$flags --max-status-checks-per-second 0.1" # --restart-times 2"
+    flags="$flags --max-status-checks-per-second 0.1 --restart-times 2"
     #flags="--max-jobs-per-second 0.05 --max-status-checks-per-second 0.1 --restart-times 2"
 fi
 

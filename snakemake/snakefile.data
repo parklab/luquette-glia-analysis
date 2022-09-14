@@ -629,25 +629,6 @@ rule pcawg_parse_snpeff:
         """
 
 
-'''
-ruleorder: parse_singlecell_snpeff > pcawg_parse_snpeff
-rule parse_singlecell_snpeff:
-    input:
-        "data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf"
-    output:
-        "data/pcawg/{celltype}___{qualtype}.gene_mutations.txt"
-    params:
-        celltype='{celltype}'
-    resources:
-        mem=8000
-    shell:
-        """
-        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=.;" $8; print $0 }}' {input} \
-            | snakemake/scripts/parse_pcawg_snpeff.sh /dev/stdin > {output}
-        """
-'''
-
-
 rule pcawg_gene_mutation_odds_ratios:
     input:
         neuron="data/pcawg/neuron___AB.gene_mutations.txt",
@@ -691,3 +672,68 @@ rule subset_by_mutsig:
         mem=12000
     script:
         "scripts/subset_by_mutsig.R"
+
+
+
+rule machado2022_sbsblood_wget:
+    input:
+    output:
+        "data/machado2022_sbsblood/Machado2022_SupplementaryTables_All.xlsx"
+    log:
+        "data/machado2022_sbsblood/wget.log"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output} \
+            'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9402440/bin/41586_2022_5072_MOESM4_ESM.xlsx'
+        """
+
+
+rule machado2022_sbsblood_convert:
+    input:
+        xlsx="data/machado2022_sbsblood/Machado2022_SupplementaryTables_All.xlsx"
+    output:
+        supptab8="data/machado2022_sbsblood/SupplementaryTable8.csv",
+        csv="data/machado2022_sbsblood/SBSblood.csv",
+        pdf="data/machado2022_sbsblood/SBSblood.pdf",
+        svg="data/machado2022_sbsblood/SBSblood.svg"
+    log:
+        "data/machado2022_sbsblood/convert.log"
+    params:
+        sheet_number=8
+    resources:
+        mem=1000
+    script:
+        "scripts/get_machado2022_sbsblood.R"
+
+
+rule leesix2018_hspc_spectrum_get:
+    input:
+    output:
+        "data/leesix2018_hspc/All_mutations_SBS_indel.txt"
+    log:
+        "data/leesix2018_hspc/wget.log"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output} \
+            'https://data.mendeley.com/public-files/datasets/yzjw2stk7f/files/46faf00b-02de-44e7-a5ea-bf84e14e875e/file_downloaded'
+        """
+
+
+
+rule leesix2018_hspc_spectrum_convert:
+    input:
+        txt="data/leesix2018_hspc/All_mutations_SBS_indel.txt"
+    output:
+        csv="data/leesix2018_hspc/HSPC_spectrum.csv",
+        pdf="data/leesix2018_hspc/HSPC_spectrum.pdf",
+        svg="data/leesix2018_hspc/HSPC_spectrum.svg",
+    log:
+        "data/leesix2018_hspc/convert.log"
+    resources:
+        mem=1000
+    script:
+        "scripts/get_leesix2018_hspc.R"

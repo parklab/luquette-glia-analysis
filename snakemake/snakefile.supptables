@@ -1,0 +1,28 @@
+# vim: syntax=python
+
+rule supptable1:
+    input:
+        # doesn't matter whether we use passA or any other type
+        neuron="input/neuron___meta___A.csv",
+        oligo="input/oligo___meta___A.csv"
+    resources:
+        mem=100
+    output:
+        "supptables/SuppTable1.csv"
+    shell:
+        """
+        (cat {input.neuron} ; tail -n +2 {input.oligo}) > {output}
+        """
+
+rule supptable2:
+    input:
+        neuron="input/neuron___unfiltered_mut___any.csv",
+        oligo="input/oligo___unfiltered_mut___any.csv"
+    output:
+        "supptables/SuppTable2.csv"
+    resources:
+        mem=100
+    shell:
+        """
+        (cat {input.neuron} ; tail -n +2 {input.oligo}) > {output}
+        """

@@ -52,7 +52,20 @@ g <- fread(gfile)
 combined <- rbind(n, g)
 
 nmodel <- lmer(genome.burden ~ age + (1|donor), data=n)
+nci <- confint(nmodel)
+colnames(nci) <- paste0('95% CI ', c('lower', 'upper'))
 gmodel <- lmer(genome.burden ~ age + (1|donor), data=g)
+gci <- confint(gmodel)
+colnames(gci) <- paste0('95% CI ', c('lower', 'upper'))
+
+# Combine neuron and oligo data to get statistical significance
+# of cell type specific variables (i.e., {neuron,oligo}-specific
+# {age,intercept} values).
+# rename type -> celltype to make CSV output easier to understand
+colnames(combined)[colnames(combined) == 'type'] <- 'celltype'
+cmodel <- lmer(genome.burden ~ age*celltype + (1|donor), data=combined)
+cci <- confint(cmodel)
+colnames(cci) <- paste0('95% CI ', c('lower', 'upper'))
 
 
 figwidth=4
@@ -81,8 +94,18 @@ for (i in 1:2) {
 
 fwrite(combined, file=outcsv)
 fwrite(rbind(
-    data.table(CellType='Neuron', Variable=c('Intercept','Age'), coef(summary(nmodel))),
-    data.table(CellType='Oligo', Variable=c('Intercept','Age'), coef(summary(gmodel)))
+    data.table(Model='Neuron only',
+        Formula=deparse(formula(nmodel)),
+        Variable=c('Intercept','Age'),
+        cbind(coef(summary(nmodel)), nci[c('(Intercept)', 'age'),])),
+    data.table(Model='Oligo only',
+        Formula=deparse(formula(gmodel)),
+        Variable=c('Intercept','Age'),
+        cbind(coef(summary(gmodel)), gci[c('(Intercept)', 'age'),])),
+    data.table(Model='Neuron and oligo',
+        Formula=deparse(formula(cmodel)),
+        Variable=c('Intercept','Age','celltype=oligo (intercept)','celltype=oligo (age)'),
+        cbind(coef(summary(cmodel)), cci[c('(Intercept)', 'age', 'celltypeoligo', 'age:celltypeoligo'),]))
 ), file=outmodelcsv)
 
 

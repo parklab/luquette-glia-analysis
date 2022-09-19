@@ -14,7 +14,9 @@ neuron	meta	indel_A	csv	metadata/metadata_pta_51neurons_no_outlier.csv
 oligo	meta	A	csv	metadata/metadata_pta_31glia_no_outlier.csv
 oligo	meta	indel_A	csv	metadata/metadata_pta_31glia_no_outlier.csv
 neuron	mut	any	csv	scan2_output/neuron_snv_indel_pass_rescue.FILTERED.txt
+neuron	unfiltered_mut	any	csv	scan2_output/neuron_snv_indel_pass_rescue.UNFILTERED.txt
 oligo	mut	any	csv	scan2_output/oligo_snv_indel_pass_rescue.FILTERED.txt
+oligo	unfiltered_mut	any	csv	scan2_output/oligo_snv_indel_pass_rescue.UNFILTERED.txt
 # Permutation tables
 neuron	perm	A	rda	scan2_output/permutations/neuron_perms_snv_pass.rda
 neuron	perm	AB	rda	scan2_output/permutations/neuron_perms_snv_rescue.rda

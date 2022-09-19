@@ -86,6 +86,8 @@ wildcard_constraints:
 
 rule all:
     input:
+        "supptables/SuppTable1.csv",
+        "supptables/SuppTable2.csv",
         "fig1/panel_b_A.pdf",
         "fig1/panel_b_A_burdens.csv",
         "fig1/panel_b_A_model.csv",
@@ -244,6 +246,7 @@ include: "snakefile.fig2"
 include: "snakefile.fig3"
 include: "snakefile.fig4"
 include: "snakefile.suppfig2"
+include: "snakefile.supptables"
 include: "snakefile.scatacseq"
 include: "snakefile.gtex_enrichment"
 include: "snakefile.scrnaseq_enrichment"

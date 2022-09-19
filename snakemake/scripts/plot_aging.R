@@ -94,15 +94,15 @@ for (i in 1:2) {
 
 fwrite(combined, file=outcsv)
 fwrite(rbind(
-    data.table(Model='Neuron only',
+    data.table(CellType='Neuron',
         Formula=deparse(formula(nmodel)),
         Variable=c('Intercept','Age'),
         cbind(coef(summary(nmodel)), nci[c('(Intercept)', 'age'),])),
-    data.table(Model='Oligo only',
+    data.table(CellType='Oligo',
         Formula=deparse(formula(gmodel)),
         Variable=c('Intercept','Age'),
         cbind(coef(summary(gmodel)), gci[c('(Intercept)', 'age'),])),
-    data.table(Model='Neuron and oligo',
+    data.table(CellType='Neuron and oligo',
         Formula=deparse(formula(cmodel)),
         Variable=c('Intercept','Age','celltype=oligo (intercept)','celltype=oligo (age)'),
         cbind(coef(summary(cmodel)), cci[c('(Intercept)', 'age', 'celltypeoligo', 'age:celltypeoligo'),]))

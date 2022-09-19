@@ -33,7 +33,7 @@ scores <- fread(scores.csv)
 cosmic <- fread(cosmic.csv)
 head(cosmic)
 
-sigs.to.keep <- scores[SigIncluded == TRUE, SigName]
+sigs.to.keep <- sort(unique(scores[SigIncluded == TRUE, SigName]))
 cat("keeping", length(sigs.to.keep), "signatures:\n")
 print(sigs.to.keep)
 # column 1 is the mutation type column

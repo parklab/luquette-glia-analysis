@@ -2,18 +2,20 @@
 
 rule fig2_raw_snv_spectrum:
     input:
-        "input/neuron___mut___A.rda",
-        "input/oligo___mut___A.rda"
+        neuron="tables/neuron___mut___A.csv",
+        oligo="tables/oligo___mut___A.csv",
+        leesix='data/leesix2018_hspc/HSPC_spectrum.csv',
+        machado='data/machado2022_sbsblood/SBSblood.csv'
     output:
-        "fig2/panel_a.svg",
-        "fig2/panel_a.pdf",
-        "fig2/panel_a.csv"
+        svg="fig2/panel_a.svg",
+        pdf="fig2/panel_a.pdf",
+        csv="fig2/panel_a.csv"
     resources:
         mem=4000
     log:
         "fig2/panel_a.log"
     script:
-        "scripts/plot_raw_snv.R"
+        "scripts/fig2_panel_a.R"
 
 
 rule fig2_raw_indel_spectrum:
@@ -102,7 +104,8 @@ rule fig2_score_cosmic_analysis:
         "scripts/score_cosmic_signatures.R"
 
 
-rule fig2_select_cosmic_sigs:
+'''
+rule fig2_select_cosmic_sigs_maxvote:
     input:
         "mutsigs/cosmic_signature_inclusion/neuron_signature_scores_{qualtype}.csv",
         "mutsigs/cosmic_signature_inclusion/oligo_signature_scores_{qualtype}.csv"
@@ -124,6 +127,21 @@ rule fig2_select_cosmic_sigs:
         #sigs_to_exclude=''
     resources:
         mem=8000
+    log:
+        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.log"
+    script:
+        "scripts/select_cosmic_sigs.R"
+'''
+
+
+rule fig2_select_cosmic_sigs:
+    input:
+        neuron="mutsigs/cosmic_signature_inclusion/neuron_signature_scores_{qualtype}.csv",
+        oligo="mutsigs/cosmic_signature_inclusion/oligo_signature_scores_{qualtype}.csv"
+    output:
+        csv="mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv"
+    resources:
+        mem=1000
     log:
         "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.log"
     script:

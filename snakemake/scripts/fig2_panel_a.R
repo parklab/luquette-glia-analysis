@@ -48,7 +48,9 @@ if (!("Arial" %in% fonts()))
 
 
 neuron <- table(sbs96(fread(neuron.csv)$mutsig))
+neuron <- neuron/sum(neuron)
 oligo <- table(sbs96(fread(oligo.csv)$mutsig))
+oligo <- oligo/sum(oligo)
 machado <- fread(machado.csv)
 machado <- machado$SBSblood / sum(machado$SBSblood)
 leesix <- fread(leesix.csv)

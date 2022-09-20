@@ -160,69 +160,55 @@ rule all:
         "fig4/panel_d.pdf"
 
 
-rule actually_all_but_skipping_now:
-    input:
-        # alignability
-        expand("alignability/plots/chromosome_bin_classes_heatmap.{output}",
-            output=['svg', 'pdf', 'jpeg']),
-        expand("alignability/plots/chromosome_bin_classes_barplot.{output}",
-            output=['svg', 'pdf']),
-        expand('alignability/genome_tiles/genome_mask_{binsize}binsize.bed',
-            binsize=[ '200' ] + binsizes),  # add in a 200bp tile set for ChromHMM
-        # spatial sensitivity
-        #expand('spatial_sensitivity/bed/{sample}.{binsize}binsize.bed',
-            #sample=neuron_samples + oligo_samples,
-            #binsize=binsizes),
-        #expand("alignability/data_plots/chr{chr}.{resolution}.{output}",
-            #chr=chrs, resolution=[ '1k', '10k', '100k', '1m' ],
-            #output=['svg', 'pdf']),
-        # 1b
-        expand('fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
-            qualtype=snv_qualtypes,  # indels are always added
-            collapsed=[ '', 'COLLAPSED.'],
-            output=output_plot_and_table),
         # 1c
         expand("fig1/indel_size_analysis/indel_size.{output}",
             output=[ 'pdf', 'svg']),
         # 1d
         expand("fig1/snpeff_analysis/snpeff_analysis.{output}",
             output=output_plot_and_table),
-        # 1e,f
+
+rule aging_rates:
+    input:
         expand('fig1/aging_rate_analysis/{qualtype}.{output}',
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg']),
         expand('fig1/aging_rate_analysis/{qualtype}_{table}.csv',
             qualtype=[ 'A', 'indel_A' ],
             table=[ 'burdens', 'model' ]),
-        # 2a
+
+
+# For now this is just signature fitting. In both projects so far,
+# de novo analysis produced only one signature.
+rule mutation_signatures:
+    input:
         expand("fig2/raw_spectrum/snv_spectrum.{output}",
             output=output_plot_and_table),
-        # 2b
         expand("fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv",
             celltype=celltypes_to_compute,
             qualtype=[ 'A', 'indel_A' ]),
-        # probably supplementary, related to fig2
         expand("fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.{output}",
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg', 'csv' ]),
-        # 2b,f
         expand("fig2/cosmic_aging/{celltype}_barplots_{qualtype}.{output}",
             celltype=celltypes_to_compute,
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg' ]),
-        # 2c,g
         expand("fig2/cosmic_aging/scatterplots_{qualtype}.{output}",
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg', 'csv' ]),
-        # 2e
         expand("fig2/raw_spectrum/indel_spectrum.{output}",
             output=output_plot_and_table),
-        # 3a
-        expand("fig3/scrnaseq/umap_plot.{output}",
-            output=[ 'svg', 'pdf', 'jpeg' ]),
-        # 3b
-        expand("fig3/scatacseq/umap_plot.{output}",
-            output=[ 'svg', 'pdf', 'jpeg' ]),
+
+
+# Enrichment analysis of total mutation burden
+rule all_enrichment:
+    input:
+        # Enrichment of introns, exons, intergenic and other. Requires
+        expand('fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
+            qualtype=qualtypes,
+            collapsed=[ '', 'COLLAPSED.'],
+            output=output_plot_and_table),
+        # All quantile-based enrichment analyses of total mutation burden
         expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
@@ -230,32 +216,27 @@ rule actually_all_but_skipping_now:
             datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ],
-            #datasource=[ 'depth' ],
             output=[ 'svg', 'pdf', 'csv' ]),
-        # Enrichment analysis, but not quantile based (qbeds)
+        # Enrichment analysis of specific regions
         expand('enrichment/{datasource}/{celltype}___{qualtype}.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
-            datasource=[ 'roadmap_chromhmm_brain' ], #, 'roadmap_histone_narrowpeak' ],
-            output=[ 'svg', 'pdf', 'csv' ]),
-        # Signature-based enrichment
+            datasource=[ 'boca2', 'dna_repair_hotspots', 'gencode', 'gencode_simplified',
+                         'gtex_genes', 'nott', 'roadmap_chromhmm_brain' ],
+            output=[ 'svg', 'pdf', 'csv' ])
+
+
+# Enrichment analysis of signature-specific mutation burden
+rule signature_enrichment:
+    input:
         expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
-            #expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}/{nquantiles}quantiles_sigenrich_adapted.csv',
             datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
                 [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ],
-            #datasource=[ 'depth' ],
             celltype=celltypes_to_compute,
             qualtype=[ 'A', 'indel_A' ],
-            nquantiles=[ 3, 5 ], #)
+            nquantiles=[ 3, 5 ],
             output=[ 'svg', 'pdf', 'csv' ]),
-        #expand('plots/enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
-            #datasource=[ 'encode_replichip', 'roadmap_histone_signal', 'roadmap_dnamethyl', 'scatacseq', 'conservation', 'boca', 'depth', 'nott', 'rizzardi' ],
-            #celltype=celltypes_to_compute,
-            #qualtype=[ 'A' ],
-            #nquantiles=[ 3, 5, 10 ],
-            #output=[ 'svg', 'pdf', 'csv' ]),
-
 
 
 include: "snakefile.data"
@@ -272,103 +253,7 @@ include: "snakefile.scrnaseq_enrichment"
 include: "snakefile.nott_enrichment"
 include: "snakefile.boca_enrichment"
 include: "snakefile.dnarepair_enrichment"
-
-
-
-# Below are several instances of
-# boilerplate code to use the bed_enrichment module to automatically
-# run arbitrary BED files through the enrichment pipeline.
-
-########################################################################
-# Gencode v26 gene region annotations (e.g., exon, intron, UTR..)
-########################################################################
-enrichment_gencode_gene_regions_config = dict(
-    **{ 'output_dir': 'enrichment/gencode',
-        'SIGNAL_MANIFEST': 'manifests/GENCODE.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_gencode_gene_regions:
-    snakefile: "snakefile.bed_enrichment"
-    config: enrichment_gencode_gene_regions_config
-
-use rule * from enrichment_gencode_gene_regions as enrichment_gencode_gene_regions_*
-
-use rule enrichment_bed_plot from enrichment_gencode_gene_regions as enrichment_gencode_gene_regions_enrichment_bed_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-    output:
-        expand('enrichment/gencode/bed_regions/{{mutclass}}.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/gencode/{mutclass}___gene_regions.log'
-
-# Additional analysis that collapses several small regions into larger
-# ones to improve power.
-#
-# XXX: this should just be a new BED file in the manifest
-# XXX2: this rule does not match when celltype=neuron. wildcard constraints is
-# celltype=oligo|neuron|any or any reordering of that
-rule gencode_gene_regions_collapsed:
-    input:
-        rda="enrichment/gencode/bed_regions/{celltype}___{qualtype}/bedenrich/FULL.rda"
-    output:
-        fullrda="enrichment/gencode/bed_regions/{celltype}___{qualtype}/bedenrich/FULL.COLLAPSED.rda",
-        rda="enrichment/gencode/bed_regions/{celltype}___{qualtype}/bedenrich/SUMMARY.COLLAPSED.rda"
-    params:
-        "Exonic=cds,utr3,utr5",
-        "Intronic=intron",
-        "Intergenic=intergenic,downstream,upstream",
-        "Other=other",
-        "Outside=outside"
-    resources:
-        mem=4000
-    log:
-        "enrichment/gencode/bed_regions/{celltype}___{qualtype}/bedenrich/COLLAPSED.log"
-    script:
-        "scripts/collapse_enrichment.R"
-
-# XXX2: hack for now to get celltype=neuron to work
-rule gencode_gene_regions_collapsed_neuron:
-    input:
-        rda="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/FULL.rda"
-    output:
-        fullrda="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/FULL.COLLAPSED.rda",
-        rda="enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/SUMMARY.COLLAPSED.rda"
-    params:
-        "Exonic=cds,utr3,utr5",
-        "Intronic=intron",
-        "Intergenic=intergenic,downstream,upstream",
-        "Other=other",
-        "Outside=outside"
-    resources:
-        mem=4000
-    log:
-        "enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/COLLAPSED.log"
-    script:
-        "scripts/collapse_enrichment.R"
-
-
-########################################################################
-# Gencode v26 genes collapsed into a single transcript as used by GTEx
-########################################################################
-enrichment_gtex_genes_config = dict(
-    **{ 'output_dir': 'enrichment/gtex_genes',
-        'SIGNAL_MANIFEST': 'manifests/GTEX_GENES.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_gtex_genes:
-    snakefile: "snakefile.bed_enrichment"
-    config: enrichment_gtex_genes_config
-
-use rule * from enrichment_gtex_genes as enrichment_gtex_genes_*
-
-# ~55,000 features, so need more memory. Oligos used ~26G
-use rule enrichment_bed_analysis from enrichment_gtex_genes as enrichment_gtex_genes_enrichment_bed_analysis with:
-    resources:
-        mem=32000
-
+include: "snakefile.gene_region_enrichment"
 
 
 ########################################################################

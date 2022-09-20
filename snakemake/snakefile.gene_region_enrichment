@@ -59,7 +59,7 @@ use rule enrichment_bed_plot from enrichment_gencode_simplified_gene_regions as 
         expand('enrichment/gencode_simplified/bed_regions/{{mutclass}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/gencode_simplified/{mutclass}___simplified_gene_regions.log'
+        'enrichment/gencode_simplified/{mutclass}___gene_regions_simplified.log'
 
 
 ########################################################################

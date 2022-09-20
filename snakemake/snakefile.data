@@ -718,6 +718,26 @@ rule make_gencode_gene_regions:
         "snakemake/scripts/make_gene_regions.R {input} {output}"
 
 
+rule simplify_gencode_gene_regions:
+    input:
+        "data/gencode/gene_regions.bed"
+    output:
+        "data/gencode/gene_regions_simplified.bed"
+    resources:
+        mem=1000
+    shell:
+        """
+        sed -e 's/upstream$/intergenic/g' \
+            -e 's/downstream$/intergenic/g' \
+            -e 's/cds$/exonic/g' \
+            -e 's/utr5$/exonic/g' \
+            -e 's/utr3$/exonic/g' \
+            -e 's/intron$/intronic/g' {input} > {output}
+        """
+
+
+
+
 rule make_gencode_gene_bed:
     input:
         "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf"

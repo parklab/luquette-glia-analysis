@@ -25,39 +25,39 @@ rule fig1_suppl_chromhmm:
 
 rule fig1_distribution_plot:
     input:
-        nmut="enrichment/gencode/bed_regions/neuron___AB/bedenrich/FULL.COLLAPSED.rda",
-        ni="enrichment/gencode/bed_regions/neuron___indel_AB/bedenrich/FULL.COLLAPSED.rda",
-        gmut="enrichment/gencode/bed_regions/oligo___AB/bedenrich/FULL.COLLAPSED.rda",
-        gi="enrichment/gencode/bed_regions/oligo___indel_AB/bedenrich/FULL.COLLAPSED.rda"
+        nmut="enrichment/gencode_simplified/bed_regions/neuron___AB/bedenrich/FULL.rda",
+        ni="enrichment/gencode_simplified/bed_regions/neuron___indel_AB/bedenrich/FULL.rda",
+        gmut="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/FULL.rda",
+        gi="enrichment/gencode_simplified/bed_regions/oligo___indel_AB/bedenrich/FULL.rda"
     output:
-        svg="fig1/panel_c.svg",
-        pdf="fig1/panel_c.pdf",
-        tsv="fig1/panel_c.csv"
+        svg="fig1/panel_c_old.svg",
+        pdf="fig1/panel_c_old.pdf",
+        tsv="fig1/panel_c_old.csv"
     resources:
         mem=4000
     log:
-        "fig1/panel_c.log"
+        "fig1/panel_c_old.log"
     script:
         "scripts/barplot_enrich_2x2.R"
 
 
 rule fig1_distribution_plot_new:
     input:
-        neuron_snv="enrichment/gencode/bed_regions/neuron___AB/bedenrich/SUMMARY.COLLAPSED.rda",
-        neuron_indel="enrichment/gencode/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.COLLAPSED.rda",
-        oligo_snv="enrichment/gencode/bed_regions/oligo___AB/bedenrich/SUMMARY.COLLAPSED.rda",
-        oligo_indel="enrichment/gencode/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.COLLAPSED.rda"
+        neuron_snv="enrichment/gencode_simplified/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/gencode_simplified/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/gencode_simplified/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
     output:
-        svg="fig1/panel_c_new.svg",
-        pdf="fig1/panel_c_new.pdf",
-        csv="fig1/panel_c_new.csv"
+        svg="fig1/panel_c.svg",
+        pdf="fig1/panel_c.pdf",
+        csv="fig1/panel_c.csv"
     params:
-        signal_to_plot='dummy',
-        features="Intergenic,Intronic,Exonic,Other"   # "other" is noncoding transcripts
+        signal_to_plot='datasource=gencode_simplified',
+        features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
     resources:
         mem=1000
     log:
-        "fig1/panel_c_new.log"
+        "fig1/panel_c.log"
     script:
         "scripts/barplot_enrich_new.R"
 

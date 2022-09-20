@@ -87,7 +87,6 @@ wildcard_constraints:
     tumor='[^\.]+',  # No longer need this -[^\.]'   # Tumor codes are formatted XXXX-YYYY 
     sig='sbs1|sbs16'  # for "simplified" analysis of sbs1 and sbs16 enrichment using CG:C>T and ATN:T>C rather than signature fitting
     #umap='atac|rna',
-    #collapsed='|COLLAPSED.',
 
 
 rule all:
@@ -107,8 +106,8 @@ rule all:
         "fig1/panel_b_indel_A_model.csv",
         "fig1/panel_c.pdf",
         "fig1/panel_c.csv",
-        "fig1/panel_c_new.pdf",
-        "fig1/panel_c_new.csv",
+        "fig1/panel_c_old.pdf",
+        "fig1/panel_c_old.csv",
         "fig1/panel_d.pdf",
         "fig1/panel_d.csv",
         "suppfig2/panel_a.pdf",     # Indel size dist'n
@@ -160,12 +159,13 @@ rule all:
         "fig4/panel_d.pdf"
 
 
-        # 1c
+rule misc:
+    input:
         expand("fig1/indel_size_analysis/indel_size.{output}",
             output=[ 'pdf', 'svg']),
-        # 1d
         expand("fig1/snpeff_analysis/snpeff_analysis.{output}",
-            output=output_plot_and_table),
+            output=output_plot_and_table)
+
 
 rule aging_rates:
     input:
@@ -201,13 +201,8 @@ rule mutation_signatures:
 
 
 # Enrichment analysis of total mutation burden
-rule all_enrichment:
+rule enrichment:
     input:
-        # Enrichment of introns, exons, intergenic and other. Requires
-        expand('fig1/distribution_analysis/{qualtype}_gene_classes.{collapsed}{output}',
-            qualtype=qualtypes,
-            collapsed=[ '', 'COLLAPSED.'],
-            output=output_plot_and_table),
         # All quantile-based enrichment analyses of total mutation burden
         expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             celltype=celltypes_to_compute,
@@ -227,6 +222,8 @@ rule all_enrichment:
 
 
 # Enrichment analysis of signature-specific mutation burden
+# In theory would be done to all regions tested for total burden enrichment,
+# but because of signature fitting inaccuracy, regions must be large.
 rule signature_enrichment:
     input:
         expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
@@ -291,10 +288,6 @@ use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_road
     log:
         'enrichment/roadmap_chromhmm_brain/{mutclass}.log'
 
-
-# Below are several instances of
-# boilerplate code to use the enrichment module to automatically
-# run bigWig signal files through the enrichment pipeline.
 
 ########################################################################
 # Roadmap epigenomics histones

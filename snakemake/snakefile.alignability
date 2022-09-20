@@ -42,6 +42,38 @@ rule tile_genome:
         "scripts/tile_genome_no_badbins.R"
 
 
+# the 200bp version is so slow that it makes sense to scatter/gather
+rule tile_genome_200bp_scatter:
+    input:
+        rdas="alignability/base_tile_size_tables/chr{chr}.rda",
+        metadata="metadata/metadata_82cells_combined.csv"  # for sample IDs of PTA single cells
+    output:
+        "alignability/genome_tiles/genome_tiles_200binsize.chr{chr}.bed"
+    log:
+        "alignability/genome_tiles/genome_tiles_200binsize.chr{chr}.log"
+    params:
+        binsize="200"
+    resources:
+        mem=12000
+    script:
+        "scripts/tile_genome_no_badbins.R"
+
+
+# Override the non-scatter/gather method
+ruleorder: tile_genome_200bp_gather > tile_genome
+rule tile_genome_200bp_gather:
+    input:
+        expand("alignability/genome_tiles/genome_tiles_200binsize.chr{chr}.bed", chr=chrs)
+    output:
+        "alignability/genome_tiles/genome_tiles_200binsize.bed"
+    resources:
+        mem=4000
+    shell:
+        """
+        cat {input} > {output}
+        """
+
+
 rule digest_chrom:
     input:
         matfiles=scan2_depth_matrixes.values(),

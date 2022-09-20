@@ -42,6 +42,8 @@ suppressMessages(library(GenomicRanges))
 suppressMessages(library(BSgenome))
 suppressMessages(library(BSgenome.Hsapiens.UCSC.hg19))
 
+chroms <- c()
+
 # unname: IMPORTANT - snakemake names the digest files, which, for reasons
 # I don't understand, prevents GRanges from c()ing together.
 base.tiles <- do.call(c, lapply(unname(digest.files), function(df) {
@@ -50,6 +52,7 @@ base.tiles <- do.call(c, lapply(unname(digest.files), function(df) {
     mean.mat <- mean.mat[, ..sample.ids]
     tiles$dp <- rowMeans(mean.mat)
     tiles.not.in.gatk$dp <- NA
+    chroms <<- c(chroms, chrom)  # record which chromosomes have been loaded
     a <- c(tiles, tiles.not.in.gatk)
     a <- sort(a)
     seqlevels(a) <- paste0('chr', seqlevels(a))
@@ -62,7 +65,9 @@ base.tiles <- do.call(c, lapply(unname(digest.files), function(df) {
     a
 }))
 
-new.tiles <- tileGenome(seqlengths=seqlengths(base.tiles)[paste0('chr', 1:22)],
+cat('tiling over chroms=', chroms, '\n')
+
+new.tiles <- tileGenome(seqlengths=seqlengths(base.tiles)[paste0('chr', chroms)], #[paste0('chr', 1:22)],
     tilewidth=binsize, cut.last.tile.in.chrom=T)
 
 # Score the amount of overlap with "good" bins (class=3)
@@ -82,10 +87,13 @@ new.tiles$status <- ifelse(nols >= 0.8*binsize/100, 'included', 'excluded')
 # base tiles.
 cat('finding overlaps for mean depth..\n')
 ols <- findOverlaps(new.tiles, base.tiles, minoverlap=100)
+cat('splitting overlapped windows..\n')
 ols <- split(to(ols), from(ols))
 new.tiles$mean.dp <- 0   # anything not in base.tiles treated as 0 depth
+cat('computing means..\n')
 new.tiles[as.integer(names(ols)),]$mean.dp <- lapply(ols, function(tos) mean(base.tiles[tos,]$dp))
 
+cat('writing tables..\n')
 write.table(cbind(as.character(seqnames(new.tiles)),
         start(new.tiles),
         end(new.tiles),

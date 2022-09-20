@@ -1,0 +1,2 @@
+datasource,dataclass,file
+gtex,genes,data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.bed

@@ -1,0 +1,85 @@
+# vim: syntax=python
+
+########################################################################
+# Gencode v26 gene region annotations:
+# cds
+# downstream
+# intergenic
+# intron
+# other
+# upstream
+# utr3
+# utr5
+########################################################################
+enrichment_gencode_gene_regions_config = dict(
+    **{ 'output_dir': 'enrichment/gencode',
+        'SIGNAL_MANIFEST': 'manifests/GENCODE.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_gencode_gene_regions:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_gencode_gene_regions_config
+
+use rule * from enrichment_gencode_gene_regions as enrichment_gencode_gene_regions_*
+
+use rule enrichment_bed_plot from enrichment_gencode_gene_regions as enrichment_gencode_gene_regions_enrichment_bed_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+    output:
+        expand('enrichment/gencode/bed_regions/{{mutclass}}.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/gencode/{mutclass}___gene_regions.log'
+
+
+########################################################################
+# Gencode v26 gene SIMPLIFIED region annotations
+# exon = cds, utr3, utr5
+# intron = intron
+# integenic = upstream, downstream, intergenic
+# other = other
+########################################################################
+enrichment_gencode_simplified_gene_regions_config = dict(
+    **{ 'output_dir': 'enrichment/gencode_simplified',
+        'SIGNAL_MANIFEST': 'manifests/GENCODE_SIMPLIFIED.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_gencode_simplified_gene_regions:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_gencode_simplified_gene_regions_config
+
+use rule * from enrichment_gencode_simplified_gene_regions as enrichment_gencode_simplified_gene_regions_*
+
+use rule enrichment_bed_plot from enrichment_gencode_simplified_gene_regions as enrichment_gencode_simplified_gene_regions_enrichment_bed_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+    output:
+        expand('enrichment/gencode_simplified/bed_regions/{{mutclass}}.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/gencode_simplified/{mutclass}___simplified_gene_regions.log'
+
+
+########################################################################
+# Gencode v26 genes collapsed into a single transcript as used by GTEx.
+# An enrichment value is computed for each gene. Most genes are too small
+# to reach statistical significance with the number of mutations we have.
+########################################################################
+enrichment_gtex_genes_config = dict(
+    **{ 'output_dir': 'enrichment/gtex_genes',
+        'SIGNAL_MANIFEST': 'manifests/GTEX_GENES.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_gtex_genes:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_gtex_genes_config
+
+use rule * from enrichment_gtex_genes as enrichment_gtex_genes_*
+
+# ~55,000 features, so need more memory. Oligos used ~26G
+use rule enrichment_bed_analysis from enrichment_gtex_genes as enrichment_gtex_genes_enrichment_bed_analysis with:
+    resources:
+        mem=32000

@@ -1,0 +1,2 @@
+datasource,region,file
+boca2,DLPFC,data/boca2/OCRs_DLPFC.bed

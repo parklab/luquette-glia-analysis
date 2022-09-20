@@ -1,0 +1,25 @@
+# vim: syntax=python
+
+########################################################################
+# DNA repair hotspot enrichment (SARseq and RepairSeq)
+########################################################################
+enrichment_dna_repair_hotspot_config = dict(
+    **{ 'output_dir': 'enrichment/dna_repair_hotspots',
+        'SIGNAL_MANIFEST': 'manifests/DNA_REPAIR_HOTSPOTS.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_dna_repair_hotspot:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_dna_repair_hotspot_config
+
+use rule * from enrichment_dna_repair_hotspot  as enrichment_dna_repair_hotspot_*
+
+use rule enrichment_bed_plot from enrichment_dna_repair_hotspot as enrichment_dna_repair_hotspot_enrichment_bed_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+    output:
+        expand('enrichment/dna_repair_hotspots/bed_regions/{{mutclass}}.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/dna_repair_hotspots/bed_regions/{mutclass}___enrichment_bed_plot.log'

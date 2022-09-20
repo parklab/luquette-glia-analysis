@@ -73,7 +73,13 @@ enrichment_config = {
 }
 
 
+# Trying to use constraints to prevent snakemake from stack overflowing
+# when building the DAG.
 wildcard_constraints:
+    mutclass='|'.join(expand("{celltype}{sigclass}___{qualtype}",
+        celltype=celltypes, sigclass=[ '', '_sbs1', '_sbs16' ], qualtype=qualtypes)),
+    chr='|'.join([ str(i) for i in range(1,23) ]),
+    binsize='|'.join(binsizes),
     celltype='|'.join(celltypes),
     qualtype='|'.join(qualtypes),
     cosmic='cosmic_full|cosmic_reduced',
@@ -88,6 +94,11 @@ rule all:
     input:
         "supptables/SuppTable1.csv",
         "supptables/SuppTable2.csv",
+        # will become chromHMM fig1 panel
+        "fig1/suppl_chromhmm.csv",
+        "fig1/suppl_chromhmm.pdf",
+        "fig1/genes_suppl.pdf",
+        "fig1/genes_suppl.csv",
         "fig1/panel_b_A.pdf",
         "fig1/panel_b_A_burdens.csv",
         "fig1/panel_b_A_model.csv",
@@ -96,6 +107,8 @@ rule all:
         "fig1/panel_b_indel_A_model.csv",
         "fig1/panel_c.pdf",
         "fig1/panel_c.csv",
+        "fig1/panel_c_new.pdf",
+        "fig1/panel_c_new.csv",
         "fig1/panel_d.pdf",
         "fig1/panel_d.csv",
         "suppfig2/panel_a.pdf",     # Indel size dist'n
@@ -134,6 +147,12 @@ rule all:
         "fig3/panel_e_supplement_3quantiles.pdf",
         "fig3/panel_e_supplement_5quantiles.pdf",
         "fig3/panel_e_supplement_10quantiles.pdf",
+        "fig3/suppl_nott_enhprom.pdf",
+        "fig3/suppl_nott_enhprom.csv",
+        "fig3/suppl_boca2_peaks.pdf",
+        "fig3/suppl_boca2_peaks.csv",
+        "fig3/suppl_dna_repair_hotspots.pdf",
+        "fig3/suppl_dna_repair_hotspots.csv",
         "fig4/panel_a.pdf",
         "fig4/panel_b_barplot.pdf",
         "fig4/panel_b_heatmap.pdf",
@@ -250,6 +269,9 @@ include: "snakefile.supptables"
 include: "snakefile.scatacseq"
 include: "snakefile.gtex_enrichment"
 include: "snakefile.scrnaseq_enrichment"
+include: "snakefile.nott_enrichment"
+include: "snakefile.boca_enrichment"
+include: "snakefile.dnarepair_enrichment"
 
 
 
@@ -325,6 +347,28 @@ rule gencode_gene_regions_collapsed_neuron:
         "enrichment/gencode/bed_regions/neuron___{qualtype}/bedenrich/COLLAPSED.log"
     script:
         "scripts/collapse_enrichment.R"
+
+
+########################################################################
+# Gencode v26 genes collapsed into a single transcript as used by GTEx
+########################################################################
+enrichment_gtex_genes_config = dict(
+    **{ 'output_dir': 'enrichment/gtex_genes',
+        'SIGNAL_MANIFEST': 'manifests/GTEX_GENES.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_gtex_genes:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_gtex_genes_config
+
+use rule * from enrichment_gtex_genes as enrichment_gtex_genes_*
+
+# ~55,000 features, so need more memory. Oligos used ~26G
+use rule enrichment_bed_analysis from enrichment_gtex_genes as enrichment_gtex_genes_enrichment_bed_analysis with:
+    resources:
+        mem=32000
+
 
 
 ########################################################################
@@ -529,44 +573,6 @@ use rule sigenrichment_plot from enrichment_conservation as enrichment_conservat
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
-
-
-########################################################################
-# Nott et al histone ChIP-seq and ATAC-seq
-########################################################################
-enrichment_nott_config = dict(
-    **{ 'output_dir': 'enrichment/nott',
-        'SIGNAL_MANIFEST': 'manifests/NOTT.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_nott:
-    snakefile: "snakefile.enrichment"
-    config: enrichment_nott_config
-
-use rule * from enrichment_nott  as enrichment_nott_*
-
-use rule enrichment_plot from enrichment_nott as enrichment_nott_enrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='celltype,mark'
-    output:
-        expand('enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles.log'
-
-use rule sigenrichment_plot from enrichment_nott as enrichment_nott_sigenrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='celltype,mark'
-    output:
-        expand('enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
-
-
 
 
 ########################################################################

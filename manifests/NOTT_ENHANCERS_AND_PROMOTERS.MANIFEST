@@ -1,0 +1,2 @@
+datasource,file
+nott_enhprom,data/nott/bed/enhancers_and_promoters_all_celltypes.bed

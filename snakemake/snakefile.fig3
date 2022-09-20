@@ -159,3 +159,69 @@ rule fig3e_supplement:
         mem=4000
     script:
         "scripts/fig3_panel_e_supplement.R"
+
+
+
+rule fig3_suppl_nott_enhprom:
+    input:
+        neuron_snv="enrichment/nott/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/nott/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/nott/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/nott/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig3/suppl_nott_enhprom.svg",
+        pdf="fig3/suppl_nott_enhprom.pdf",
+        csv="fig3/suppl_nott_enhprom.csv"
+    params:
+        signal_to_plot='datasource=nott_enhprom',
+        features="astrocyte_enhancer,neuron_enhancer,oligo_enhancer,microglia_enhancer,astrocyte_promoter,neuron_promoter,oligo_promoter,microglia_promoter"
+    resources:
+        mem=1000
+    log:
+        "fig3/suppl_nott_enhprom_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
+
+rule fig3_suppl_boca2_peaks:
+    input:
+        neuron_snv="enrichment/boca2/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/boca2/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/boca2/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/boca2/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig3/suppl_boca2_peaks.svg",
+        pdf="fig3/suppl_boca2_peaks.pdf",
+        csv="fig3/suppl_boca2_peaks.csv"
+    params:
+        signal_to_plot='region=DLPFC',
+        features="GABA,GLU,OLIG,MGAS"
+    resources:
+        mem=1000
+    log:
+        "fig3/suppl_boca2_peaks_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
+
+rule fig3_suppl_dna_repair_hotspots:
+    input:
+        neuron_snv="enrichment/dna_repair_hotspots/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/dna_repair_hotspots/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/dna_repair_hotspots/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/dna_repair_hotspots/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig3/suppl_dna_repair_hotspots.svg",
+        pdf="fig3/suppl_dna_repair_hotspots.pdf",
+        csv="fig3/suppl_dna_repair_hotspots.csv"
+    params:
+        signal_to_plot='datasource=dnarepair',
+        features="SAR-seq,Repair-seq"
+    resources:
+        mem=1000
+    log:
+        "fig3/suppl_dna_repair_hotspots_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"

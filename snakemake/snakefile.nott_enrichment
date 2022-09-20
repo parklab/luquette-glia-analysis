@@ -1,0 +1,63 @@
+# vim: syntax=python
+
+########################################################################
+# Nott et al histone ChIP-seq and ATAC-seq genome-wide bigwig signals
+########################################################################
+enrichment_nott_config = dict(
+    **{ 'output_dir': 'enrichment/nott',
+        'SIGNAL_MANIFEST': 'manifests/NOTT.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_nott:
+    snakefile: "snakefile.enrichment"
+    config: enrichment_nott_config
+
+use rule * from enrichment_nott  as enrichment_nott_*
+
+use rule enrichment_plot from enrichment_nott as enrichment_nott_enrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype,mark'
+    output:
+        expand('enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+use rule sigenrichment_plot from enrichment_nott as enrichment_nott_sigenrichment_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype,mark'
+    output:
+        expand('enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+
+
+
+########################################################################
+# Nott et al enhancer/promoter regions determined by integrated ChIP-seq,
+# ATAC-seq, PLAC-seq, etc.
+########################################################################
+enrichment_nott_enhprom_config = dict(
+    **{ 'output_dir': 'enrichment/nott',
+        'SIGNAL_MANIFEST': 'manifests/NOTT_ENHANCERS_AND_PROMOTERS.MANIFEST' },
+    **enrichment_config
+)
+
+module enrichment_nott_enhprom:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_nott_enhprom_config
+
+use rule * from enrichment_nott_enhprom  as enrichment_nott_enhprom_*
+
+use rule enrichment_bed_plot from enrichment_nott_enhprom as enrichment_nott_enhprom_enrichment_bed_plot with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+    output:
+        expand('enrichment/nott/bed_regions/{{mutclass}}.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/nott/bed_regions/{mutclass}___enrichment_bed_plot.log'

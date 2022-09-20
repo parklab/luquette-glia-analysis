@@ -387,6 +387,66 @@ rule download_nott_bigwigs:
         """
 
 
+ruleorder: copyover_nott_supptab5 > download_nott_supptab5
+rule copyover_nott_supptab5:
+    input:
+        "external_data/aay0793-nott-table-s5.xlsx"
+    output:
+        "data/nott/SupplementaryTable5.xlsx"
+    resources:
+        mem=100
+    shell:
+        "cp -n {input} {output}"
+
+
+rule download_nott_supptab5:
+    input:
+    output:
+        "data/nott/SupplementaryTable5.xlsx"
+    resources:
+        mem=1000
+    message:
+        "This rule will always fail because science.org blocks simple wget downloads. Please open `https://www.science.org/doi/suppl/10.1126/science.aay0793/suppl_file/aay0793-nott-table-s5.xlsx` in a web browser and place the file in data/nott/SupplementaryTable5.xlsx"
+    shell:
+        """
+        wget -O {output} \
+            "https://www.science.org/doi/suppl/10.1126/science.aay0793/suppl_file/aay0793-nott-table-s5.xlsx"
+        """
+
+
+rule parse_nott_supptab5:
+    input:
+        xlsx="data/nott/SupplementaryTable5.xlsx"
+    output:
+        temp(expand('data/nott/bed/{celltype}_{regiontype}.csv',
+            celltype=[ 'astrocyte', 'neuron', 'oligo', 'microglia' ],
+            regiontype=[ 'enhancer', 'promoter' ])),
+        expand('data/nott/bed/{celltype}_{regiontype}.bed',
+            celltype=[ 'astrocyte', 'neuron', 'oligo', 'microglia' ],
+            regiontype=[ 'enhancer', 'promoter' ])
+    log:
+        'data/nott/bed/parse_nott_supptab5.log'
+    params:
+        out_prefix='data/nott/bed'
+    script:
+        'scripts/parse_nott2019_supptable.R'
+
+
+rule make_final_nott_bed:
+    input:
+        beds=expand('data/nott/bed/{celltype}_{regiontype}.bed',
+            celltype=[ 'astrocyte', 'neuron', 'oligo', 'microglia' ],
+            regiontype=[ 'enhancer', 'promoter' ]), 
+        genome_ordering='snakemake/scripts/hg19.chrom.sizes'
+    output:
+        'data/nott/bed/enhancers_and_promoters_all_celltypes.bed'
+    resources:
+        mem=1000
+    shell:
+        """
+        cat {input.beds} | bedtools sort -g {input.genome_ordering} > {output}
+        """
+
 
 rule download_gtex_expression:
     input:
@@ -658,6 +718,23 @@ rule make_gencode_gene_regions:
         "snakemake/scripts/make_gene_regions.R {input} {output}"
 
 
+rule make_gencode_gene_bed:
+    input:
+        "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf"
+    output:
+        "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.bed"
+    log:
+        "data/gtex/make_gencode_gene_bed.log"
+    resources:
+        mem=1000
+    shell:
+        """
+        awk 'BEGIN {{ OFS="\t"; }} {{ if ($1 ~ /chr[0-9]+/) {{ match($0, /gene_name [^;]*/);  print $1, $4, $5, substr($0, RSTART, RLENGTH); }} }}' {input} \
+            | sed -e 's/gene_name //' \
+            | tr -d '"' > {output}
+        """
+
+
 ruleorder: subset_by_mutsig > copy_inputs
 rule subset_by_mutsig:
     input:
@@ -737,3 +814,81 @@ rule leesix2018_hspc_spectrum_convert:
         mem=1000
     script:
         "scripts/get_leesix2018_hspc.R"
+
+
+
+rule copyover_boca2_peaks:
+    input:
+        GABA="external_data/GABA_DLPFC.bed.gz",
+        GLU="external_data/GLU_DLPFC.bed.gz",
+        OLIG="external_data/OLIG_DLPFC.bed.gz",
+        MGAS="external_data/MGAS_DLPFC.bed.gz",
+        genome_ordering='snakemake/scripts/hg19.chrom.sizes'
+    output:
+        "data/boca2/OCRs_DLPFC.bed"
+    resources:
+        mem=1000
+    shell:
+        """
+        (gunzip -c {input.GABA} | awk 'BEGIN {{ OFS="\t"; }} {{ print $0, "GABA"; }}';
+         gunzip -c {input.GLU} | awk 'BEGIN {{ OFS="\t"; }} {{ print $0, "GLU"; }}';
+         gunzip -c {input.OLIG} | awk 'BEGIN {{ OFS="\t"; }} {{ print $0, "OLIG"; }}';
+         gunzip -c {input.MGAS} | awk 'BEGIN {{ OFS="\t"; }} {{ print $0, "MGAS"; }}') \
+        | bedtools sort -g {input.genome_ordering} > {output}
+        """
+
+
+rule download_sarseq_hotspots:
+    input:
+    output:
+        gzbed=temp("data/dna_repair_hotspots/Wu2021_SARseq_peaks_overlap.bed.gz"),
+        bed="data/dna_repair_hotspots/Wu2021_SARseq_peaks_overlap.bed"
+    resources:
+        mem=1000
+    shell:
+        """
+        wget -O {output.gzbed} \
+            "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE167257&format=file&file=GSE167257%5FSARseq%5FiNeuron%5FOverlapRep123%2Epeaks%2Ebed%2Egz"
+        gunzip -c {output.gzbed} | awk 'BEGIN {{ OFS="\t"; }} {{ print $0, "SAR-seq"; }}' > {output.bed}
+        """
+
+
+rule copyover_repairseq_supptab:
+    input:
+        "external_data/abb9032_Table_S1.xlsx"
+    output:
+        "data/dna_repair_hotspots/Reid2021_SupplementaryTable1.xlsx"
+    resources:
+        mem=1000
+    shell:
+        "cp -n {input} {output}"
+
+
+rule parse_repairseq_supptab:
+    input:
+        xlsx="data/dna_repair_hotspots/Reid2021_SupplementaryTable1.xlsx"
+    output:
+        csv=temp("data/dna_repair_hotspots/Reid2021_RepairSeq_hotspots.csv"),
+        bed="data/dna_repair_hotspots/Reid2021_RepairSeq_hotspots.bed",
+    log:
+        'data/nott/dna_repair_hotspots/parse_reid2021_supptable.log'
+    params:
+        out_prefix='data/dna_repair_hotspots'
+    script:
+        'scripts/parse_reid2021_supptable.R'
+
+
+rule make_final_dna_repair_hotspot_bed:
+    input:
+        repairseq="data/dna_repair_hotspots/Reid2021_RepairSeq_hotspots.bed",
+        sarseq="data/dna_repair_hotspots/Wu2021_SARseq_peaks_overlap.bed",
+        genome_ordering='snakemake/scripts/hg19.chrom.sizes'
+    output:
+        "data/dna_repair_hotspots/DNArepair_hotspots.bed"
+    resources:
+        mem=1000
+    shell:
+        """
+        cat {input.repairseq} {input.sarseq} \
+            | bedtools sort -g {input.genome_ordering} > {output}
+        """

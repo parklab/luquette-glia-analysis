@@ -1,5 +1,28 @@
 # vim: syntax=python
 
+rule fig1_suppl_chromhmm:
+    input:
+        neuron_snv="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig1/suppl_chromhmm.svg",
+        pdf="fig1/suppl_chromhmm.pdf",
+        csv="fig1/suppl_chromhmm.csv"
+    params:
+        signal_to_plot='eid=E073',
+        # 3_TssFlnk, 10_,11_,12_ (bivalent states) are all tiny genomic regions, creating
+        # huge error bars that make the rest of the plot difficult to read.
+        features="1_TssA,2_TssAFlnk,4_Tx,5_TxWk,6_EnhG,7_Enh,8_ZNF/Rpts,9_Het,13_ReprPC,14_ReprPCWk,15_Quies"
+    resources:
+        mem=1000
+    log:
+        "fig1/suppl_chromhmm.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
 rule fig1_distribution_plot:
     input:
         nmut="enrichment/gencode/bed_regions/neuron___AB/bedenrich/FULL.COLLAPSED.rda",
@@ -16,6 +39,27 @@ rule fig1_distribution_plot:
         "fig1/panel_c.log"
     script:
         "scripts/barplot_enrich_2x2.R"
+
+
+rule fig1_distribution_plot_new:
+    input:
+        neuron_snv="enrichment/gencode/bed_regions/neuron___AB/bedenrich/SUMMARY.COLLAPSED.rda",
+        neuron_indel="enrichment/gencode/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.COLLAPSED.rda",
+        oligo_snv="enrichment/gencode/bed_regions/oligo___AB/bedenrich/SUMMARY.COLLAPSED.rda",
+        oligo_indel="enrichment/gencode/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.COLLAPSED.rda"
+    output:
+        svg="fig1/panel_c_new.svg",
+        pdf="fig1/panel_c_new.pdf",
+        csv="fig1/panel_c_new.csv"
+    params:
+        signal_to_plot='dummy',
+        features="Intergenic,Intronic,Exonic,Other"   # "other" is noncoding transcripts
+    resources:
+        mem=1000
+    log:
+        "fig1/panel_c_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
 
 
 # only specify prevburdens for neurons, which refers to the 15 PTA
@@ -95,3 +139,19 @@ rule fig1_snpeff_analysis:
         "fig1/panel_d.log"
     script:
         "scripts/plot_snpeff.R"
+
+
+rule fig1_suppl_genes:
+    input:
+        neuron="enrichment/gtex_genes/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        oligo="enrichment/gtex_genes/bed_regions/oligo___AB/bedenrich/SUMMARY.rda"
+    output:
+        csv="fig1/genes_suppl.csv",
+        pdf="fig1/genes_suppl.pdf",
+        svg="fig1/genes_suppl.svg"
+    resources:
+        mem=8000
+    log:
+        "fig1/genes_suppl.log"
+    script:
+        "scripts/fig1_genes_suppl.R"

@@ -1,0 +1,2 @@
+datasource,dataclass,file
+gencode_simplified,gene_regions,data/gencode/gene_regions_simplified.bed

@@ -70,8 +70,8 @@ combine.dfs <- function(s1, s2) {
     d1
 }
 
-aging.burden.model <- fread(aging.burden.model.csv)[CellType == 'Oligo']
-aging.burden.model.sigs <- fread(aging.burden.model.sigs.csv)[CellType == 'Oligo']
+aging.burden.model <- fread(aging.burden.model.csv)[CellType == 'oligo']
+aging.burden.model.sigs <- fread(aging.burden.model.sigs.csv)[CellType == 'oligo' & Sig =='SBS1']
 
 cosmic <- fread(cosmic.csv)
 if (amptype == 'pta') {
@@ -167,23 +167,23 @@ f <- function(object, muttab, hsnptab, model.intercept, model.rate, remove.sigb=
 # approximated for single-sample somatic calling with SCAN2.
 total.mut <- data.frame(model='Total burden', all.shared=sum(muttab$shared),
     rbind(f(r1, muttab[pass1 == TRUE], hsnptab[pass1 == TRUE],
-            model.intercept=aging.burden.model[Variable=='Intercept', Estimate],
-            model.rate=aging.burden.model[Variable=='Age', Estimate],
+            model.intercept=aging.burden.model[Variable=='(Intercept)', Estimate],
+            model.rate=aging.burden.model[Variable=='age', Estimate],
             remove.sigb=amptype == 'mda'),
         f(r2, muttab[pass2 == TRUE], hsnptab[pass2 == TRUE],
-            model.intercept=aging.burden.model[Variable=='Intercept', Estimate],
-            model.rate=aging.burden.model[Variable=='Age', Estimate],
+            model.intercept=aging.burden.model[Variable=='(Intercept)', Estimate],
+            model.rate=aging.burden.model[Variable=='age', Estimate],
             remove.sigb=amptype == 'mda')))
 
 # Date MRCA based on SBS1
 sbs1.mut <- data.frame(model='SBS1 burden', all.shared=NA,
     rbind(f(r1, muttab[pass1 == TRUE], hsnptab[pass1 == TRUE],
-            model.intercept=aging.burden.model.sigs[Sig=='SBS1', AgeIntercept],
-            model.rate=aging.burden.model.sigs[Sig=='SBS1',AgeRate],
+            model.intercept=aging.burden.model.sigs[Variable == '(Intercept)', Estimate],
+            model.rate=aging.burden.model.sigs[Variable == 'age', Estimate],
             n.shared.fn=get.sbs1, n.private.fn=get.sbs1),
         f(r2, muttab[pass2 == TRUE], hsnptab[pass2 == TRUE],
-            model.intercept=aging.burden.model.sigs[Sig=='SBS1', AgeIntercept],
-            model.rate=aging.burden.model.sigs[Sig=='SBS1',AgeRate],
+            model.intercept=aging.burden.model.sigs[Variable == '(Intercept)', Estimate],
+            model.rate=aging.burden.model.sigs[Variable == 'age', Estimate],
             n.shared.fn=get.sbs1, n.private.fn=get.sbs1)))
 
 results <- rbind(total.mut, sbs1.mut)

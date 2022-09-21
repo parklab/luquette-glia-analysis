@@ -22,7 +22,8 @@ all_qualtypes = snv_qualtypes + indel_qualtypes
 
 
 binsizes = [ '1000', '10000', '100000', '1000000' ]
-qsizes = [ 3, 5, 10 ]
+qsizes = [ 3, 5, 10, 50 ]
+qsizes_to_compute = [ 10, 50 ]
 
 
 import yaml
@@ -169,34 +170,34 @@ rule misc:
 
 rule aging_rates:
     input:
-        expand('fig1/aging_rate_analysis/{qualtype}.{output}',
-            qualtype=[ 'A', 'indel_A' ],
-            output=[ 'pdf', 'svg']),
-        expand('fig1/aging_rate_analysis/{qualtype}_{table}.csv',
-            qualtype=[ 'A', 'indel_A' ],
-            table=[ 'burdens', 'model' ]),
+        expand('aging_rates/{celltype}___mutburden___{qualtype}.csv',
+            celltype=[ 'all' ] + celltypes_to_compute,
+            qualtype=[ 'A', 'indel_A' ]),  # only passA calls are used
+        expand('aging_rates/all___mutburden_models___{qualtype}.csv',
+            celltype=celltypes_to_compute,
+            qualtype=[ 'A', 'indel_A' ])
 
 
 # For now this is just signature fitting. In both projects so far,
 # de novo analysis produced only one signature.
 rule mutation_signatures:
     input:
-        expand("fig2/raw_spectrum/snv_spectrum.{output}",
+        expand("mutsigs/raw_spectrum/snv_spectrum.{output}",
             output=output_plot_and_table),
-        expand("fig2/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv",
+        expand("mutsigs/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv",
             celltype=celltypes_to_compute,
             qualtype=[ 'A', 'indel_A' ]),
-        expand("fig2/cosmic_signature_inclusion/final_signature_selection_{qualtype}.{output}",
+        expand("mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.{output}",
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg', 'csv' ]),
-        expand("fig2/cosmic_aging/{celltype}_barplots_{qualtype}.{output}",
+        expand("mutsigs/cosmic_aging/{celltype}_barplots_{qualtype}.{output}",
             celltype=celltypes_to_compute,
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg' ]),
-        expand("fig2/cosmic_aging/scatterplots_{qualtype}.{output}",
+        expand("mutsigs/cosmic_aging/scatterplots_{qualtype}.{output}",
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg', 'csv' ]),
-        expand("fig2/raw_spectrum/indel_spectrum.{output}",
+        expand("mutsigs/raw_spectrum/indel_spectrum.{output}",
             output=output_plot_and_table),
 
 
@@ -207,13 +208,16 @@ rule enrichment:
         expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
-            nquantiles=[ 5, 10 ],
-            datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
-                [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
-                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ],
+            nquantiles=qsizes_to_compute,
+            datasource=[ 'gtex_expression_mc' + x for x in [ '02', '08' ] ] + # '04', '06', '08' ] ] +
+                [ 'scrnaseq_expression_mc' + x for x in [ '02', '08' ] ] + # '04', '06', '08' ] ] +
+                #[ 'scrnaseq_expression_mc' + x + "_foldchange" for x in [ '02', '08' ] ] +
+                [ 'nott', 'encode_replichip', 'repliseq', 'conservation',
+                  #'scatacseq_foldchange',
+                  'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ],
             output=[ 'svg', 'pdf', 'csv' ]),
         # Enrichment analysis of specific regions
-        expand('enrichment/{datasource}/{celltype}___{qualtype}.{output}',
+        expand('enrichment/{datasource}/bed_regions/{celltype}___{qualtype}.{output}', #/bedenrich/SUMMARY.rda',
             celltype=celltypes_to_compute,
             qualtype=all_qualtypes,
             datasource=[ 'boca2', 'dna_repair_hotspots', 'gencode', 'gencode_simplified',
@@ -238,6 +242,7 @@ rule signature_enrichment:
 
 include: "snakefile.data"
 include: "snakefile.alignability"
+include: "snakefile.aging_rates"
 include: "snakefile.fig1"
 include: "snakefile.fig2"
 include: "snakefile.fig3"
@@ -271,6 +276,8 @@ use rule * from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_*
 # Uses 200 bp tiles and has >200 tracks, so give it a generous amount of RAM
 # N.B. failed with 32G after 1 hour of loading BED files
 # Max usage was ~37G.
+# -- The above is no longer applicable when using only the 13 brain samples.
+# -- but leaving in here anyway in case we go back to the full catalog.
 use rule enrichment_bed_analysis from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_enrichment_bed_analysis with:
     resources:
         mem=42000
@@ -282,11 +289,6 @@ use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_road
         xgroup='quantile',
         ygroup='model',
         highlight='eid=E073'
-    output:
-        expand('enrichment/roadmap_chromhmm_brain/{{mutclass}}.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/roadmap_chromhmm_brain/{mutclass}.log'
 
 
 ########################################################################

@@ -62,48 +62,29 @@ rule fig1_distribution_plot_new:
         "scripts/barplot_enrich_new.R"
 
 
-# only specify prevburdens for neurons, which refers to the 15 PTA
-# neurons from UMBXXXX donors that did not have matched oligos and
-# were thus not re-analyzed in this study.
-def mut_burden_analysis_input(wildcards):
-    d = { 'meta' : "input/{celltype}___meta___{qualtype}.csv",
-          'objects' : scan2_objects[wildcards.celltype].values() }
-
-    if wildcards.celltype == 'neuron':
-        d['prevburdens'] = "scan2_paper_output/Collected_SCAN2_%s_burdens.csv" % ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV')
-    return(d)
-
-
-rule fig1_mut_burden_analysis:
+# Just a copyover of the default files
+rule fig1_panel_b:
     input:
-        unpack(mut_burden_analysis_input)
-    output:
-        csv="aging_rates/{celltype}___mutburden___{qualtype}.csv"
-    params:
-        muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel_') else 'snv',
-    resources:
-        mem=1000
-    log:
-        "aging_rates/{celltype}___mutburden___{qualtype}.log"
-    script:
-        "scripts/make_mutburden_tables.R"
-
-
-rule fig1_aging_rate_analysis:
-    input:
-        neuron="aging_rates/neuron___mutburden___{qualtype}.csv",
-        oligo="aging_rates/oligo___mutburden___{qualtype}.csv"
+        svg="aging_rates/all___mutburden_models___{qualtype}.svg",
+        pdf="aging_rates/all___mutburden_models___{qualtype}.pdf",
+        models="aging_rates/all___mutburden_models___{qualtype}.csv",
+        mutburdens="aging_rates/all___mutburden___{qualtype}.csv"
     output:
         svg='fig1/panel_b_{qualtype}.svg',
         pdf='fig1/panel_b_{qualtype}.pdf',
-        tsv='fig1/panel_b_{qualtype}_burdens.csv',
-        tsv2='fig1/panel_b_{qualtype}_model.csv'
+        mutburdens='fig1/panel_b_{qualtype}_burdens.csv',
+        models='fig1/panel_b_{qualtype}_model.csv'
     resources:
-        mem=4000
+        mem=1000
     log:
         'fig1/panel_b_{qualtype}.log'
-    script:
-        "scripts/plot_aging.R"
+    shell:
+        """
+        cp -n {input.svg} {output.svg}
+        cp -n {input.pdf} {output.pdf}
+        cp -n {input.models} {output.models}
+        cp -n {input.mutburdens} {output.mutburdens}
+        """
 
 
 

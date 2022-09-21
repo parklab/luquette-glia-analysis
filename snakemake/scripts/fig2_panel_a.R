@@ -58,8 +58,8 @@ leesix <- leesix$HSPC_spectrum / sum(leesix$HSPC_spectrum)
 
 cossim <- function(a, b) sum(a*b) /(sqrt(sum(a^2))*sqrt(sum(b^2)))
 
-o.cossim <- sapply(list(neuron.spectrum, leesix, machado), function(x) cossim(oligo, x))
-n.cossim <- sapply(list(oligo.spectrum, leesix, machado), function(x) cossim(neuron, x))
+o.cossim <- sapply(list(neuron.spectrum, leesix, machado), function(x) cossim(oligo.spectrum, x))
+n.cossim <- sapply(list(oligo.spectrum, leesix, machado), function(x) cossim(neuron.spectrum, x))
 
 d <- data.table(MutType=neuron$MutType, Neurons=neuron, Oligo=oligo,
     LeeSix2018=leesix, Machado2020=machado)

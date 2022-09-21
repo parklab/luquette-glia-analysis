@@ -157,8 +157,8 @@ if (!("Arial" %in% fonts()))
 # get height (in lines) of longest class name (will be in x-axis label)
 em <- strheight('M', unit='inches')  # height of a capital M in inches
 # 4 - y axis, 1 - right margin, 4 - outer margins
-# 1.5em per point per y panel (plus text label panel)
-figwidth <- (4 + 1 + 4)*em + max(strwidth(xgroups, unit='inches')) + nygroups*em*nxlabs*1.5  # in inches
+# 2em per point per y panel (plus text label panel)
+figwidth <- (4 + 1 + 4)*em + max(strwidth(xgroups, unit='inches')) + nygroups*em*nxlabs*2  # in inches
 
 # x labels will be rotated, so use width
 emw <- strwidth('M', unit='inches')  # width of a capital M in inches

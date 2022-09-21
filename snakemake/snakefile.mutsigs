@@ -2,28 +2,25 @@
 
 rule raw_spectrum:
     input:
-        neuron="tables/{celltype}___mut___{qualtype}.csv",
+        csv="tables/{celltype}___mut___{qualtype}.csv",
     output:
-        svg="mutsigs/raw_spectrum/{celltype}___raw_spectrum___{qualtype}.svg",
-        pdf="mutsigs/raw_spectrum/{celltype}___raw_spectrum___{qualtype}.pdf",
-        csv="mutsigs/raw_spectrum/{celltype}___raw_spectrum___{qualtype}.csv",
+        svg="mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.svg",
+        pdf="mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.pdf",
+        csv="mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.csv"
+    params:
+        sigtype=lambda wildcards: 'id83' if wildcards.qualtype.startswith('indel') else 'sbs96',
+        plot_title='{celltype}'
     resources:
         mem=4000
     log:
-        csv="mutsigs/raw_spectrum/{celltype}___raw_spectrum___{qualtype}.log",
+        csv="mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.log",
     script:
         "scripts/plot_raw_spectrum.R"
 
 
 # The only difference between SNV and indel COSMIC databases is that
 # we add the PTA universal artifact signature to COSMIC SNV.
-# since the snv_table rule uses {qualtype}, it could be called by
-# snakemake to generate the indel table, which would be an error.
-# ruleorder makes the indel rule take precedence for the indel table
-# only.
-ruleorder: fig2_make_cosmic_indel_table > fig2_make_cosmic_snv_table
-
-rule fig2_make_cosmic_indel_table:
+rule make_cosmic_indel_table:
     input:
         cosmic="input/any___cosmic___indel_A.csv",
     output:
@@ -36,20 +33,20 @@ rule fig2_make_cosmic_indel_table:
         "scripts/make_cosmic_indel_table.R"
 
 
-rule fig2_make_cosmic_snv_table:
+rule make_cosmic_snv_table:
     input:
         cosmic="input/any___cosmic___A.csv",
     output:
-        "mutsigs/cosmic_full___{qualtype}.csv"
+        "mutsigs/cosmic_full___A.csv"
     resources:
         mem=4000
     log:
-        "mutsigs/cosmic_full___{qualtype}.log"
+        "mutsigs/cosmic_full___A.log"
     script:
         "scripts/make_cosmic_snv_table.R"
 
 
-rule fig2_cosmic_fit:
+rule fit_cosmic:
     input:
         "tables/{celltype}___mut___{qualtype}.csv",
         "aging_rates/{celltype}___mutburden___{qualtype}.csv",
@@ -67,15 +64,17 @@ rule fig2_cosmic_fit:
         "scripts/fit_cosmic.R"
 
 
-rule fig2_score_cosmic_analysis:
+# Computes several scores to help decide which COSMIC signatures
+# are likely present in the mutations.
+rule score_cosmic_sigs:
     input:
         "mutsigs/cosmic_full/{celltype}___mutmat___{qualtype}.csv",
         "aging_rates/{celltype}___mutburden___{qualtype}.csv",
         "mutsigs/cosmic_full___{qualtype}.csv"
     output:
-        "mutsigs/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv"
+        "mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{qualtype}.csv"
     log:
-        "mutsigs/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.log"
+        "mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{qualtype}.log"
     resources:
         mem=8000
     params:
@@ -85,55 +84,31 @@ rule fig2_score_cosmic_analysis:
         "scripts/score_cosmic_signatures.R"
 
 
-'''
-rule fig2_select_cosmic_sigs_maxvote:
+# Use scores to decide which COSMIC signatures to keep
+rule select_cosmic_sigs:
     input:
-        "mutsigs/cosmic_signature_inclusion/neuron_signature_scores_{qualtype}.csv",
-        "mutsigs/cosmic_signature_inclusion/oligo_signature_scores_{qualtype}.csv"
+        expand("mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{{qualtype}}.csv",
+            celltype=celltypes_to_compute)
     output:
-        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.svg",
-        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.pdf",
-        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv"
-    params:
-        # these values were determined MANUALLY by looking at the plots
-        # generated above and considering the signatures detected.
-        pct_resid_reduc=lambda wildcards: 1 if wildcards.qualtype == 'indel_A' else 1,
-        stability=lambda wildcards: 0.5 if wildcards.qualtype == 'indel_A' else 0.5,
-        pct_contrib=lambda wildcards: 5 if wildcards.qualtype == 'indel_A' else 5,
-        pct_cells=lambda wildcards: 50 if wildcards.qualtype == 'indel_A' else 50,
-        muts_per_year=lambda wildcards: 0.125 if wildcards.qualtype == 'indel_A' else 0.5,
-        age_signif=2,
-        num_cutoffs=lambda wildcards: 4 if wildcards.qualtype == 'indel_A' else 5,
-        # currently not excluding any sigs by name
-        #sigs_to_exclude=''
-    resources:
-        mem=8000
-    log:
-        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.log"
-    script:
-        "scripts/select_cosmic_sigs.R"
-'''
-
-
-rule fig2_select_cosmic_sigs:
-    input:
-        neuron="mutsigs/cosmic_signature_inclusion/neuron_signature_scores_{qualtype}.csv",
-        oligo="mutsigs/cosmic_signature_inclusion/oligo_signature_scores_{qualtype}.csv"
-    output:
-        csv="mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv"
+        csv="mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv"
     resources:
         mem=1000
     log:
-        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.log"
+        "mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.log"
     script:
         "scripts/select_cosmic_sigs.R"
 
 
 # Use output of fig2_select_cosmic_sigs to make a COSMIC table with only
 # the selected signatures.
-rule fig2_make_reduced_cosmic_table:
+# N.B. the reduced COSMIC table contains signatures present in any of
+# celltypes_to_compute. This allows direct comparisons between all signatures
+# in all celltypes - if we made reduced tables specific to each celltype then
+# non-shared signatures would trivially be 0 in one celltype, making comparison
+# hard to interpret.
+rule reduce_cosmic:
     input:
-        "mutsigs/cosmic_signature_inclusion/final_signature_selection_{qualtype}.csv",
+        "mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv",
         "mutsigs/cosmic_full___{qualtype}.csv"
     output:
         "mutsigs/cosmic_reduced___{qualtype}.csv"
@@ -145,102 +120,40 @@ rule fig2_make_reduced_cosmic_table:
         "scripts/reduce_cosmic.R"
 
 
-# panels b and f
-rule fig2_cosmic_barplots:
+# Creates two barplots:
+#   - stacked barplot of absolute exposure levels 
+#   - stacked barplot of relative exposure levels (i.e., all bars are 1.0 tall)
+rule cosmic_barplots:
     input:
         "mutsigs/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
         "aging_rates/{celltype}___mutburden___{qualtype}.csv"
     output:
-        svg="fig2/panel_{panel_letter}___{celltype}___{qualtype}.svg",
-        pdf="fig2/panel_{panel_letter}___{celltype}___{qualtype}.pdf",
-        csv="fig2/panel_{panel_letter}___{celltype}___{qualtype}.csv"
+        svg="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.svg",
+        pdf="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.pdf",
+        csv="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "fig2/panel_{panel_letter}___{celltype}___{qualtype}.csv"
+        "mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.log"
     script:
         "scripts/plot_cosmic_barplots.R"
 
 
-# panels c and g
-rule fig2_cosmic_vs_age_plots:
+# Scatter plots of per-sample age vs. signature exposure.
+# All celltypes are plotted on the same panel to allow visual comparison.
+rule model_cosmic_vs_age:
     input:
-        "mutsigs/cosmic_reduced/neuron___expomat___{qualtype}.csv",
-        "aging_rates/neuron___mutburden___{qualtype}.csv",
-        "mutsigs/cosmic_reduced/oligo___expomat___{qualtype}.csv",
-        "aging_rates/oligo___mutburden___{qualtype}.csv"
+        expomats=expand("mutsigs/cosmic_reduced/{celltype}___expomat___{{qualtype}}.csv",
+            celltype=celltypes_to_compute),
+        mutburdens=expand("aging_rates/{celltype}___mutburden___{{qualtype}}.csv",
+            celltype=celltypes_to_compute)
     output:
-        svg="fig2/panel_{panel_letter}_{qualtype}.svg",
-        pdf="fig2/panel_{panel_letter}_{qualtype}.pdf",
-        csv="fig2/panel_{panel_letter}_{qualtype}.csv"
+        svg="mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.svg",
+        pdf="mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.pdf",
+        csv="mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "fig2/panel_{panel_letter}_{qualtype}.log"
+        "mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.log"
     script:
-        "scripts/plot_cosmic_vs_age.R"
-
-
-# panel d - shared oligo mutations
-# these two pairs were discovered manually
-# 5657 - GliaLC-4-F11, GliaLC-4-G10 (MDA)
-# 5559 - 5559-Oligo-5, 5559-Oligo-8
-rule fig2_shared_snv_analysis:
-    input:
-        object1=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-5_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-F11_scan2_object.rda'),
-        object2=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-8_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-G10_scan2_object.rda'),
-        cosmic="mutsigs/cosmic_reduced___A.csv",
-        sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv",
-        aging_model="fig1/panel_b_A_model.csv",
-        aging_model_sigs="fig2/panel_c_A.csv"
-    output:
-        muts="fig2/oligo_pair_{sample_id}_mutations.csv",
-        fits="fig2/oligo_pair_{sample_id}_mrca.csv"
-    log:
-        "fig2/oligo_pair_{sample_id}.log"
-    params:
-        amptype=lambda wildcards: 'pta' if wildcards.sample_id == '5559' else 'mda'
-    resources:
-        # The SCAN2 objects are big
-        mem=8000
-    script:
-        "scripts/fit_mrca.R"
-
-
-rule fig2_panel_d:
-    input:
-        cosmic="mutsigs/cosmic_reduced___A.csv",
-        sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv",
-        muts=expand('fig2/oligo_pair_{sample_id}_mutations.csv',
-            sample_id=[ '5559', '5657' ])
-    output:
-        pdf='fig2/panel_d.pdf',
-        svg='fig2/panel_d.svg',
-        suppl_pdf='fig2/panel_d_supplement.pdf',
-        suppl_svg='fig2/panel_d_supplement.svg',
-        spectra_csv='fig2/panel_d_spectra.csv',
-        expo_csv='fig2/panel_d_exposures.csv'
-    log:
-        'fig2/panel_d.log'
-    resources:
-        mem=4000
-    script:
-        "scripts/fig2_panel_d.R"
-
-
-rule fig2_panel_d_infant:
-    input:
-        neuron_muts='tables/neuron___mut___A.csv',
-        oligo_muts='tables/oligo___mut___A.csv',
-        cosmic="mutsigs/cosmic_reduced___A.csv",
-    output:
-        pdf='fig2/panel_d_infant.pdf',
-        svg='fig2/panel_d_infant.svg',
-        spectra_csv='fig2/panel_d_spectra_infant.csv',
-        expo_csv='fig2/panel_d_exposures_infant.csv'
-    log:
-        'fig2/panel_d_infant.log'
-    resources:
-        mem=4000
-    script:
-        "scripts/fig2_panel_d_infant.R"
+        "scripts/model_cosmic_vs_age.R"

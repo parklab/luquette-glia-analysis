@@ -36,7 +36,7 @@ if ('snakemake' %in% ls()) {
 args <- commandArgs(trailingOnly=TRUE)
 if (all(length(args) != 6:9)) {
     cat('This script is just a copy of plot_enrichment_grid.R with bins and quantiles removed and outside/excluded regions retained\n')
-    stop("usage: make_roadmap_enrichment_grid.R enrichment_table.csv ignore out.svg out.pdf out.csv xlabfactor1,...,xlabfactorN [ x_group_factor1,...,x_group_factorN ] [ y_group_factor1,...,y_group_factorN ] [highlight]")
+    stop("usage: plot_enrichment.R enrichment_table.csv ignore out.svg out.pdf out.csv xlabfactor1,...,xlabfactorN [ x_group_factor1,...,x_group_factorN ] [ y_group_factor1,...,y_group_factorN ] [highlight]")
 }
 
 in.csv <- args[1]
@@ -151,8 +151,6 @@ textpane <- function(txt, legend.position='center') {
 suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(mutenrich))
-
-
 if (!("Arial" %in% fonts()))
     stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
@@ -202,6 +200,8 @@ for (i in 1:2) {
         # add in 0.95 and 1.05 to ensure we always have a reasonable amount
         # of spread around the 1 line.
         ylim <- range(c(0.95, 1.05, g$enr.boot.0.95.lb, g$enr.boot.0.95.ub), na.rm=TRUE)
+        # add an extra 5% of room on either end to allow for asterisk printing
+        ylim <- ylim * c(0.95, 1.05)
         cat('uniform y-axis limit:', ylim, 'for group', yg, '\n')
 
         for (yg in ygroups) {
@@ -225,7 +225,7 @@ print(signals)
                     color <- ifelse(signals[[highlight.key]] == highlight.value, 'green', 'black')
                 plot.enrich(es=as.data.frame(signals), ylim=ylim, type='l', ltype='p',
                      yaxt=ifelse(yg==ygroups[1], 's', 'n'), lcol=color, xaxt='n',
-                    bootstrap.ci=FALSE)
+                    bootstrap.ci=TRUE, show.asterisks=TRUE)
                 if (xg == tail(xgroups,1))
                     axis(side=1, at=1:nrow(signals), labels=signals[['x_label_factor_class']], las=3)
                 abline(h=1, lty='dashed', col='grey')

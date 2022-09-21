@@ -147,6 +147,7 @@ model.age <- function(burden, age) {
 mod <- t(apply(bysample.full, 1, model.age, age=muttab$age))
 
 sigtable <- cbind(sigtable, mod[sigtable$SigName,])
+sigtable$AgeSignifAdj <- -log10(p.adjust(10^-sigtable$AgeSignif))
                        
 fwrite(sigtable, file=outcsv)
 

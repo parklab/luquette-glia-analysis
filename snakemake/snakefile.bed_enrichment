@@ -32,12 +32,12 @@ outroot = config['output_dir'] + "/bed_regions"
 
 rule enrichment_bed_plot:
     input:
-        outroot + '/{mutclass}.csv'
+        outroot + '/{mutclass}/combined_table.csv'
     output:
         expand(outroot + '/{{mutclass}}.{ext}',
-            ext=[ 'svg', 'pdf', 'csv2' ])
+            ext=[ 'svg', 'pdf', 'csv' ])
     log:
-        outroot + '/{mutclass}.log'
+        outroot + '/{mutclass}_plot.log'
     params:
         ignore='enrichment_grid_R_ignore_none',
         # specify group=comma separated list of metadata names to group traces
@@ -59,11 +59,11 @@ rule enrichment_bed_table:
     input:
         outroot + "/{mutclass}/bedenrich/SUMMARY.rda"
     output:
-        outroot + '/{mutclass}.csv'
+        outroot + '/{mutclass}/combined_table.csv'
     log:
-        outroot + '/{mutclass}.log'
+        outroot + '/{mutclass}/combined_table.log'
     benchmark:
-        outroot + '/{mutclass}.benchmark.txt'
+        outroot + '/{mutclass}/combined_table.benchmark.txt'
     resources:
         mem=4000
     script:

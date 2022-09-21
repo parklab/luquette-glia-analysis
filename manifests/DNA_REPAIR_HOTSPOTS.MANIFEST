@@ -1,2 +1,2 @@
-datasource,file
-dnarepair,data/dna_repair_hotspots/DNArepair_hotspots.bed
+datasource,dataclass,file
+dnarepair,overlapping_peaks,data/dna_repair_hotspots/DNArepair_hotspots.bed

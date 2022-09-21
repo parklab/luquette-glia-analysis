@@ -52,12 +52,3 @@ module enrichment_nott_enhprom:
     config: enrichment_nott_enhprom_config
 
 use rule * from enrichment_nott_enhprom  as enrichment_nott_enhprom_*
-
-use rule enrichment_bed_plot from enrichment_nott_enhprom as enrichment_nott_enhprom_enrichment_bed_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-    output:
-        expand('enrichment/nott/bed_regions/{{mutclass}}.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/nott/bed_regions/{mutclass}___enrichment_bed_plot.log'

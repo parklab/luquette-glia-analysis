@@ -14,12 +14,3 @@ module enrichment_dna_repair_hotspot:
     config: enrichment_dna_repair_hotspot_config
 
 use rule * from enrichment_dna_repair_hotspot  as enrichment_dna_repair_hotspot_*
-
-use rule enrichment_bed_plot from enrichment_dna_repair_hotspot as enrichment_dna_repair_hotspot_enrichment_bed_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-    output:
-        expand('enrichment/dna_repair_hotspots/bed_regions/{{mutclass}}.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/dna_repair_hotspots/bed_regions/{mutclass}___enrichment_bed_plot.log'

@@ -14,12 +14,3 @@ module enrichment_boca_peaks:
     config: enrichment_boca_peaks_config
 
 use rule * from enrichment_boca_peaks  as enrichment_boca_peaks_*
-
-use rule enrichment_bed_plot from enrichment_boca_peaks as enrichment_boca_peaks_enrichment_bed_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-    output:
-        expand('enrichment/boca2/bed_regions/{{mutclass}}.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/boca2/bed_regions/{mutclass}___enrichment_bed_plot.log'

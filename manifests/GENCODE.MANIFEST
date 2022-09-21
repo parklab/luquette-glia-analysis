@@ -1,2 +1,2 @@
 datasource,dataclass,file
-gencode,gene_regions,data/gencode/gene_regions.bed
+gencode,overlapping_peaks,data/gencode/gene_regions.bed

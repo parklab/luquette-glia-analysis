@@ -23,15 +23,6 @@ module enrichment_gencode_gene_regions:
 
 use rule * from enrichment_gencode_gene_regions as enrichment_gencode_gene_regions_*
 
-use rule enrichment_bed_plot from enrichment_gencode_gene_regions as enrichment_gencode_gene_regions_enrichment_bed_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-    output:
-        expand('enrichment/gencode/bed_regions/{{mutclass}}.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/gencode/{mutclass}___gene_regions.log'
-
 
 ########################################################################
 # Gencode v26 gene SIMPLIFIED region annotations
@@ -51,15 +42,6 @@ module enrichment_gencode_simplified_gene_regions:
     config: enrichment_gencode_simplified_gene_regions_config
 
 use rule * from enrichment_gencode_simplified_gene_regions as enrichment_gencode_simplified_gene_regions_*
-
-use rule enrichment_bed_plot from enrichment_gencode_simplified_gene_regions as enrichment_gencode_simplified_gene_regions_enrichment_bed_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-    output:
-        expand('enrichment/gencode_simplified/bed_regions/{{mutclass}}.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/gencode_simplified/{mutclass}___gene_regions_simplified.log'
 
 
 ########################################################################

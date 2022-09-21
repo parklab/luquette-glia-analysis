@@ -82,14 +82,14 @@ fwrite(data.table(SigName=signames, E), file=out.csv)
 devs <- list(svglite, pdf)
 outs <- c(out.svg, out.pdf)
 for (i in 1:2) {
-    devs[[i]](file=outs[i], width=figwidth, height=figheight)
+    devs[[i]](file=outs[i], width=figwidth, height=figheight) #, pointsize=5)  # pointsize works, but haven't settled yet on figure sizes
     layout(1:2)
     par(mar=c(xheight,4,1,1))
-    barplot(as.matrix(E), col=sigcols, las=3, border=NA, ylab='Number of mutations')
+    barplot(as.matrix(E), col=sigcols, las=3, border=NA, ylab='Number of mutations', cex.names=3/4)
     legend('topleft', legend=signames, fill=sigcols)
 
     x <- apply(E, 2, function(col) col/sum(col))
-    barplot(x, col=sigcols, las=3, border=NA, ylab='Fraction of mutations')
+    barplot(x, col=sigcols, las=3, border=NA, ylab='Fraction of mutations', cex.names=3/4)
     dev.off()
 }
 

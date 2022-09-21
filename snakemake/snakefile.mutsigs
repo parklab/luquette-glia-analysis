@@ -1,37 +1,18 @@
 # vim: syntax=python
 
-rule fig2_raw_snv_spectrum:
+rule raw_spectrum:
     input:
-        neuron="mutsigs/raw_spectrum/neuron___raw_spectrum___A.csv",
-        oligo="mutsigs/raw_spectrum/oligo___raw_spectrum___A.csv",
-        leesix='data/leesix2018_hspc/HSPC_spectrum.csv',
-        machado='data/machado2022_sbsblood/SBSblood.csv'
+        neuron="tables/{celltype}___mut___{qualtype}.csv",
     output:
-        svg="fig2/panel_a.svg",
-        pdf="fig2/panel_a.pdf",
-        csv="fig2/panel_a.csv"
+        svg="mutsigs/raw_spectrum/{celltype}___raw_spectrum___{qualtype}.svg",
+        pdf="mutsigs/raw_spectrum/{celltype}___raw_spectrum___{qualtype}.pdf",
+        csv="mutsigs/raw_spectrum/{celltype}___raw_spectrum___{qualtype}.csv",
     resources:
         mem=4000
     log:
-        "fig2/panel_a.log"
+        csv="mutsigs/raw_spectrum/{celltype}___raw_spectrum___{qualtype}.log",
     script:
-        "scripts/fig2_panel_a.R"
-
-
-rule fig2_raw_indel_spectrum:
-    input:
-        "mutsigs/raw_spectrum/neuron___raw_spectrum___indel_A.csv",
-        "mutsigs/raw_spectrum/oligo___raw_spectrum___indel_A.csv",
-    output:
-        "fig2/panel_e.svg",
-        "fig2/panel_e.pdf",
-        "fig2/panel_e.csv"
-    resources:
-        mem=4000
-    log:
-        "fig2/panel_e.log"
-    script:
-        "scripts/fig2_panel_e.R"
+        "scripts/plot_raw_spectrum.R"
 
 
 # The only difference between SNV and indel COSMIC databases is that

@@ -23,7 +23,7 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 7) {
-    stop('usage: fig2_panel_a.R neuron_muts.csv oligo_muts.csv leesix_spectrum.csv machado_sbs.csv out.csv out.pdf out.svg')
+    stop('usage: fig2_panel_a.R neuron_spectrum.csv oligo_spectrum.csv leesix_spectrum.csv machado_sbs.csv out.csv out.pdf out.svg')
 }
 
 
@@ -47,10 +47,10 @@ if (!("Arial" %in% fonts()))
     stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 
-neuron <- table(sbs96(fread(neuron.csv)$mutsig))
-neuron <- neuron/sum(neuron)
-oligo <- table(sbs96(fread(oligo.csv)$mutsig))
-oligo <- oligo/sum(oligo)
+neuron <- fread(neuron.csv)
+neuron.spectrum <- neuron$Spectrum
+oligo <- fread(oligo.csv)
+oligo.spectrum <- oligo$Spectrum
 machado <- fread(machado.csv)
 machado <- machado$SBSblood / sum(machado$SBSblood)
 leesix <- fread(leesix.csv)
@@ -58,10 +58,10 @@ leesix <- leesix$HSPC_spectrum / sum(leesix$HSPC_spectrum)
 
 cossim <- function(a, b) sum(a*b) /(sqrt(sum(a^2))*sqrt(sum(b^2)))
 
-o.cossim <- sapply(list(neuron, leesix, machado), function(x) cossim(oligo, x))
-n.cossim <- sapply(list(oligo, leesix, machado), function(x) cossim(neuron, x))
+o.cossim <- sapply(list(neuron.spectrum, leesix, machado), function(x) cossim(oligo, x))
+n.cossim <- sapply(list(oligo.spectrum, leesix, machado), function(x) cossim(neuron, x))
 
-d <- data.table(MutType=names(neuron), Neurons=as.vector(neuron), Oligo=as.vector(oligo),
+d <- data.table(MutType=neuron$MutType, Neurons=neuron, Oligo=oligo,
     LeeSix2018=leesix, Machado2020=machado)
 fwrite(d, file=out.csv)
 
@@ -71,10 +71,10 @@ for (i in 1:2) {
     devs[[i]](width=3, height=4, pointsize=5, file=outs[i])
     layout(1:4)
     par(mar=c(1,4,2,1))
-    plot.sbs96(x=0, spectrum=neuron, main='Neurons')
+    plot.sbs96(x=0, spectrum=neuron.spectrum, main='Neurons')
     legend('topright', legend=paste(c('Oligo', 'Lee-Six HSPC', 'Machado blood'), round(n.cossim,3)),
         bty='n', bg='white', title='Cosine sim.')
-    plot.sbs96(x=0, spectrum=oligo, main='Oligodendrocytes')
+    plot.sbs96(x=0, spectrum=oligo.spectrum, main='Oligodendrocytes')
     legend('topright', legend=paste(c('Neuron', 'Lee-Six HSPC', 'Machado blood'), round(o.cossim,3)),
         bty='n', bg='white', title='Cosine sim.')
                                       

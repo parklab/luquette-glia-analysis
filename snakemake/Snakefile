@@ -182,7 +182,9 @@ rule aging_rates:
 # de novo analysis produced only one signature.
 rule mutation_signatures:
     input:
-        expand("mutsigs/raw_spectrum/snv_spectrum.{output}",
+        expand("mutsigs/raw_spectra/snv_spectrum.{output}",
+            output=output_plot_and_table),
+        expand("mutsigs/raw_spectra/indel_spectrum.{output}",
             output=output_plot_and_table),
         expand("mutsigs/cosmic_signature_inclusion/{celltype}_signature_scores_{qualtype}.csv",
             celltype=celltypes_to_compute,
@@ -197,8 +199,6 @@ rule mutation_signatures:
         expand("mutsigs/cosmic_aging/scatterplots_{qualtype}.{output}",
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg', 'csv' ]),
-        expand("mutsigs/raw_spectrum/indel_spectrum.{output}",
-            output=output_plot_and_table),
 
 
 # Enrichment analysis of total mutation burden
@@ -243,6 +243,7 @@ rule signature_enrichment:
 include: "snakefile.data"
 include: "snakefile.alignability"
 include: "snakefile.aging_rates"
+include: "snakefile.mutsigs"
 include: "snakefile.fig1"
 include: "snakefile.fig2"
 include: "snakefile.fig3"

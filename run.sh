@@ -31,6 +31,7 @@ elif [ "x$word" == 'xlocal' ]; then
     kgflag='--keep-going'
 elif [ "x$word" == "xcluster" ]; then
     echo "be sure to run: module load slurm-drmaa"
+    mkdir -p cluster-logs
     usedrmaa='true'
     jobflag='-j=1000'
     kgflag='--keep-going'

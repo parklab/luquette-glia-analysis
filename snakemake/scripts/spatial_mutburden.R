@@ -23,6 +23,8 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 7) {
+    #cat('typically power is lower for finding regions with significant depletion.\n')
+    #cat('excluding these regions from consideration a priori allows fewer hypothesis tests.\n')
     stop('usage: spatial_mutburden.R muts_FILTERED.csv metadata.csv tiles.bed out.profile.csv out.stats.csv out.modelcomparison.pdf out.modelcomparison.svg')
 }
 
@@ -95,6 +97,13 @@ bins$pois.pval <- sapply(bins$muts.smoothed, function(n) {
 })
 bins$pois.pval.adj <- p.adjust(bins$pois.pval, method=padj.method)
 
+
+bins$pois.pval.enrich <- sapply(bins$muts.smoothed, function(n) {
+    mu <- exp(coef(pois.model)[1])
+    if (is.na(n) | n <= mu) NA else poisson.test(n, r=mu, alternative='greater')$p.value
+})
+bins$pois.pval.enrich.adj <- p.adjust(bins$pois.pval.enrich, method=padj.method)
+
 # Two-sided negative binomial test. This fragment was copied from poisson.test
 # and all instances of {d,p}pois replaced by {d,p}nbinom.  Still need to
 # carefully review to make sure it makes sense.
@@ -119,10 +128,24 @@ negbin.test <- function(x, mu, theta, relErr=1 + 1e-7) {
     }
 }
 
+
 bins$negbin.pval <- sapply(bins$muts.smoothed, function(n) {
     negbin.test(n, mu=exp(coef(negbin.model)[1]), theta=negbin.model$theta)
 })
 bins$negbin.pval.adj <- p.adjust(bins$negbin.pval, method=padj.method)
+
+
+negbin.test.enrich <- function(x, mu, theta)
+    pnbinom(x - 1, mu=mu, size=theta, lower.tail=FALSE)
+
+# Only test windows with > mean signal.
+bins$negbin.pval.enrich <- sapply(bins$muts.smoothed, function(n) {
+    mu <- exp(coef(negbin.model)[1])
+    if (!is.na(n) & n > mu)
+        negbin.test.enrich(n, mu=mu, theta=negbin.model$theta)
+    else NA
+})
+bins$negbin.pval.enrich.adj <- p.adjust(bins$negbin.pval.enrich, method=padj.method)
 
 # Write some select summary statistics to a CSV file.
 writeLines(text=c(paste0('AgeSum,', agesum),
@@ -167,9 +190,35 @@ for (i in 1:2) {
     plot(-log10(bins$negbin.pval), -log10(bins$pois.pval), bty='n',
         ylab='-log10(Poisson p-value)', xlab='-log10(NegBin p-value)')
     abline(coef=0:1)
+
+    # TODO: generalize these power calculations so they're done for every analysis
+    # XXX: add enrich-only power testing
+    if (FALSE) {
+    # This is the ALS total mutation average (snv+indel)
+    mu <- 11.1741396880185
+    # Actual number of mutations in the somatic catalog (SNV+indel)
+    # not used in any calculation, but might be nice to replace the
+    # "mut multiplier" by real counts.
+    n.muts <- 29109
+
+    layout(t(1:2))
+    mults=c(1,2,5,10,20,50,100)
+
+    for (i in 1:length(mults)) {
+        mult = mults[i]
+        curve(ppois(q=qpois(p=0.05/25000, lambda=mu*mult), lambda=x*mu*mult), from=0.1,to=1,log='x', main='Power vs. effect size for depletion\n1MB smoothed at 100kb, Bonferroni', ylab='Power', xlab='Effect size', add=i>1, col=i, lwd=2, ylim=c(0,1))
+    }
+
+    for (i in 1:length(mults)) {
+        mult = mults[i]
+        curve(1-ppois(q=qpois(p=1-0.05/25000, lambda=mu*mult, lower.tail=T), lambda=x*mu*mult), from=1,to=10,log='x', main='Power vs. effect size for enrichment\n1MB smoothed at 100kb, Bonferroni', ylab='Power', xlab='Effect size', add=i>1, col=i, lwd=2, ylim=c(0,1))
+    }
+    legend('bottomright', legend=mults, col=1:length(mults),lwd=2, title='Mutation multiplier')
     dev.off()
+    }
 }
 
 if ('snakemake' %in% ls()) {
     sink()
 }
+

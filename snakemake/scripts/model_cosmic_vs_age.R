@@ -131,10 +131,10 @@ for (i in 1:2) {
             m <- models[[i]][Sig == signame]
             abline(coef=c(m[Variable == '(Intercept)']$Estimate,
                           m[Variable == 'age']$Estimate),
-                lwd=2, col=i)
+                lwd=2, col=data[[i]]$burden$color[1])
         }
         legend('topleft', pch=17, lwd=2, legend=names(models)[-length(models)],
-            col=1:(length(models)-1))
+            col=sapply(data[-length(data)], function(d) d$burden$color[1]))
     }
     dev.off()
 }

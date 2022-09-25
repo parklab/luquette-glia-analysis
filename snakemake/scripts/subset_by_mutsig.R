@@ -21,8 +21,8 @@ args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 3) {
     cat('in.rda must contain only a single object. mutation .RData files and permutation .RData files are differentiated by checking this object for the data.table/data.frame or GenomicRanges/CompressedGRangesList classes, respectively. If the object is not one of these two classes, the script will exit.\n')
     cat('the object in in.rda must contain a column named `mutsig` that contains SBS96 channel info\n')
-    cat('sbs1 keeps any C>T at an NCG context; sbs16 keeps any T>C at an ATN context\n')
-    stop('usage: subset_by_mutsig.R in.rda {sbs1|sbs16} out.rda')
+    cat('sbs1 keeps any C>T at an NCG context; sbs16 keeps any T>C at an ATN context; id4 keeps any 2bp deletion at 1-2 repeats or MH=1\n')
+    stop('usage: subset_by_mutsig.R in.rda {sbs1|sbs16|id4} out.rda')
 }
 
 
@@ -30,7 +30,7 @@ in.rda <- args[1]
 sigtype <- args[2]
 out.rda <- args[3]
 
-if (sigtype != 'sbs1' & sigtype != 'sbs16')
+if (sigtype != 'sbs1' & sigtype != 'sbs16' & sigtype != 'id4')
     stop("sigtype must be either 'sbs1' or 'sbs16', case sensitive")
 
 for (f in c(out.rda)) {
@@ -44,6 +44,8 @@ if (sigtype == 'sbs1') {
     grep.pattern <- 'CG:C>T'
 } else if (sigtype == 'sbs16') { 
     grep.pattern <- 'AT.:T>C'
+} else if (sigtype == 'id4') {
+    grep.pattern <- '2:Del:[MR]:[01]'
 } else {
     stop("sigtype must be either 'sbs1' or 'sbs16', case sensitive")
 }

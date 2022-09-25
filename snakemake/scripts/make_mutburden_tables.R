@@ -41,7 +41,7 @@ if (muttype != 'snv' & muttype != 'indel')
 
 suppressMessages(library(scan2))
 
-meta <- fread(meta)[,.(sample,donor,age,plotage,color,type)]
+meta <- fread(meta)[,.(sample,donor,age,plotage,color,type,outlier)]
 
 objects <- lapply(object.rdas, function(rf) get(load(rf)))
 
@@ -54,6 +54,7 @@ if (prevburden != 'Notafile') {
 }
 
 meta <- meta[dt, on='sample']
+meta[meta$outlier == TRUE]$genome.burden <- NA  # mask outliers from the aging rate calculations
 
 fwrite(meta, file=out.csv)
 

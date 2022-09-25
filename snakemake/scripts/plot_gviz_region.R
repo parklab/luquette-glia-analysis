@@ -65,10 +65,12 @@ s$oligo.muts.smoothed.peryear <- os$muts.smoothed.peryear
 
 dstrack <- DataTrack(GRanges(s), name='Mutations / Mb*year', col=1:2, groups=c('neuron','oligo'), type='l')
 
-# Create full set of sites with Poisson p-value < 0.1 after BH adjustment
+# Create full set of sites with Poisson enrichment p-value < 0.05 after BH adjustment
+# TODO: make this configurable later. Allow selection of cutoff, but more importantly,
+# whether to use one sided (enrichment only) or two sided (enrichment+depletion) tests.
 ns[, CellType := 'Neuron']
 os[, CellType := 'Oligo']
-fwrite(rbind(ns,os)[pois.pval.adj < 0.1], file=out.csv)
+fwrite(rbind(ns,os)[pois.pval.enrich.adj < 0.05], file=out.csv)
 
 all.sites <- reduce(GRanges(rbind(ns,os)[pois.pval.adj < 0.1]))
 
@@ -82,6 +84,7 @@ for (i in 1:length(all.sites)) {
     cat('from', from, '\n')
     cat('to', to, '\n')
     as <- get.annots(chrom=chrom, from=max(0, from-(2*extend)), to=to+extend*2)
+    Sys.sleep(15)  # UCSC will block if too many requests are sent
     cat('plotting..\n')
     
     devs=list(pdf, svglite)

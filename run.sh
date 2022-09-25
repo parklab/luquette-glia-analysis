@@ -23,15 +23,15 @@ elif [ "x$word" == 'xunlock' ]; then
 elif [ "x$word" == 'xmake_pcawg_metadata' ]; then
     flags="$flags --config make_pcawg_metadata=1 --until metadata/pcawg_metadata.csv"
 elif [ "x$word" == 'xtest' ]; then
-    flags="$flags $@"
     jobflag='-j=1'
     kgflag=''
 elif [ "x$word" == 'xlocal' ]; then
     flags="$flags $@"
-    jobflag='-j=8' #20'
+    jobflag='-j=6' #20'
     kgflag='--keep-going'
 elif [ "x$word" == "xcluster" ]; then
     echo "be sure to run: module load slurm-drmaa"
+    mkdir -p cluster-logs
     usedrmaa='true'
     jobflag='-j=1000'
     kgflag='--keep-going'

@@ -43,6 +43,11 @@ M <- fread(mutmat.csv)
 
 muttab <- fread(mutburden.csv)
 
+# Remove outliers from M and muttab
+muttab <- muttab[outlier == FALSE]
+samples.to.keep <- muttab$sample
+M <- M[,..samples.to.keep]
+
 ###############################################################################
 # Evaluate signatures by reduction of fit residual
 ###############################################################################

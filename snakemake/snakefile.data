@@ -428,6 +428,8 @@ rule parse_nott_supptab5:
         'data/nott/bed/parse_nott_supptab5.log'
     params:
         out_prefix='data/nott/bed'
+    resources:
+        mem=1000
     script:
         'scripts/parse_nott2019_supptable.R'
 
@@ -892,6 +894,8 @@ rule parse_repairseq_supptab:
         bed="data/dna_repair_hotspots/Reid2021_RepairSeq_hotspots.bed",
     log:
         'data/nott/dna_repair_hotspots/parse_reid2021_supptable.log'
+    resources:
+        mem=1000
     params:
         out_prefix='data/dna_repair_hotspots'
     script:

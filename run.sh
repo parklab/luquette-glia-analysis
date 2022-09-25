@@ -23,6 +23,7 @@ elif [ "x$word" == 'xunlock' ]; then
 elif [ "x$word" == 'xmake_pcawg_metadata' ]; then
     flags="$flags --config make_pcawg_metadata=1 --until metadata/pcawg_metadata.csv"
 elif [ "x$word" == 'xtest' ]; then
+    flags="$flags $@"
     jobflag='-j=1'
     kgflag=''
 elif [ "x$word" == 'xlocal' ]; then

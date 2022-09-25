@@ -44,7 +44,12 @@ library(pracma)
 # COSMIC format: column 1 is the mutation type. Need to remove it before
 # fitting.
 exposure <- function(x, cosmic=cosmic) {
-    setNames(lsqnonneg(as.matrix(cosmic), x)$x, colnames(cosmic))
+    # lsqnonneg fails if given NA
+    if (any(is.na(x)))
+        ret <- rep(NA, ncol(cosmic))
+    else
+        ret <- lsqnonneg(as.matrix(cosmic), x)$x
+    setNames(ret, colnames(cosmic))
 }
 
 
@@ -54,6 +59,9 @@ cosmic <- fread(incosmic)
 
 
 # nsom=0 will unfortunately get extrapolated to 0
+# genome.burden=NA for outlier=TRUE samples. need to propagate NA
+# so that the measurement is not considered by linear models but
+# cannot allow certain functions (lsqnonneg) to see NA (they fail)
 mutburden[, correction.factor := ifelse(nsom == 0, 0, genome.burden / nsom)]
 
 # Get the finalized mutation matrix M, which involves mapping mutations to

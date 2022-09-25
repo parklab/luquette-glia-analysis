@@ -91,11 +91,11 @@ for (i in 1:2) {
 
     # any donor can be used
     # [-length(models)] - don't use the combined model
-    maxpred <- max(sapply(models[-length(models)], function(m)
-        predict(m$model, data.frame(age=max(combined.burdens$age), donor=combined.burdens$donor[1]))
-    ))
+    maxpred <- sapply(models[-length(models)], function(m)
+        predict(m$model, data.frame(age=max(combined.burdens[outlier==FALSE]$age), donor=m$model@frame$donor[1]))
+    )
     # make ylim big enough to contain all data points and lines
-    ylim <- c(0, max(combined.burdens$genome.burden, maxpred))
+    ylim <- c(0, max(combined.burdens$genome.burden, maxpred, na.rm=TRUE))
     plot(combined.burdens$plotage,
         combined.burdens$genome.burden,
         col=combined.burdens$color, pch=17, ylim=ylim,
@@ -105,9 +105,11 @@ for (i in 1:2) {
     for (i in 1:(length(models)-1)) {
         m <- models[[i]]
         curve(coef(summary(m$model))[1] + coef(summary(m$model))[2]*x,
-            from=0, to=2*max(combined.burdens$age), lwd=2, col=i, add=T)
+            from=0, to=2*max(combined.burdens$age), lwd=2,
+            col=burdens[[i]]$color[1], add=T)
     }
-    legend('topleft', lwd=2, pch=17, col=1:(length(burdens)-1),
+    legend('topleft', lwd=2, pch=17,
+        col=sapply(burdens[-length(burdens)], function(b) b$color[1]),
         legend=names(burdens)[-length(burdens)])
 }
 

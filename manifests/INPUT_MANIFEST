@@ -9,14 +9,20 @@ any	cosmic	indel_A	csv	metadata/COSMIC_ID_signatures.csv
 any	cosmic	A	csv	metadata/COSMIC_SBS.csv
 # Metadata
 # Same metadata is used for SNVs and indels, but there is flexibility to change later
-neuron	meta	A	csv	metadata/metadata_pta_51neurons_no_outlier.csv
-neuron	meta	indel_A	csv	metadata/metadata_pta_51neurons_no_outlier.csv
-oligo	meta	A	csv	metadata/metadata_pta_31glia_no_outlier.csv
-oligo	meta	indel_A	csv	metadata/metadata_pta_31glia_no_outlier.csv
+neuron	meta	any	csv	metadata/metadata_pta_51neurons_no_outlier.csv
+oligo	meta	any	csv	metadata/metadata_pta_31glia_no_outlier.csv
+oligo_mda_2infants	meta	any	csv	metadata/metadata_mda_39glia.csv
+oligo_mda_2elderly	meta	any	csv	metadata/metadata_mda_39glia.csv
+oligo_mdapta	meta	any	csv	metadata/metadata_mdapta_70glia.csv
+oligo_mda	meta	any	csv	metadata/metadata_mda_39glia.csv
 neuron	mut	any	csv	scan2_output/neuron_snv_indel_pass_rescue.FILTERED.txt
 neuron	unfiltered_mut	any	csv	scan2_output/neuron_snv_indel_pass_rescue.UNFILTERED.txt
 oligo	mut	any	csv	scan2_output/oligo_snv_indel_pass_rescue.FILTERED.txt
 oligo	unfiltered_mut	any	csv	scan2_output/oligo_snv_indel_pass_rescue.UNFILTERED.txt
+oligo_mda_2infants	mut	any	csv	scan2_output/oligo_mda_2infants_snv_indel_pass_rescue.FILTERED.txt
+oligo_mda_2elderly	mut	any	csv	scan2_output/oligo_mda_2elderly_snv_indel_pass_rescue.FILTERED.txt
+oligo_mdapta	mut	any	csv	scan2_output/oligo_mdapta_snv_indel_pass_rescue.FILTERED.txt
+oligo_mda	mut	any	csv	scan2_output/oligo_mda_snv_indel_pass_rescue.FILTERED.txt
 # Permutation tables
 neuron	perm	A	rda	scan2_output/permutations/neuron_perms_snv_pass.rda
 neuron	perm	AB	rda	scan2_output/permutations/neuron_perms_snv_rescue.rda
@@ -26,6 +32,12 @@ oligo	perm	A	rda	scan2_output/permutations/oligo_perms_snv_pass.rda
 oligo	perm	AB	rda	scan2_output/permutations/oligo_perms_snv_rescue.rda
 oligo	perm	indel_A	rda	scan2_output/permutations/oligo_perms_indel_pass.rda
 oligo	perm	indel_AB	rda	scan2_output/permutations/oligo_perms_indel_rescue.rda
+oligo_mda_2elderly	perm	A	rda	scan2_output/permutations/oligo_mda_2elderly_perms_snv_pass.rda
+oligo_mda_2elderly	perm	AB	rda	scan2_output/permutations/oligo_mda_2elderly_perms_snv_rescue.rda
+oligo_mda_2infants	perm	A	rda	scan2_output/permutations/oligo_mda_2infants_perms_snv_pass.rda
+oligo_mda_2infants	perm	AB	rda	scan2_output/permutations/oligo_mda_2infants_perms_snv_rescue.rda
+oligo_mdapta	perm	A	rda	scan2_output/permutations/oligo_mdapta_perms_snv_pass.rda
+oligo_mdapta	perm	AB	rda	scan2_output/permutations/oligo_mdapta_perms_snv_rescue.rda
 # Seurat analysis of scATAC-seq. Just dragging in a very processed
 # data object; no intention (yet) to recapitulate any real analysis here.
 any	scatacseq_umap	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/try1_manual_assignment_table_20210623.csv

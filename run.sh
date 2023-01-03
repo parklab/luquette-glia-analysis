@@ -16,8 +16,9 @@ drmaaflag=''
 usedrmaa='false'
 
 if [ "x$word" == 'xdry' ]; then
-    flags="$flags $@ --dryrun --quiet" # --reason"
-    #flags="$flags --dryrun --reason"
+    flags="$flags $@ --dryrun --quiet"
+elif [ "x$word" == 'xdryreason' ]; then
+    flags="$flags $@ --dryrun --reason"
 elif [ "x$word" == 'xunlock' ]; then
     flags="$flags --unlock"
 elif [ "x$word" == 'xmake_pcawg_metadata' ]; then

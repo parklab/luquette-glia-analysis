@@ -1,0 +1,20 @@
+# vim: syntax=python
+
+rule compute_spatial_mutburden:
+    input:
+        muts='tables/{celltype}___mut___{qualtype}.csv',
+        binbed='alignability/genome_tiles/genome_tiles_{binsize}binsize.bed',
+        meta='input/{celltype}___meta___any.csv'
+    output:
+        profile="enrichment/spatial_burden/{celltype}___{qualtype}___{binsize}binsize___{rolling}rolling.profile.csv",
+        stats="enrichment/spatial_burden/{celltype}___{qualtype}___{binsize}binsize___{rolling}rolling.stats.csv",
+        pdf="enrichment/spatial_burden/{celltype}___{qualtype}___{binsize}binsize___{rolling}rolling.modelcomparison.pdf",
+        svg="enrichment/spatial_burden/{celltype}___{qualtype}___{binsize}binsize___{rolling}rolling.modelcomparison.svg"
+    params:
+        rolling_window_size='{rolling}'
+    log:
+        "enrichment/spatial_burden/{celltype}___{qualtype}___{binsize}binsize___{rolling}rolling.log"
+    resources:
+        mem=8000
+    script:
+        "scripts/spatial_mutburden.R"

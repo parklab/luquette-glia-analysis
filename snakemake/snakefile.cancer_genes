@@ -1,0 +1,133 @@
+# vim: syntax=python
+
+rule pcawg_snpeff:
+    input:
+        "data/pcawg/tumor_vcfs/{tumor}.vcf"
+    output:
+        "cancer_genes/snpeff_vcfs/{tumor}.snpeff.vcf"
+    log:
+        "cancer_genes/snpeff_vcfs/{tumor}.snpeff.log"
+    resources:
+        mem=8000
+    shell:
+        """
+        snakemake/scripts/run_snpeff_pcawg.sh {input} {output} > {log} 2>&1
+        """
+
+
+# Same as above, but input format is different. Also add some extra VCF
+# tags to the normal cell VCFs.
+ruleorder: pcawg_snpeff_singlecell > pcawg_snpeff
+rule pcawg_snpeff_singlecell:
+    input:
+        "vcfs/{celltype}___mut___{qualtype}.vcf"
+    output:
+        tmp=temp("cancer_genes/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf.tmp"),
+        vcf="cancer_genes/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf"
+    log:
+        "cancer_genes/snpeff_vcfs/{celltype}___{qualtype}.snpeff.log"
+    params:
+        celltype='{celltype}'
+    resources:
+        mem=8000
+    shell:
+        """
+        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=."; print $0 }}' {input} > {output.tmp} \
+            | snakemake/scripts/run_snpeff_pcawg.sh {output.tmp} {output.vcf} > {log} 2>&1
+        """
+
+
+rule pcawg_parse_snpeff:
+    input:
+        "cancer_genes/snpeff_vcfs/{tumor_or_celltype}.snpeff.vcf"
+    output:
+        "cancer_genes/gene_mutations/{tumor_or_celltype}.txt"
+    resources:
+        mem=8000
+    shell:
+        """
+        snakemake/scripts/parse_pcawg_snpeff.sh {input} > {output}
+        """
+
+
+rule pcawg_gene_mutation_odds_ratios:
+    input:
+        neuron="cancer_genes/gene_mutations/{celltype1}___AB.txt",
+        oligo="cancer_genes/gene_mutations/{celltype2}___AB.txt",
+        tumor="cancer_genes/gene_mutations/{tumor}.txt",
+        genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
+    output:
+        rda="cancer_genes/odds_ratios/{celltype1}___vs___{celltype2}/{tumor}.rda"
+    log:
+        "cancer_genes/odds_ratios/{celltype1}___vs___{celltype2}/{tumor}.log"
+    resources:
+        mem=8000
+    shell:
+        """
+        snakemake/scripts/pcawg_gene_odds_ratio.R \
+            {input.tumor} {input.neuron} {input.oligo} {input.genes_bed} {output.rda} > {log} 2>&1
+        """
+
+
+rule run_dndscv_cancer:
+    input:
+        muts="data/cancer_snvdens/snvs/{tumor}.txt"
+    output:
+        rda="cancer_genes/dndscv/{tumor}.rda",
+        csv="cancer_genes/dndscv/{tumor}.csv"
+    params:
+        # add the cancer_ prefix so we know what files came from tumors without
+        # parsing the names directly
+        sampletag="cancer_{tumor}"
+    log:
+        "cancer_genes/dndscv/{tumor}.log"
+    resources:
+        mem=16000
+    script:
+        "scripts/run_dndscv.R"
+
+
+# same rule as above but uses mutations from our cells,
+# which requires a different input format
+ruleorder: run_dndscv > run_dndscv_cancer
+rule run_dndscv:
+    input:
+        muts="tables/{celltype}___mut___{qualtype}.csv"
+    output:
+        rda="cancer_genes/dndscv/{celltype}___{qualtype}.rda",
+        csv="cancer_genes/dndscv/{celltype}___{qualtype}.csv"
+    params:
+        sampletag="{celltype}_{qualtype}"
+    log:
+        "cancer_genes/dndscv/{celltype}___{qualtype}.log"
+    resources:
+        mem=8000
+    script:
+        "scripts/run_dndscv.R"
+
+
+if 'make_pcawg_metadata' not in config.keys():
+    pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
+    pcawg_tumors = sorted(set(pcawg_meta['tumor']))
+else:
+    pcawg_tumors = []
+
+rule make_dndscv_table:
+    input:
+        csvs=expand('cancer_genes/dndscv/{celltype}___{qualtype}.csv',
+                      celltype = [ 'neuron', 'oligo', 'oligo_mda_2elderly', 'oligo_mdapta' ],
+                      qualtype = [ 'A', 'AB' ]) +
+             expand('cancer_genes/dndscv/{tumor}.csv', tumor=pcawg_tumors)
+    output:
+        csv='cancer_genes/dndscv/dndscv_table.csv'
+    params:
+        sampletags=expand('{celltype}_{qualtype}',
+                      celltype = [ 'neuron', 'oligo', 'oligo_mda_2elderly', 'oligo_mdapta' ],
+                      qualtype = [ 'A', 'AB' ]) +
+                   expand('cancer_{tumor}', tumor=pcawg_tumors)
+    log:
+        'cancer_genes/dndscv/dndscv_table.log'
+    resources:
+        mem=16000
+    script:
+        "scripts/combine_dndscv_tables.R"

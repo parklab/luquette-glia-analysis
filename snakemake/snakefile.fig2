@@ -18,36 +18,19 @@ rule fig2_raw_snv_spectrum:
         "scripts/fig2_panel_a.R"
 
 
-rule fig2_raw_indel_spectrum:
-    input:
-        "mutsigs/raw_spectra/neuron___raw_spectrum___indel_A.csv",
-        "mutsigs/raw_spectra/oligo___raw_spectrum___indel_A.csv",
-    output:
-        "fig2/panel_e.svg",
-        "fig2/panel_e.pdf",
-        "fig2/panel_e.csv"
-    resources:
-        mem=4000
-    log:
-        "fig2/panel_e.log"
-    script:
-        "scripts/fig2_panel_e.R"
-
-
-# panels b and f
-rule fig2_cosmic_barplots:
+rule cosmic_snv_barplots:
     input:
         svg="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.svg",
         pdf="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.pdf",
         csv="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.csv"
     output:
-        svg="fig2/panel_{panel_letter}___{celltype}___{qualtype}.svg",
-        pdf="fig2/panel_{panel_letter}___{celltype}___{qualtype}.pdf",
-        csv="fig2/panel_{panel_letter}___{celltype}___{qualtype}.csv"
+        svg="fig2/panel_b___{celltype}___{qualtype}.svg",
+        pdf="fig2/panel_b___{celltype}___{qualtype}.pdf",
+        csv="fig2/panel_b___{celltype}___{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "fig2/panel_{panel_letter}___{celltype}___{qualtype}.log"
+        "fig2/panel_b___{celltype}___{qualtype}.log"
     shell:
         """
         cp -n {input.svg} {output.svg}
@@ -56,20 +39,19 @@ rule fig2_cosmic_barplots:
         """
 
 
-# panels c and g
-rule fig2_cosmic_vs_age_plots:
+rule cosmic_snv_vs_age_plots:
     input:
         svg='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.svg',
         pdf='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.pdf',
         csv='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.csv'
     output:
-        svg="fig2/panel_{panel_letter}_{qualtype}.svg",
-        pdf="fig2/panel_{panel_letter}_{qualtype}.pdf",
-        csv="fig2/panel_{panel_letter}_{qualtype}.csv"
+        svg="fig2/panel_c_{qualtype}.svg",
+        pdf="fig2/panel_c_{qualtype}.pdf",
+        csv="fig2/panel_c_{qualtype}.csv"
     resources:
         mem=4000
     log:
-        "fig2/panel_{panel_letter}_{qualtype}.log"
+        "fig2/panel_c_{qualtype}.log"
     shell:
         """
         cp -n {input.svg} {output.svg}
@@ -104,7 +86,7 @@ rule fig2_shared_snv_analysis:
         "scripts/fit_mrca.R"
 
 
-rule fig2_panel_d:
+rule signature_fitting_related_oligo_pairs:
     input:
         cosmic="mutsigs/cosmic_reduced___A.csv",
         sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv",
@@ -127,19 +109,19 @@ rule fig2_panel_d:
         "scripts/fig2_panel_d.R"
 
 
-rule fig2_panel_d_infant:
+rule infant_oligo_spectra:
     input:
         neuron_muts='tables/neuron___mut___A.csv',
         oligo_muts='tables/oligo___mut___A.csv',
         cosmic="mutsigs/cosmic_reduced___A.csv",
     output:
-        pdf='fig2/panel_d_infant.pdf',
-        svg='fig2/panel_d_infant.svg',
-        spectra_csv='fig2/panel_d_spectra_infant.csv',
-        expo_csv='fig2/panel_d_exposures_infant.csv'
+        pdf='fig2/panel_e_infant.pdf',
+        svg='fig2/panel_e_infant.svg',
+        spectra_csv='fig2/panel_e_spectra_infant.csv',
+        expo_csv='fig2/panel_e_exposures_infant.csv'
     log:
-        'fig2/panel_d_infant.log'
+        'fig2/panel_e_infant.log'
     resources:
         mem=4000
     script:
-        "scripts/fig2_panel_d_infant.R"
+        "scripts/fig2_panel_e_infant.R"

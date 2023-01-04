@@ -1,0 +1,58 @@
+# vim: syntax=python
+
+rule indel_spectrum:
+    input:
+        "mutsigs/raw_spectra/neuron___raw_spectrum___indel_A.csv",
+        "mutsigs/raw_spectra/oligo___raw_spectrum___indel_A.csv",
+    output:
+        "fig3/panel_a_spectrum.svg",
+        "fig3/panel_a_spectrum.pdf",
+        "fig3/panel_a_spectrum.csv"
+    resources:
+        mem=4000
+    log:
+        "fig3/panel_a_spectrum.log"
+    script:
+        "scripts/fig2_panel_e.R"
+
+
+rule cosmic_indel_barplots:
+    input:
+        svg="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.svg",
+        pdf="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.pdf",
+        csv="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.csv"
+    output:
+        svg="fig3/panel_b___{celltype}___{qualtype}.svg",
+        pdf="fig3/panel_b___{celltype}___{qualtype}.pdf",
+        csv="fig3/panel_b___{celltype}___{qualtype}.csv"
+    resources:
+        mem=4000
+    log:
+        "fig3/panel_b___{celltype}___{qualtype}.log"
+    shell:
+        """
+        cp -n {input.svg} {output.svg}
+        cp -n {input.pdf} {output.pdf}
+        cp -n {input.csv} {output.csv}
+        """
+
+
+rule cosmic_indel_vs_age_plots:
+    input:
+        svg='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.svg',
+        pdf='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.pdf',
+        csv='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.csv'
+    output:
+        svg="fig3/panel_c_{qualtype}.svg",
+        pdf="fig3/panel_c_{qualtype}.pdf",
+        csv="fig3/panel_c_{qualtype}.csv"
+    resources:
+        mem=4000
+    log:
+        "fig3/panel_c_{qualtype}.log"
+    shell:
+        """
+        cp -n {input.svg} {output.svg}
+        cp -n {input.pdf} {output.pdf}
+        cp -n {input.csv} {output.csv}
+        """

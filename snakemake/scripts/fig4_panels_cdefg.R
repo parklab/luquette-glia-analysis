@@ -27,7 +27,7 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 11) {
-    stop('usage: fig5_allpanels.R {neuron signals: scrnaseq, scatacseq, repliseq, histone} {oligo signals: <same as neuron>} out.pdf out.svg out.csv')
+    stop('usage: fig4_panels_cdefg.R {neuron signals: scrnaseq, scatacseq, repliseq, histone} {oligo signals: <same as neuron>} out.pdf out.svg out.csv')
 }
 
 

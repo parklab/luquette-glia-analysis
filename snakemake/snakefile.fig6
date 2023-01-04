@@ -9,7 +9,8 @@ scatacseq_meta = pd.read_csv('manifests/SCATACSEQ.MANIFEST')
 
 scrnaseq_meta = pd.read_csv('manifests/SCRNASEQ_EXPRESSION.MANIFEST')
 
-rule fig4a:
+
+rule cancer_density_correlation:
     input:
         neuron_muts="input/neuron___mut___A.rda",
         oligo_muts="input/oligo___mut___A.rda",
@@ -18,18 +19,18 @@ rule fig4a:
         cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
             tumor=sorted(set(cancer_meta['tumor'])))
     output:
-        pdf='fig4/panel_a.pdf',
-        svg='fig4/panel_a.svg',
-        csv='fig4/panel_a.csv'
+        pdf='fig6/panel_a.pdf',
+        svg='fig6/panel_a.svg',
+        csv='fig6/panel_a.csv'
     log:
-        'fig4/panel_a.log'
+        'fig6/panel_a.log'
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_a.R"
+        "scripts/fig6_panel_a.R"
 
 # same as panel a, but adding in elderly MDA glia
-rule fig4a_supp:
+rule cancer_density_correlation_with_mda_ols:
     input:
         neuron_muts="input/neuron___mut___A.rda",
         oligo_muts="input/oligo_mdapta___mut___A.rda",
@@ -38,18 +39,18 @@ rule fig4a_supp:
         cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
             tumor=sorted(set(cancer_meta['tumor'])))
     output:
-        pdf='fig4/panel_a_mdapta_supp.pdf',
-        svg='fig4/panel_a_mdapta_supp.svg',
-        csv='fig4/panel_a_mdapta_supp.csv'
+        pdf='fig6/panel_a_mdapta_supp.pdf',
+        svg='fig6/panel_a_mdapta_supp.svg',
+        csv='fig6/panel_a_mdapta_supp.csv'
     log:
-        'fig4/panel_a_mdapta_supp.log'
+        'fig6/panel_a_mdapta_supp.log'
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_a.R"
+        "scripts/fig6_panel_a.R"
 
 
-rule fig4b:
+rule cancer_density_vs_scatacseq:
     input:
         tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
         # quantile is ignored. raw scores used.
@@ -59,28 +60,26 @@ rule fig4b:
 
             celltype=sorted(set(scatacseq_meta['celltype'])))
     output:
-        barplot_pdf='fig4/panel_b_barplot.pdf',
-        barplot_svg='fig4/panel_b_barplot.svg',
-        heatmap_pdf='fig4/panel_b_heatmap.pdf',
-        heatmap_svg='fig4/panel_b_heatmap.svg',
-        csv='fig4/panel_b.csv'
+        barplot_pdf='fig6/panel_b_barplot.pdf',
+        barplot_svg='fig6/panel_b_barplot.svg',
+        heatmap_pdf='fig6/panel_b_heatmap.pdf',
+        heatmap_svg='fig6/panel_b_heatmap.svg',
+        csv='fig6/panel_b.csv'
     log:
-        'fig4/panel_b.log'
+        'fig6/panel_b.log'
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_b.R"
+        "scripts/fig6_panel_b.R"
 
 
 
-# Not sure if this should be a main panel (c) or a supplement
-# 
 # NOTICE! NOTICE!
 # We are using scrnaseq_expression_mc02 here because of the 1 MB bins.
 # mc08 (meaning only windows covered 80% by a gene) has only ~250 windows
 # across the genome that are not NA, because genes only cover about 1/3rd
 # of the genome (incl. introns).
-rule fig4c:
+rule cancer_density_vs_scrnaseq:
     input:
         tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
         # quantile is ignored. raw scores used.
@@ -90,17 +89,17 @@ rule fig4c:
 
             celltype=sorted(set(scrnaseq_meta['celltype'])))
     output:
-        barplot_pdf='fig4/panel_c_barplot.pdf',
-        barplot_svg='fig4/panel_c_barplot.svg',
-        heatmap_pdf='fig4/panel_c_heatmap.pdf',
-        heatmap_svg='fig4/panel_c_heatmap.svg',
-        csv='fig4/panel_c.csv'
+        barplot_pdf='fig6/panel_c_barplot.pdf',
+        barplot_svg='fig6/panel_c_barplot.svg',
+        heatmap_pdf='fig6/panel_c_heatmap.pdf',
+        heatmap_svg='fig6/panel_c_heatmap.svg',
+        csv='fig6/panel_c.csv'
     log:
-        'fig4/panel_c.log'
+        'fig6/panel_c.log'
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_c.R"
+        "scripts/fig6_panel_c.R"
 
 if 'make_pcawg_metadata' not in config.keys():
     # not affected by 2 excluded samples
@@ -109,41 +108,41 @@ if 'make_pcawg_metadata' not in config.keys():
 else:
     pcawg_tumors = []
 
-rule fig4d:
+rule top_cancer_gene_enrichment:
     input:
         genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
         cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo/{tumor}.rda", tumor=pcawg_tumors)
     output:
-        pdf="fig4/panel_d.pdf",
-        svg="fig4/panel_d.svg",
-        csv="fig4/panel_d.csv",
-        supppdf="fig4/panel_d_supplement.pdf",
-        suppsvg="fig4/panel_d_supplement.svg",
-        fullsupppdf="fig4/panel_d_supplement_full.pdf",
-        fullsuppsvg="fig4/panel_d_supplement_full.svg"
+        pdf="fig6/panel_d.pdf",
+        svg="fig6/panel_d.svg",
+        csv="fig6/panel_d.csv",
+        supppdf="fig6/panel_d_supplement.pdf",
+        suppsvg="fig6/panel_d_supplement.svg",
+        fullsupppdf="fig6/panel_d_supplement_full.pdf",
+        fullsuppsvg="fig6/panel_d_supplement_full.svg"
     log:
-        "fig4/panel_d.log"
+        "fig6/panel_d.log"
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_d.R"
+        "scripts/fig6_panel_d.R"
 
 # Same as above, but add in elderly MDA glia
-rule fig4d_supp:
+rule top_cancer_gene_enrichment_with_mda_ols:
     input:
         genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
         cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo_mdapta/{tumor}.rda", tumor=pcawg_tumors)
     output:
-        pdf="fig4/panel_d_mdapta.pdf",
-        svg="fig4/panel_d_mdapta.svg",
-        csv="fig4/panel_d_mdapta.csv",
-        supppdf="fig4/panel_d_mdapta_supplement.pdf",
-        suppsvg="fig4/panel_d_mdapta_supplement.svg",
-        fullsupppdf="fig4/panel_d_mdapta_supplement_full.pdf",
-        fullsuppsvg="fig4/panel_d_mdapta_supplement_full.svg"
+        pdf="fig6/panel_d_mdapta.pdf",
+        svg="fig6/panel_d_mdapta.svg",
+        csv="fig6/panel_d_mdapta.csv",
+        supppdf="fig6/panel_d_mdapta_supplement.pdf",
+        suppsvg="fig6/panel_d_mdapta_supplement.svg",
+        fullsupppdf="fig6/panel_d_mdapta_supplement_full.pdf",
+        fullsuppsvg="fig6/panel_d_mdapta_supplement_full.svg"
     log:
-        "fig4/panel_d_mdapta.log"
+        "fig6/panel_d_mdapta.log"
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_d.R"
+        "scripts/fig6_panel_d.R"

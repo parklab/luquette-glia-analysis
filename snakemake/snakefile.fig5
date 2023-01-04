@@ -1,0 +1,22 @@
+# vim: syntax=python
+
+rule many_enrichment_analyses_signature_specific:
+    input:
+        # would like to expand() this but also want to keep names of inputs
+        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_scatacseq="enrichment/scatacseq/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_repliseq="enrichment/repliseq/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron___A.3quantiles_sigenrich.csv",
+        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_scatacseq="enrichment/scatacseq/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/oligo___A.3quantiles_sigenrich.csv"
+        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo___A.3quantiles_sigenrich.csv",
+    output:
+        pdf="fig5/all_panels_enrichment_analyses.pdf",
+        svg="fig5/all_panels_enrichment_analyses.svg"
+    log:
+        "fig5/all_panels_enrichment_analyses.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig5_all_panels.R"

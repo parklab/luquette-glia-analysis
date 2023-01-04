@@ -48,14 +48,16 @@ rule make_cosmic_snv_table:
 
 rule fit_cosmic:
     input:
-        "tables/{celltype}___mut___{qualtype}.csv",
-        "aging_rates/{celltype}___mutburden___{qualtype}.csv",
-        "mutsigs/{cosmic}___{qualtype}.csv"
+        muts="tables/{celltype}___mut___{qualtype}.csv",
+        mutburden="aging_rates/{celltype}___mutburden___{qualtype}.csv",
+        cosmic="mutsigs/{cosmic}___{qualtype}.csv",
+        sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv"
     output:
-        "mutsigs/{cosmic}/{celltype}___mutmat___{qualtype}.csv",
-        "mutsigs/{cosmic}/{celltype}___expomat___{qualtype}.csv"
+        mutmat="mutsigs/{cosmic}/{celltype}___mutmat___{qualtype}.csv",
+        expomat="mutsigs/{cosmic}/{celltype}___expomat___{qualtype}.csv"
     params:
-        muttype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV'
+        muttype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV',
+        amptype=lambda wildcards: 'MDA' if "mda" in wildcards.celltype else 'PTA'
     resources:
         mem=4000
     log:
@@ -141,7 +143,8 @@ rule cosmic_barplots:
 
 # Scatter plots of per-sample age vs. signature exposure.
 # All celltypes are plotted on the same panel to allow visual comparison.
-rule model_cosmic_vs_age:
+ruleorder: model_cosmic_vs_age_all > model_cosmic_vs_age
+rule model_cosmic_vs_age_all:
     input:
         expomats=expand("mutsigs/cosmic_reduced/{celltype}___expomat___{{qualtype}}.csv",
             celltype=celltypes_to_compute),
@@ -155,5 +158,42 @@ rule model_cosmic_vs_age:
         mem=4000
     log:
         "mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.log"
+    script:
+        "scripts/model_cosmic_vs_age.R"
+
+# Same as above but include MDA
+ruleorder: model_cosmic_vs_age_all_mda > model_cosmic_vs_age
+rule model_cosmic_vs_age_all_mda:
+    input:
+        expomats=expand("mutsigs/cosmic_reduced/{celltype}___expomat___{{qualtype}}.csv",
+            celltype=celltypes_to_compute + [ 'oligo_mda' ]),
+        mutburdens=expand("aging_rates/{celltype}___mutburden___{{qualtype}}.csv",
+            celltype=celltypes_to_compute + [ 'oligo_mda' ])
+    output:
+        svg="mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.svg",
+        pdf="mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.pdf",
+        csv="mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.csv"
+    resources:
+        mem=4000
+    log:
+        "mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.log"
+    script:
+        "scripts/model_cosmic_vs_age.R"
+
+
+# Scatter plots of per-sample age vs. signature exposure.
+# All celltypes are plotted on the same panel to allow visual comparison.
+rule model_cosmic_vs_age:
+    input:
+        expomats="mutsigs/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
+        mutburdens="aging_rates/{celltype}___mutburden___{qualtype}.csv"
+    output:
+        svg="mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.svg",
+        pdf="mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.pdf",
+        csv="mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.csv"
+    resources:
+        mem=4000
+    log:
+        "mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.log"
     script:
         "scripts/model_cosmic_vs_age.R"

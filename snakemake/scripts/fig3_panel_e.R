@@ -260,7 +260,9 @@ plotfn <- function(n, typecol, linetype=c('separate', 'average'), labtype=c('poi
     n <- n[quantile %in% 1:10]
     n$quantile <- as.integer(n$quantile)
 
-    ylim <- range(n$enr)*c(0.95,1.05)
+    #ylim <- range(n$enr)*c(0.95,1.05)
+    # Manually set uniform y-axis
+    ylim <- c(0.4,2.25)
     xlim <- range(c(n$quantile))
     ## changes depending on track
     n$type <- n[[typecol]]  # only allows one column for now
@@ -295,14 +297,15 @@ plotfn <- function(n, typecol, linetype=c('separate', 'average'), labtype=c('poi
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=10, height=6, pointsize=5, file=outs[i])
+    devs[[i]](width=10, height=9, pointsize=5, file=outs[i])
     layout(rbind(
         matrix(1:18, nrow=2, byrow=F),
-        18+matrix(1:18, nrow=2, byrow=F)), height=c(2,3,2,3))
+        18+matrix(1:18, nrow=2, byrow=F),
+        36+matrix(1:18, nrow=2, byrow=F)), height=c(2,3,2,3,2,3))
     par(mar=c(5,2,3,0.1))
     # did more sigs for exploratory analysis, now just do panels for paper
     #for (sig in c('SBS1', 'SBS5', 'SBS32', 'SBS89')) {
-    for (sig in 'SBS1') {
+    for (sig in c('SBS1', 'SBS32')) {
         print(c('oligo', sig))
         #make.panel(sig=sig, ourcell='oligo', pdev=function(...) pdf(file=paste0('oligo_', sig, '_v2.pdf'), ...))
         make.panel(files=oligo.fs, sig=sig, ourcell='oligo', pdev=NULL, plot.1mb=FALSE)

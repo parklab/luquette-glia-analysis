@@ -9,131 +9,147 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@input['neuron_rna'],
-        snakemake@input['neuron_atac'],
-        snakemake@input['oligo_rna'],
-        snakemake@input['oligo_atac'],
-        snakemake@output['pdf'],
-        snakemake@output['svg'],
-        snakemake@output['csv']
+        snakemake@input['tiles'],
+        snakemake@output['barplot_pdf'],
+        snakemake@output['barplot_svg'],
+        snakemake@output['heatmap_pdf'],
+        snakemake@output['heatmap_svg'],
+        snakemake@output['csv'],
+        snakemake@input['cancer_qbeds'],
+        snakemake@input['rna_qbeds']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) != 7) {
-    stop('usage: fig4_panel_c.R neuron_rna.rda neuron_atac.rda oligo_rna.rda oligo_atac.rda out.pdf out.svg out.csv')
+if (length(args) < 8) {
+    cat('qbed type is automatically determined by searching for datasource=scrnaseq or datasource=cancer_snvdens\n')
+    cat('quantiles are ignored; raw scores are used\n')
+    stop('usage: fig4_panel_c.R tiles.bed barplot.pdf barplot.svg heatmap.pdf heatmap.svg out.csv qbed1 qbed2 [ qbed3 ... qbedN ]')
 }
 
-neuron.rna <- args[1]
-neuron.atac <- args[2]
-oligo.rna <- args[3]
-oligo.atac <- args[4]
-out.pdf <- args[5]
-out.svg <- args[6]
-out.csv <- args[7]
 
-for (f in c(out.pdf, out.svg, out.csv)) {
+tile.file <- args[1]
+barplot.pdf <- args[2]
+barplot.svg <- args[3]
+heatmap.pdf <- args[4]
+heatmap.svg <- args[5]
+out.csv <- args[6]
+qbed.files <- args[-(1:6)]
+
+for (f in c(barplot.pdf, barplot.svg, heatmap.pdf, heatmap.svg, out.csv)) {
     if (file.exists(f))
         stop(paste('output file', f, 'already exists, please delete it first'))
 }
 
+suppressMessages(library(GenomicRanges))
+suppressMessages(library(pheatmap))
 suppressMessages(library(data.table))
 suppressMessages(library(mutenrich))
 suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
+suppressMessages(library(grid))
+suppressMessages(library(gridExtra))
 if (!("Arial" %in% fonts()))
     stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
-# ATACseq
-load(oligo.atac)
-oatactab <- do.call(rbind, lapply(1:nrow(emeta), function(i) { x <- data.frame(Assay='scATACseq', MutsFrom='Oligo', AssayCelltype=emeta$celltype[i], Quantile=rownames(es[[i]]), es[[i]]); x[as.character(1:10),] }))
-aoes <- lapply(es, function(e) e[as.character(1:10),])
-load(neuron.atac)
-natactab <- do.call(rbind, lapply(1:nrow(emeta), function(i) { x <- data.frame(Assay='scATACseq', MutsFrom='Neuron', AssayCelltype=emeta$celltype[i], Quantile=rownames(es[[i]]), es[[i]]); x[as.character(1:10),] }))
-anes <- lapply(es, function(e) e[as.character(1:10),])
-atacmeta <- emeta
-atacmap <- setNames(c('OPCs', 'Astrocytes', 'Excitatory-Neurons', 'Inhibitory-Neurons',
-    'Microglia', 'Oligodendrocytes', 'Endothelial'),
-    c('OPC', 'astrocyte', 'excitatory_neuron', 'inhibitory_neuron', 'microglia', 'oligo', 'endothelial'))
-print(atacmeta$celltype)
-atacmeta$celltype <- atacmap[atacmeta$celltype]
-print(atacmeta$celltype)
 
-# RNAseq
-load(oligo.rna)
-ornatab <- do.call(rbind, lapply(1:nrow(emeta), function(i) { x <- data.frame(Assay='scRNAseq', MutsFrom='Oligo', AssayCelltype=emeta$celltype[i], Quantile=rownames(es[[i]]), es[[i]]); x[as.character(1:10),] }))
-roes <- lapply(es, function(e) e[as.character(1:10),])
-load(neuron.rna)
-nrnatab <- do.call(rbind, lapply(1:nrow(emeta), function(i) { x <- data.frame(Assay='scRNAseq', MutsFrom='Neuron', AssayCelltype=emeta$celltype[i], Quantile=rownames(es[[i]]), es[[i]]); x[as.character(1:10),] }))
-rnes <- lapply(es, function(e) e[as.character(1:10),])
-rnameta <- emeta
+gr2 <- function (bed, seqinfo = NULL, add.chr.prefix = FALSE) {
+    ret <- GenomicRanges::GRanges(seqnames = bed[[1]],
+        ranges = IRanges::IRanges(start = bed[[2]], bed[[3]]))
+    ret$keep <- bed[,5] != 0
+    ret
+}
 
+tiles <- gr2(fread(tile.file))
 
-fwrite(rbind(oatactab,ornatab, natactab,nrnatab), file=out.csv)
+qbeds <- lapply(qbed.files, function(f) {
+    x <- fread(f, skip=1)
+    metadata <- mutenrich::read.bed.metadata(f, is.qbed=TRUE)
+    if (!(metadata['datasource'] %in% c('cancer_snvdens', 'scrnaseq')))
+        stop('only QBEDs with datasource=cancer_snvdens or scrnaseq are allowed')
 
-# Match the UMAP figure colors
+    list(datasource=metadata['datasource'],
+         value=ifelse(metadata['datasource'] == 'cancer_snvdens', metadata['tumor'], metadata['celltype']),
+         scores=x[[5]])
+})
+
+cancer <- Filter(function(qbed) qbed$datasource == 'cancer_snvdens', qbeds)
+cancer.mat <- sapply(cancer, function(x) x$scores)
+colnames(cancer.mat) <- unname(sapply(cancer, function(x) x$value))
+
+rna <- Filter(function(qbed) qbed$datasource == 'scrnaseq', qbeds)
+rna.mat <- sapply(rna, function(x) x$scores)
+colnames(rna.mat) <- unname(sapply(rna, function(x) x$value))
+
+str(rna.mat)
+str(cancer.mat)
+
+# Discard the lower 2.5th percentile of ATAC sites (=top 2.5% after 1/x xform)
+fit.cancer.to.rna <- function(cancer, rna) { #, rna.eps=1e-3, cancer.eps=1e-7) {
+    data <- data.frame(rna=rna, cancer=cancer)
+    #rna.q <- quantile(data$rna, prob=1-0.025, na.rm=T)
+    data <- data[tiles$keep & !is.na(data$rna) & !is.na(data$cancer),]
+
+    lm(cancer ~ rna, data=data)
+}
+
+# Fit the model and get R squared. The linear model was useful
+# for plotting/exploring, but the final value that we plot is just
+# a function of the correlation.
+m <- t(sapply(colnames(cancer.mat), function(cn) {
+    sapply(colnames(rna.mat), function(an) {
+        x <- fit.cancer.to.rna(cancer.mat[,cn], rna.mat[,an])
+        summary(x)$r.squared
+    })
+}))
+
+str(m)
+
+# Just reorder for plotting
+m <- m[,c('OPCs','Oligodendrocytes','Excitatory-Neurons','Inhibitory-Neurons','Astrocytes','Microglia')]
+# Use prettier column names
+#colnames(m) <- c('OPC', 'Oligodendrocyte',
+      #'Excitatory-Neuron', 'Inhibitory-Neuron',
+      #'Astrocyte', 'Microglia')
+
+# Match the colors from the UMAP plot
 colors <- setNames(c('#f5c710', '#61d04f', 'black', '#28e2e5', '#cd0bbc', '#FF0000', '#9e9e9e', 'black'),
     c('Astrocytes', 'Endothelial', 'Excitatory-Neurons', 'Inhibitory-Neurons',
-      'Microglia', 'Oligodendrocytes', 'OPCs', 'Neurons'))
-
-textpane <- function(txt, ...) {
-    oldmar <- par(mar=c(0,0,0,0))$mar
-    plot(1, pch=NA, bty='n', xaxt='n', yaxt='n')
-    legend('center', legend=txt, bty='n', cex=1.4, ...)
-    par(mar=oldmar)
-}
+    'Microglia', 'Oligodendrocytes', 'OPCs', 'Neurons'))
 
 
 devs=list(pdf, svglite)
-outs=c(out.pdf, out.svg)
+outs=c(barplot.pdf, barplot.svg)
 for (i in 1:2) {
-    devs[[i]](width=4.5, height=2.5, pointsize=5, file=outs[i])
-
-    # format:
-    # row1: scRNAseq: neuron plot, oligo plot, legend 
-    # row2: scATACseq: neuron plot, oligo plot, legend 
-    layout(matrix(1:6, nrow=2,byrow=T), width=c(2,2,2))
-    par(mar=c(4,4,2,1))
-
-    n=6
-    yl=c(0.5,1.5)
-
-    # For snRNAseq, exc. and inh. neurons were merged. Can break this
-    # out in supplement if we want.
-    for (i in 1:n)
-        plot.enrich(es=rnes[[i]], main='Neuron SNVs', type='l', ltype='b',
-            xlab='snRNAseq foldchange (decile)',
-            lcol=colors[rnameta$celltype[i]], add=i>1, ylim=yl, bootstrap.ci=F)
-    abline(h=1, lty='dashed', col='grey')
-    for (i in 1:n)
-        plot.enrich(es=roes[[i]], main='Oligodendrocyte SNVs', type='l', ltype='b',
-            xlab='snRNAseq foldchange (decile)',
-            lcol=colors[rnameta$celltype[i]], add=i>1, ylim=yl, bootstrap.ci=F)
-    abline(h=1, lty='dashed', col='grey')
-
-    textpane(x='center', txt=rnameta$celltype, lwd=2, col=colors[rnameta$celltype])
-
-    n=7
-    yl=c(0.5,1.5) # for 1 MB plots
-    #yl=c(0.85,1.2)  # for 1 KB plots
-
-    for (i in 1:n)
-        plot.enrich(es=anes[[i]], main='Neuron SNVs', type='l', ltype='b',
-            xlab='scATACseq foldchange (decile)',
-            lcol=colors[atacmeta$celltype[i]], add=i>1, ylim=yl, bootstrap.ci=F)
-    abline(h=1, lty='dashed', col='grey')
-    for (i in 1:n)
-        plot.enrich(es=aoes[[i]], main='Oligodendrocyte SNVs', type='l', ltype='b',
-            xlab='scATACseq foldchange (decile)',
-            lcol=colors[atacmeta$celltype[i]], add=i>1, ylim=yl, bootstrap.ci=F)
-    abline(h=1, lty='dashed', col='grey')
-
-    textpane(x='center', txt=atacmeta$celltype, lwd=2, col=colors[atacmeta$celltype])
-
+    devs[[i]](width=1.25, height=2, pointsize=5, file=outs[i])
+    par(mar=c(8,4,3,1))
+    barplot(m['CNS-GBM',], las=3, border=NA,
+        ylab='R^2, GBM mutation density', col=colors[colnames(m)])
     dev.off()
 }
+
+# modified from stackoverflow:
+# https://stackoverflow.com/questions/43051525/how-to-draw-pheatmap-plot-to-screen-and-also-save-to-file
+save_pheatmap <- function(x, dev, filename, width=7, height=7, ...) {
+   stopifnot(!missing(x))
+   stopifnot(!missing(filename))
+   dev(filename, width=width, height=height, ...)
+   grid::grid.newpage()
+   grid::grid.draw(x$gtable)
+   dev.off()
+}
+
+devs=list(pdf, svglite)
+outs=c(heatmap.pdf, heatmap.svg)
+for (i in 1:2) {
+    x <- pheatmap(m[order(m[,'OPCs'],decreasing=T),],
+        main='scRNAseq', cluster_row=F, cluster_cols=F, silent=TRUE, fontsize=5)
+    save_pheatmap(x, dev=devs[[i]], filename=outs[i], width=2.0, height=4.0, pointsize=5)
+}
+
+fwrite(m[order(m[,'OPCs'], decreasing=T),], file=out.csv)
 
 if ('snakemake' %in% ls()) {
     sink()

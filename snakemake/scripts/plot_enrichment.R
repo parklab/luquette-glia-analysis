@@ -206,14 +206,14 @@ for (i in 1:2) {
 
         for (yg in ygroups) {
             par(mar=c(1/2,1/2,0,0))
-            g <- g[y_group_factor_class == yg]
-            meta.cols <- colnames(g)
+            gg <- g[y_group_factor_class == yg]
+            meta.cols <- colnames(gg)
             # for general BEDs (i.e., not qBEDs), this meta column is named 'quantile'
             # but the data are not necessarily quantiles. They could be data classes
             # with no numeric interpretation, like "inside a peak', a gene, or a
             # chromHMM state.
             meta.cols <- meta.cols[(1:length(meta.cols)) < which(meta.cols=='quantile')]
-            signals <- g
+            signals <- gg
 print(signals)
             cat('plotting', nrow(signals), 'points\n')
             if (nrow(signals) == 0) {
@@ -232,6 +232,7 @@ print(signals)
             }
         }
     }
+    dev.off()
 }
 
 fwrite(d, file=out.csv)

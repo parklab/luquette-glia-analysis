@@ -157,6 +157,7 @@ use rule sigenrichment_plot from enrichment_scrnaseq_expression_mc08 as enrichme
 
 
 # FOLDCHANGE qbeds. Currently for mc02 and mc08
+'''
 # Min. signal coverage: _mc02
 enrichment_scrnaseq_expression_mc02_foldchange_config = dict(
     **{ 'output_dir': 'enrichment/scrnaseq_expression_mc02_foldchange',
@@ -179,6 +180,7 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc02_foldchange as 
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'enrichment/scrnaseq_expression_mc02_foldchange/quantile/{mutclass}.{nquantiles}quantiles.log'
+'''
 
 
 # Min. signal coverage: _mc08
@@ -194,12 +196,13 @@ module enrichment_scrnaseq_expression_mc08_foldchange:
 
 use rule enrichment_qbed_analysis from enrichment_scrnaseq_expression_mc08_foldchange as enrichment_scrnaseq_expression_mc08_foldchange_enrichment_qbed_analysis
 
+use rule enrichment_table from enrichment_scrnaseq_expression_mc08_foldchange as enrichment_scrnaseq_expression_mc08_foldchange_enrichment_table
+
 use rule enrichment_plot from enrichment_scrnaseq_expression_mc08_foldchange as enrichment_scrnaseq_expression_mc08_foldchange_enrichment_plot with:
     params:
         ignore='enrichment_grid_R_ignore_none',
         group='donor,selection,celltype'
     output:
-        expand('enrichment/scrnaseq_expression_mc08_foldchange/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/scrnaseq_expression_mc08_foldchange/quantile/{mutclass}.{nquantiles}quantiles.log'
+        expand('enrichment/scrnaseq_expression_mc08_foldchange/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}', output=[ 'svg', 'pdf', 'csv' ])
+    #log:
+        #'enrichment/scrnaseq_expression_mc08_foldchange/quantile/{mutclass}.{nquantiles}quantiles.log'

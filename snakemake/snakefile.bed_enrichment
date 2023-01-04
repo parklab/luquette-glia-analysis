@@ -19,10 +19,6 @@ def read_manifest(filename, nrows=None):
     manifest['__metatags__'] = metatags
     return(manifest, files, metadata, list(classes), metatags)
 
-
-mut_manifest, mut_files, mut_metadata, mut_classes, mut_metatags = \
-    read_manifest(config['MUT_MANIFEST'])
-
 signal_manifest, signal_files, signal_metadata, signal_classes, signal_metatags = \
     read_manifest(config['SIGNAL_MANIFEST'])
 
@@ -70,10 +66,19 @@ rule enrichment_bed_table:
         "scripts/make_enrichment_table.R"
 
 
+# XXX: copy of function in snakefile.enrichment - find a way to remove code duplication
+# mutclass is {celltype}___{qualtype}; e.g., neuron___AB
+# map this to an associated file: input/{celltype}___FILETYPE___{qualtype}.rda
+# FILETYPE (so far) is either: mut or perm
+def mutclass_to_file(mutclass, filetype):
+    celltype, qualtype = mutclass.split('___')
+    return("input/" + celltype + "___" + filetype + "___" + qualtype + ".rda")
+
+
 rule enrichment_bed_analysis:
     input:
-        mut=lambda wildcards: list(mut_manifest.loc[mut_manifest['__class__'] == wildcards.mutclass, 'file'])[0],
-        perm=lambda wildcards: config['mut_to_perm'][wildcards.mutclass],
+        mut=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'mut'),
+        perm=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'perm'),
         beds=expand(outroot + "/masked_bed/{signalclass}.bed",
             signalclass=signal_classes)
     output:
@@ -82,7 +87,7 @@ rule enrichment_bed_analysis:
     params:
         nbootstraps=10000
     resources:
-        mem=10000
+        mem=15000
     log:
         summary=outroot + "/{mutclass}/bedenrich/bedenrich.log"
     benchmark:

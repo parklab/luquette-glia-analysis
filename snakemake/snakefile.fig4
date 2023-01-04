@@ -7,6 +7,8 @@ cancer_meta = pd.read_csv('manifests/CANCER_SNVDENS.MANIFEST')
 
 scatacseq_meta = pd.read_csv('manifests/SCATACSEQ.MANIFEST')
 
+scrnaseq_meta = pd.read_csv('manifests/SCRNASEQ_EXPRESSION.MANIFEST')
+
 rule fig4a:
     input:
         neuron_muts="input/neuron___mut___A.rda",
@@ -21,6 +23,26 @@ rule fig4a:
         csv='fig4/panel_a.csv'
     log:
         'fig4/panel_a.log'
+    resources:
+        mem=4000
+    script:
+        "scripts/fig4_panel_a.R"
+
+# same as panel a, but adding in elderly MDA glia
+rule fig4a_supp:
+    input:
+        neuron_muts="input/neuron___mut___A.rda",
+        oligo_muts="input/oligo_mdapta___mut___A.rda",
+        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
+        # quantile is ignored. raw scores used.
+        cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
+            tumor=sorted(set(cancer_meta['tumor'])))
+    output:
+        pdf='fig4/panel_a_mdapta_supp.pdf',
+        svg='fig4/panel_a_mdapta_supp.svg',
+        csv='fig4/panel_a_mdapta_supp.csv'
+    log:
+        'fig4/panel_a_mdapta_supp.log'
     resources:
         mem=4000
     script:
@@ -50,15 +72,28 @@ rule fig4b:
         "scripts/fig4_panel_b.R"
 
 
+
+# Not sure if this should be a main panel (c) or a supplement
+# 
+# NOTICE! NOTICE!
+# We are using scrnaseq_expression_mc02 here because of the 1 MB bins.
+# mc08 (meaning only windows covered 80% by a gene) has only ~250 windows
+# across the genome that are not NA, because genes only cover about 1/3rd
+# of the genome (incl. introns).
 rule fig4c:
     input:
-        neuron_atac="enrichment/scatacseq_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda",
-        oligo_atac="enrichment/scatacseq_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda",
-        neuron_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda",
-        oligo_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000000binsize_10quantiles.SUMMARY.rda"
+        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
+        # quantile is ignored. raw scores used.
+        cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
+            tumor=sorted(set(cancer_meta['tumor']))),
+        rna_qbeds=expand('enrichment/scrnaseq_expression_mc02/quantile/qbed/scrnaseq___expression___combined___combined___{celltype}.1000000binsize_10quantiles.qbed',
+
+            celltype=sorted(set(scrnaseq_meta['celltype'])))
     output:
-        pdf='fig4/panel_c.pdf',
-        svg='fig4/panel_c.svg',
+        barplot_pdf='fig4/panel_c_barplot.pdf',
+        barplot_svg='fig4/panel_c_barplot.svg',
+        heatmap_pdf='fig4/panel_c_heatmap.pdf',
+        heatmap_svg='fig4/panel_c_heatmap.svg',
         csv='fig4/panel_c.csv'
     log:
         'fig4/panel_c.log'
@@ -66,7 +101,6 @@ rule fig4c:
         mem=4000
     script:
         "scripts/fig4_panel_c.R"
-
 
 if 'make_pcawg_metadata' not in config.keys():
     # not affected by 2 excluded samples
@@ -77,14 +111,38 @@ else:
 
 rule fig4d:
     input:
-        cancer_ors=expand("data/pcawg/{tumor}.gene_mutation_odds_ratios.rda",
-            tumor=pcawg_tumors)
+        genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
+        cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo/{tumor}.rda", tumor=pcawg_tumors)
     output:
         pdf="fig4/panel_d.pdf",
         svg="fig4/panel_d.svg",
-        csv="fig4/panel_d.csv"
+        csv="fig4/panel_d.csv",
+        supppdf="fig4/panel_d_supplement.pdf",
+        suppsvg="fig4/panel_d_supplement.svg",
+        fullsupppdf="fig4/panel_d_supplement_full.pdf",
+        fullsuppsvg="fig4/panel_d_supplement_full.svg"
     log:
         "fig4/panel_d.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig4_panel_d.R"
+
+# Same as above, but add in elderly MDA glia
+rule fig4d_supp:
+    input:
+        genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
+        cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo_mdapta/{tumor}.rda", tumor=pcawg_tumors)
+    output:
+        pdf="fig4/panel_d_mdapta.pdf",
+        svg="fig4/panel_d_mdapta.svg",
+        csv="fig4/panel_d_mdapta.csv",
+        supppdf="fig4/panel_d_mdapta_supplement.pdf",
+        suppsvg="fig4/panel_d_mdapta_supplement.svg",
+        fullsupppdf="fig4/panel_d_mdapta_supplement_full.pdf",
+        fullsuppsvg="fig4/panel_d_mdapta_supplement_full.svg"
+    log:
+        "fig4/panel_d_mdapta.log"
     resources:
         mem=4000
     script:

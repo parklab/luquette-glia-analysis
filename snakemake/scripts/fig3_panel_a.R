@@ -50,18 +50,24 @@ if (!("Arial" %in% fonts()))
 
 # not using "NEUN" for neurons because "NEUN_Aug" is presumably the same
 # data but more up-to-date.
-n <- fread(neuron.snv)[celltype=='Excitatory-Neurons' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
-ni <- fread(neuron.indel)[celltype=='Excitatory-Neurons' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
+# celltype==Neurons refers to only one scRNAseq library where Inh and Exc
+# neurons were not separated. We don't use this library.
+n <- fread(neuron.snv)[celltype != "Neurons" & BINSIZE==1000 & quantile %in% 1:100 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
+n$library <- paste(n$donor, n$selection)
+ni <- fread(neuron.indel)[celltype != "Neurons" & BINSIZE==1000 & quantile %in% 1:100 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
+ni$library <- paste(ni$donor, ni$selection)
 
 # Also, not using NEUN for oligos, but for a different reason: NEUN sorting
 # presumably mostly removes them.
-g <- fread(oligo.snv)[celltype=='Oligodendrocytes' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
-gi <- fread(oligo.indel)[celltype=='Oligodendrocytes' & BINSIZE==1000 & quantile %in% 1:10 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
+g <- fread(oligo.snv)[celltype != "Neurons" & BINSIZE==1000 & quantile %in% 1:100 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
+g$library <- paste(g$donor, g$selection)
+gi <- fread(oligo.indel)[celltype != "Neurons" & BINSIZE==1000 & quantile %in% 1:100 & selection != "NEUN"][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
+gi$library <- paste(gi$donor, gi$selection)
 
 outtab <- rbind(n, ni, g, gi)
 fwrite(outtab, file=out.csv)
 
-plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','number'), ...) {
+plotfn <- function(n, g, column, linetype=c('separate', 'average'), labtype=c('point','number'), skip.legend=FALSE, ...) {
     labtype <- match.arg(labtype)
     linetype <- match.arg(linetype)
 
@@ -72,8 +78,6 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
 
     ylim <- range(n$enr, g$enr)*c(0.95,1.05)
     xlim <- range(c(n$quantile, g$quantile))
-    n$type <- paste(n$donor, n$selection)
-    g$type <- paste(g$donor, g$selection)
 
     if (linetype == 'average') {
         n$quantile <- as.integer(n$quantile)
@@ -85,42 +89,70 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
             type='b', lwd=2, col=2, pch=20)
         abline(h=1, lty='dashed', col='grey')
     } else {
-        ntypes <- unique(n$type)
-        gtypes <- unique(g$type)
+        ntypes <- unique(n[[column]])
+        gtypes <- unique(g[[column]])
         for (i in 1:length(ntypes)) {
             t <- ntypes[i]
             pf <- if (i == 1) plot else lines
             pch <- ifelse(labtype == 'point', 20, letters[i])
-            pf(n[type == t, .(quantile, enr)], type='b', lwd=2, col=1, pch=pch,
+            ndf <- as.data.frame(n) # because using programmatic column names/values is so hard in data.table
+            pf(ndf[ndf[[column]] == t, c('quantile', 'enr')], type='b', lwd=2, col=1, pch=pch,
                 xlim=xlim, ylim=ylim, ...)
         }
         for (i in 1:length(gtypes)) {
             t <- gtypes[i]
             pch <- ifelse(labtype == 'point', 20, letters[i])
-            lines(g[type == t, .(quantile, enr)], type='b', lwd=2, col=2, pch=pch)
+            gdf <- as.data.frame(g)
+            lines(gdf[gdf[[column]] == t, c('quantile', 'enr')], type='b', lwd=2, col=2, pch=pch)
         }
         abline(h=1, lty='dashed', col='grey')
 
-        # separate panel because it's so large
-        plot(1, pch=NA, xlab='', ylab='', xaxt='n', yaxt='n', bty='n')
-        legend('topleft', ncol=2, pch=c(letters[1:length(ntypes)], letters[1:length(gtypes)]),
-            legend=c(ntypes,gtypes),
-            col=rep(1:2, times=c(length(ntypes), length(gtypes))))
-            
+        if (!skip.legend) {
+            # separate panel because it's so large
+            plot(1, pch=NA, xlab='', ylab='', xaxt='n', yaxt='n', bty='n')
+            legend('topleft', ncol=2, pch=c(letters[1:length(ntypes)], letters[1:length(gtypes)]),
+                legend=c(ntypes,gtypes),
+                col=rep(1:2, times=c(length(ntypes), length(gtypes))))
+        }
     }
 }
 
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=5, height=3, pointsize=5, file=outs[i])
-    layout(matrix(1:6, nrow=2, byrow=T))
+    devs[[i]](width=8, height=3, pointsize=5, file=outs[i])
+    layout(matrix(1:10, nrow=2, byrow=T))
     par(mar=c(4,4,2,1))
-    plotfn(n, g, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment SNV passAB', family='Arial')
-    plotfn(n, g, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library SNV passAB', family='Arial')
     
-    plotfn(ni, gi, linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment Indel passAB', family='Arial')
-    plotfn(ni, gi, labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library Indel passAB', family='Arial')
+    # SNVs ------------
+    # For main figure plots, only using the matched cell type.
+    # For average plot, don't include the combined library
+    plotfn(n[donor != 'combined' & selection != 'combined' & celltype == 'Excitatory-Neurons'],
+           g[donor != 'combined' & selection != 'combined' & celltype == 'Oligodendrocytes'],
+        linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment SNV passAB', family='Arial')
+    # For cell type specific plot, only use the combined library
+    plotfn(n[donor == 'combined' & selection == 'combined'],
+           g[donor == 'combined' & selection == 'combined'],
+        column='celltype',
+        labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per cell type SNV passAB', family='Arial', skip.legend=FALSE)
+    # For per-library plot, only showing the matched cell type
+    plotfn(n[celltype == 'Excitatory-Neurons'],
+           g[celltype == 'Oligodendrocytes'],
+        column='library',
+        labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library SNV passAB', family='Arial', skip.legend=FALSE)
+    
+    # Indels ------------
+    plotfn(ni[donor != 'combined' & selection != 'combined' & celltype == 'Excitatory-Neurons'],
+           gi[donor != 'combined' & selection != 'combined' & celltype == 'Oligodendrocytes'],
+        linetype='average', xlab='Expression decile', ylab='Obs/exp', main='Average enrichment Indel passAB', family='Arial')
+    plotfn(ni[donor == 'combined' & selection == 'combined'],
+           gi[donor == 'combined' & selection == 'combined'],
+        column='celltype',
+        labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per cell type Indel passAB', family='Arial', skip.legend=FALSE)
+    plotfn(ni[celltype == 'Excitatory-Neurons'],
+           gi[celltype == 'Oligodendrocytes'],
+        column='library',
+        labtype='number', xlab='Expression decile', ylab='Obs/exp', main='Enrichment per library Indel passAB', family='Arial', skip.legend=FALSE)
     dev.off()
 }
 

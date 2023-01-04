@@ -4,7 +4,7 @@
 # neurons from UMBXXXX donors that did not have matched oligos and
 # were thus not re-analyzed in this study.
 def mut_burden_analysis_input(wildcards):
-    d = { 'meta' : "input/{celltype}___meta___{qualtype}.csv",
+    d = { 'meta' : "input/{celltype}___meta___any.csv",
           'objects' : scan2_objects[wildcards.celltype].values() }
 
     if wildcards.celltype == 'neuron':

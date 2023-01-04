@@ -62,6 +62,25 @@ rule fig1_distribution_plot_new:
         "scripts/barplot_enrich_new.R"
 
 
+rule fig1_distribution_plot_new_elderly_mda:
+    input:
+        oligo_snv_pta="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_snv_mda="enrichment/gencode_simplified/bed_regions/oligo_mda_2elderly___AB/bedenrich/SUMMARY.rda",
+    output:
+        svg="fig1/suppl_panel_c_mda_elderly.svg",
+        pdf="fig1/suppl_panel_c_mda_elderly.pdf",
+        csv="fig1/suppl_panel_c_mda_elderly.csv"
+    params:
+        signal_to_plot='datasource=gencode_simplified',
+        features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
+    resources:
+        mem=1000
+    log:
+        "fig1/suppl_panel_c_mda_elderly.log"
+    script:
+        "scripts/suppfig2_panel_c.R"
+
+
 # Just a copyover of the default files
 rule fig1_panel_b:
     input:

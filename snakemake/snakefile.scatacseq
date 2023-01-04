@@ -1,20 +1,20 @@
 # vim: syntax=python
 #
 
-celltypes = [ 'OPC', 'astrocyte', 'endothelial', 'excitatory_neuron',
+atac_celltypes = [ 'OPC', 'astrocyte', 'endothelial', 'excitatory_neuron',
               'inhibitory_neuron', 'microglia', 'oligo' ]
 libraries = [ 'merged' ] + [ str(x) for x in range(1, 12) ]
 
 
 wildcard_constraints:
     libid='|'.join(libraries),
-    celltype='|'.join(celltypes)
+    atac_celltype='|'.join(atac_celltypes)
 
 
 #rule all:
     #input:
-        #expand('bigwig/transpositions.library{libid}_{celltype}.bigwig',
-            #libid=libraries, celltype=celltypes)
+        #expand('bigwig/transpositions.library{libid}_{atac_celltype}.bigwig',
+            #libid=libraries, atac_celltype=atac_celltypes)
 
 
 rule scatacseq_extract_mapfile:
@@ -35,8 +35,8 @@ rule scatacseq_frags_to_beds:
         frags="input/any___scatacseq_frags___none.tsv",
         mapfile="data/scatacseq/auxiliary/sample_to_cell_map.txt"
     output:
-        expand("data/scatacseq/bed/transpositions.library{libid}_{celltype}.bed",
-            libid=libraries, celltype=celltypes)
+        expand("data/scatacseq/bed/transpositions.library{libid}_{atac_celltype}.bed",
+            libid=libraries, atac_celltype=atac_celltypes)
     log:
         "data/scatacseq/bed/frags_to_beds.log"
     resources:
@@ -50,13 +50,13 @@ rule scatacseq_frags_to_beds:
 
 rule scatacseq_bedgraph_to_bigwig:
     input:
-        bed="data/scatacseq/bed/transpositions.library{libid}_{celltype}.bed",
+        bed="data/scatacseq/bed/transpositions.library{libid}_{atac_celltype}.bed",
         genome="input/any___hg19_genome_withXYM___none.genome"
     output:
-        tmp=temp("data/scatacseq/bigwig/transpositions.library{libid}_{celltype}.tmp"),
-        bw="data/scatacseq/bigwig/transpositions.library{libid}_{celltype}.bigwig"
+        tmp=temp("data/scatacseq/bigwig/transpositions.library{libid}_{atac_celltype}.tmp"),
+        bw="data/scatacseq/bigwig/transpositions.library{libid}_{atac_celltype}.bigwig"
     log:
-        "data/scatacseq/bigwig/transpositions.library{libid}_{celltype}.log"
+        "data/scatacseq/bigwig/transpositions.library{libid}_{atac_celltype}.log"
     resources:
         mem=4000
     shell:

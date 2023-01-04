@@ -47,11 +47,11 @@ suppressMessages(library(svglite))
 if (!("Arial" %in% fonts()))
     stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
-n <- fread(neuron.snv)[eid=='E073' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
-ni <- fread(neuron.indel)[eid=='E073' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
+n <- fread(neuron.snv)[eid=='E073' & BINSIZE==1000 & quantile %in% 1:100][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
+ni <- fread(neuron.indel)[eid=='E073' & BINSIZE==1000 & quantile %in% 1:100][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
 
-g <- fread(oligo.snv)[eid=='E073' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
-gi <- fread(oligo.indel)[eid=='E073' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
+g <- fread(oligo.snv)[eid=='E073' & BINSIZE==1000 & quantile %in% 1:100][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
+gi <- fread(oligo.indel)[eid=='E073' & BINSIZE==1000 & quantile %in% 1:100][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
 
 outtab <- rbind(n, ni, g, gi)
 fwrite(outtab, file=out.csv)
@@ -60,9 +60,9 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
     labtype <- match.arg(labtype)
     linetype <- match.arg(linetype)
 
-    n <- n[quantile %in% 1:10]
+    n <- n[quantile %in% 1:100]
     n$quantile <- as.integer(n$quantile)
-    g <- g[quantile %in% 1:10]
+    g <- g[quantile %in% 1:100]
     g$quantile <- as.integer(g$quantile)
 
     ylim <- range(n$enr, g$enr)*c(0.95,1.05)
@@ -102,17 +102,37 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
 
 }
 
+# Reverse the order of inactive marks so that the highest quantile
+# is always interpreted as "most active".
+n$quantile <- as.integer(n$quantile)
+ni$quantile <- as.integer(ni$quantile)
+g$quantile <- as.integer(g$quantile)
+gi$quantile <- as.integer(gi$quantile)
+# Scratch that idea, back to older way
+#n[mark %in% c('H3K27me3', 'H3K9me3'), quantile := 10 - quantile + 1]
+#ni[mark %in% c('H3K27me3', 'H3K9me3'), quantile := 10 - quantile + 1]
+#g[mark %in% c('H3K27me3', 'H3K9me3'), quantile := 10 - quantile + 1]
+#gi[mark %in% c('H3K27me3', 'H3K9me3'), quantile := 10 - quantile + 1]
+
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=5, height=3, pointsize=5, file=outs[i])
+    devs[[i]](width=6.4, height=3, pointsize=5, file=outs[i])
     layout(matrix(1:8, nrow=2, byrow=T))
     par(mar=c(4,4,2,1))
-    plotfn(n[mark %in% c('H3K27me3', 'H3K9me3')], g[mark %in% c('H3K27me3', 'H3K9me3')], labtype='number', xlab='Pentile', ylab='Obs/exp', main='Inactive marks SNV passAB', family='Arial')
-    plotfn(n[!(mark %in% c('H3K27me3', 'H3K9me3'))], g[!(mark %in% c('H3K27me3', 'H3K9me3'))], labtype='number', xlab='Pentile', ylab='Obs/exp', main='Active marks SNV passAB', family='Arial')
+    plotfn(n[mark %in% c('H3K27me3', 'H3K9me3')], g[mark %in% c('H3K27me3', 'H3K9me3')],
+        labtype='number', xlab='Decile', ylab='Obs/exp', main='Inactive marks SNV passAB', family='Arial')
+        #labtype='number', xlab='Pentile', ylab='Obs/exp', main='Inactive marks SNV passAB', family='Arial')
+    plotfn(n[!(mark %in% c('H3K27me3', 'H3K9me3'))], g[!(mark %in% c('H3K27me3', 'H3K9me3'))],
+        labtype='number', xlab='Decile', ylab='Obs/exp', main='Active marks SNV passAB', family='Arial')
+        #labtype='number', xlab='Pentile', ylab='Obs/exp', main='Active marks SNV passAB', family='Arial')
 
-    plotfn(ni[mark %in% c('H3K27me3', 'H3K9me3')], gi[mark %in% c('H3K27me3', 'H3K9me3')], labtype='number', xlab='Pentile', ylab='Obs/exp', main='Inactive marks Indel passAB', family='Arial')
-    plotfn(ni[!(mark %in% c('H3K27me3', 'H3K9me3'))], gi[!(mark %in% c('H3K27me3', 'H3K9me3'))], labtype='number', xlab='Pentile', ylab='Obs/exp', main='Active marks Indel passAB', family='Arial')
+    plotfn(ni[mark %in% c('H3K27me3', 'H3K9me3')], gi[mark %in% c('H3K27me3', 'H3K9me3')],
+        labtype='number', xlab='Decile', ylab='Obs/exp', main='Inactive marks Indel passAB', family='Arial')
+        #labtype='number', xlab='Pentile', ylab='Obs/exp', main='Inactive marks Indel passAB', family='Arial')
+    plotfn(ni[!(mark %in% c('H3K27me3', 'H3K9me3'))], gi[!(mark %in% c('H3K27me3', 'H3K9me3'))],
+        labtype='number', xlab='Decile', ylab='Obs/exp', main='Active marks Indel passAB', family='Arial')
+        #labtype='number', xlab='Pentile', ylab='Obs/exp', main='Active marks Indel passAB', family='Arial')
 
     dev.off()
 }

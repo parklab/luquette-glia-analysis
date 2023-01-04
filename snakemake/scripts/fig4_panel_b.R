@@ -144,8 +144,9 @@ save_pheatmap <- function(x, dev, filename, width=7, height=7, ...) {
 devs=list(pdf, svglite)
 outs=c(heatmap.pdf, heatmap.svg)
 for (i in 1:2) {
-    x <- pheatmap(t(m[order(m[,'OPC'],decreasing=T),]), cluster_row=F, cluster_cols=F, silent=TRUE, fontsize=5)
-    save_pheatmap(x, dev=devs[[i]], filename=outs[i], width=4.5, height=1.5, pointsize=5)
+    x <- pheatmap((m[order(m[,'OPC'],decreasing=T),]),
+        main='scATACseq', cluster_row=F, cluster_cols=F, silent=TRUE, fontsize=5)
+    save_pheatmap(x, dev=devs[[i]], filename=outs[i], width=2, height=4, pointsize=5)
 }
 
 fwrite(m[order(m[,'OPC'], decreasing=TRUE),], file=out.csv)

@@ -9,27 +9,39 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@params[1], snakemake@input[1:3], snakemake@output[1:2]
+        snakemake@params['muttype'],
+        snakemake@params['amptype'],
+        snakemake@input['muts'],
+        snakemake@input['mutburden'],
+        snakemake@input['cosmic'],
+        snakemake@input['sigb'],
+        snakemake@output['mutmat'],
+        snakemake@output['expomat']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) != 6) {
+if (length(args) != 8) {
     cat('muttype must be either SNV or Indel\n')
-    stop("usage: analyze_cosmic_aging.R muttype mutations.csv mutburden.csv cosmic.csv out.mutmat.csv out.expo.csv")
+    cat('when amptype=MDA (case sensitive), Lodato et al. signature B is added to COSMIC, but its exposure is REMOVED from the output\n')
+    stop("usage: analyze_cosmic_aging.R muttype amptype mutations.csv mutburden.csv cosmic.csv out.mutmat.csv out.expo.csv")
 }
 
 muttype <- args[1]
-inmuts <- args[2]
-inmutburden <- args[3]
-incosmic <- args[4]
-out.mutmat.csv <- args[5]
-out.expo.csv <- args[6]
+amptype <- args[2]
+inmuts <- args[3]
+inmutburden <- args[4]
+incosmic <- args[5]
+insigb <- args[6]
+out.mutmat.csv <- args[7]
+out.expo.csv <- args[8]
 
 if (muttype != 'SNV' & muttype != 'Indel')
     stop(paste('muttype must be either SNV or Indel, got', muttype))
+if (amptype != 'PTA' & amptype != 'MDA')
+    stop(paste('amptype must be either PTA or MDA (case sensitive), got', amptype))
 if (file.exists(out.mutmat.csv))
     stop(paste('output file', out.mutmat.csv, 'already exists, please delete it first'))
 if (file.exists(out.expo.csv))
@@ -56,7 +68,12 @@ exposure <- function(x, cosmic=cosmic) {
 muts <- fread(inmuts)
 mutburden <- fread(inmutburden)  # allows extrapolation to genome-wide numbers
 cosmic <- fread(incosmic)
+sigb <- fread(insigb)$B
 
+if (amptype == 'MDA') {
+    cat("amptype=MDA, adding Lodato et al. Signature B to COSMIC catalog\n")
+    cosmic$SigB <- sigb
+}
 
 # nsom=0 will unfortunately get extrapolated to 0
 # genome.burden=NA for outlier=TRUE samples. need to propagate NA
@@ -94,6 +111,11 @@ E <- apply(M, 2, exposure, cosmic=as.matrix(cosmic[,-1]))
 # data.tables don't use rownames
 E <- data.table(Sig=rownames(E), E)
 head(E)
+
+if (amptype == 'MDA') {
+    cat("Removing Signature B contribution from exposure matrix\n")
+    E <- E[Sig != 'SigB',]
+}
 
 fwrite(M, file=out.mutmat.csv)
 fwrite(E, file=out.expo.csv)

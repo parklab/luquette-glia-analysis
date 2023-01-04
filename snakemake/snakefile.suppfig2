@@ -5,13 +5,47 @@ rule fig1_indel_size_analysis:
         "input/neuron___mut___indel_A.rda",
         "input/oligo___mut___indel_A.rda"
     output:
-        "suppfig2/panel_a.svg",
-        "suppfig2/panel_a.pdf",
-        "suppfig2/panel_a.csv"
+        "suppfig2/panel_b_indelsize.svg",
+        "suppfig2/panel_b_indelsize.pdf",
+        "suppfig2/panel_b_indelsize.csv"
     resources:
         mem=4000
     log:
-        "suppfig2/panel_a.log"
+        "suppfig2/panel_b_indelsize.log"
     script:
         "scripts/plot_indel_sizes.R"
 
+
+rule genic_distribution_elderly_mda:
+    input:
+        oligo_snv_pta="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_snv_mda="enrichment/gencode_simplified/bed_regions/oligo_mda_2elderly___AB/bedenrich/SUMMARY.rda",
+    output:
+        svg="suppfig2/panel_c_mda_elderly.svg",
+        pdf="suppfig2/panel_c_mda_elderly.pdf",
+        csv="suppfig2/panel_c_mda_elderly.csv"
+    params:
+        signal_to_plot='datasource=gencode_simplified',
+        features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
+    resources:
+        mem=1000
+    log:
+        "suppfig2/suppl_panel_c_mda_elderly.log"
+    script:
+        "scripts/suppfig2_panel_c.R"
+
+
+rule individual_gene_enrichment:
+    input:
+        neuron="enrichment/gtex_genes/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        oligo="enrichment/gtex_genes/bed_regions/oligo___AB/bedenrich/SUMMARY.rda"
+    output:
+        csv="suppfig2/panel_d_genes.csv",
+        pdf="suppfig2/panel_d_genes.pdf",
+        svg="suppfig2/panel_d_genes.svg"
+    resources:
+        mem=8000
+    log:
+        "suppfig2/panel_d_genes.log"
+    script:
+        "scripts/suppfig2_panel_d_genes.R"

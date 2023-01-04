@@ -46,9 +46,6 @@ def read_manifest(filename):
     return(manifest, files, metadata, list(classes), metatags)
 
 
-mut_manifest, mut_files, mut_metadata, mut_classes, mut_metatags = \
-    read_manifest(config['MUT_MANIFEST'])
-
 signal_manifest, signal_files, signal_metadata, signal_classes, signal_metatags = \
     read_manifest(config['SIGNAL_MANIFEST'])
 
@@ -142,16 +139,21 @@ rule enrichment_table:
     script:
         "scripts/make_enrichment_table.R"
 
+# mutclass is {celltype}___{qualtype}; e.g., neuron___AB
+# map this to an associated file: input/{celltype}___FILETYPE___{qualtype}.rda
+# FILETYPE (so far) is either: mut or perm
+def mutclass_to_file(mutclass, filetype):
+    celltype, qualtype = mutclass.split('___')
+    return("input/" + celltype + "___" + filetype + "___" + qualtype + ".rda")
 
 rule sigenrichment_qbed_analysis:
     input:
-        #cosmic='analysis/tables/cosmic_reduced___A.csv',
         # enable indel sigenrich for Nat. 2022 paper on ID4
         # COSMIC reduction is always performed on the non-rescue calls (="A" or "indel_A"),
         # because rescue can introduce signature biases.
         cosmic=lambda wildcards: 'mutsigs/cosmic_reduced___' + ('indel_A' if wildcards.mutclass.split('___')[1].split('_')[0] == 'indel' else 'A') + '.csv',
-        mut=lambda wildcards: mut_manifest.loc[mut_manifest['__class__'] == wildcards.mutclass, 'file'],
-        perm=lambda wildcards: config['mut_to_perm'][wildcards.mutclass],
+        mut=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'mut'),
+        perm=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'perm'),
         qbeds=expand(outroot + "/qbed/{signalclass}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
             signalclass=signal_classes)
     output:
@@ -174,8 +176,8 @@ rule sigenrichment_qbed_analysis:
 
 rule enrichment_qbed_analysis:
     input:
-        mut=lambda wildcards: mut_manifest.loc[mut_manifest['__class__'] == wildcards.mutclass, 'file'],
-        perm=lambda wildcards: config['mut_to_perm'][wildcards.mutclass],
+        mut=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'mut'),
+        perm=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'perm'),
         qbeds=expand(outroot + "/qbed/{signalclass}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
             signalclass=signal_classes)
     output:
@@ -185,7 +187,7 @@ rule enrichment_qbed_analysis:
         nbootstraps=10000
     resources:
         # XXX: update me: so far, these RAM values work with my data.
-        mem=lambda wildcards: 32000 if wildcards.binsize == '1000' else 10000
+        mem=lambda wildcards: 48000 if wildcards.binsize == '1000' else 15000
     log:
         summary=outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log"
     benchmark:
@@ -225,8 +227,6 @@ def make_qbed_from_bigwig_params(min_coverage, extratags=[]):
 # XXX: actually, I don't think this is necessary anymore
 rule make_qbed_from_bigwig:
     input:
-        #dummy1=config['MUT_MANIFEST'],
-        #dummy2=config['SIGNAL_MANIFEST'],
         tiles=lambda wildcards: config['tiles'].values(),
         bigwig=lambda wildcards: list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, 'file'])[0]
     output:

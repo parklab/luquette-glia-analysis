@@ -16,6 +16,8 @@ if ('snakemake' %in% ls()) {
         snakemake@output['svg'],
         snakemake@output['suppl_svg'],
         snakemake@output['spectra_csv'],
+        snakemake@output['expo_pdf'],
+        snakemake@output['expo_svg'],
         snakemake@output['expo_csv'],
         snakemake@input['muts']   # list
     ))
@@ -24,9 +26,9 @@ if ('snakemake' %in% ls()) {
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 9) {
+if (length(args) < 11) {
     cat('muts.csv must be a combined 2-sample mutation table as produced by fit_mrca.R\n')
-    stop('usage: fig2_panel_d.R cosmic.csv sigb.csv out.pdf out.supplement.pdf out.svg out.supplement.svg out.spectra.csv out.exposures.csv muts1.csv [ muts2.csv ... mutsN.csv ]')
+    stop('usage: fig2_panel_d.R cosmic.csv sigb.csv out.pdf out.supplement.pdf out.svg out.supplement.svg out.spectra.csv out.exposures_barplot.pdf out.exposures_barplot.svg out.exposures_barplot.csv muts1.csv [ muts2.csv ... mutsN.csv ]')
 }
 
 
@@ -37,10 +39,12 @@ out.suppl.pdf <- args[4]
 out.svg <- args[5]
 out.suppl.svg <- args[6]
 out.spectra.csv <- args[7]
-out.expo.csv <- args[8]
-mut.csvs <- args[-(1:8)]
+out.expo.pdf <- args[8]
+out.expo.svg <- args[9]
+out.expo.csv <- args[10]
+mut.csvs <- args[-(1:10)]
 
-for (f in c(out.pdf, out.suppl.pdf, out.svg, out.suppl.svg, out.spectra.csv, out.expo.csv)) {
+for (f in c(out.pdf, out.suppl.pdf, out.svg, out.suppl.svg, out.spectra.csv, out.expo.pdf, out.expo.svg, out.expo.csv)) {
     if (file.exists(f))
         stop(paste('output file', f, 'already exists, please delete it first'))
 }
@@ -66,6 +70,7 @@ sh.sbs1.pct <- sh['SBS1'] / sum(sh[names(sh) != 'SigB'])
 # SigB has extremely low contribution to the shared spectrum, but do this for consistency
 tmp.sh <- sh
 tmp.sh['SigB'] <- 0 # exclude signature B contribution from plotted spectrum
+sh.expo.pct <- tmp.sh/sum(tmp.sh)*100
 reconstructed.shared.spectrum <- setNames(as.vector(as.matrix(cosmic[,-1]) %*% tmp.sh),
     as.vector(cosmic$MutType))
 
@@ -75,14 +80,15 @@ pr <- setNames(lsqnonneg(as.matrix(cosmic[,-1]), raw.private.spectrum)$x,
 pr.sbs1.pct <- pr['SBS1'] / sum(pr[names(pr) != 'SigB'])
 tmp.pr <- pr
 tmp.pr['SigB'] <- 0 # exclude signature B contribution from plotted spectrum
+pr.expo.pct <- tmp.pr/sum(tmp.pr)*100
 reconstructed.private.spectrum <- setNames(as.vector(as.matrix(cosmic[,-1]) %*% tmp.pr),
     as.vector(cosmic$MutType))
 
 write.csv(
     cbind(`Shared sSNV exposure`=sh,
-        `Shared sSNV exposure (%, sig B removed)`=tmp.sh/sum(tmp.sh)*100,
+        `Shared sSNV exposure (%, sig B removed)`=sh.expo.pct,
         `Private sSNV exposure`=pr,
-        `Private sSNV exposure (%, sig B removed)`=tmp.pr/sum(tmp.pr)*100),
+        `Private sSNV exposure (%, sig B removed)`=pr.expo.pct),
     file=out.expo.csv, row.names=TRUE, quote=FALSE)
 
 write.csv(cbind(raw.shared.spectrum, reconstructed.shared.spectrum,
@@ -108,6 +114,19 @@ for (i in 1:2) {
     par(mar=c(1,4,2,1))
     plot.sbs96(x=0, spectrum=raw.shared.spectrum, main='Shared sSNVs (raw)')
     plot.sbs96(x=0, spectrum=raw.private.spectrum, main='Private sSNVs (raw)')
+    dev.off()
+}
+
+devs=list(pdf, svglite)
+outs=c(out.expo.pdf, out.expo.svg)
+for (i in 1:2) {
+    devs[[i]](width=3, height=1.5, pointsize=5, file=outs[i])
+    layout(t(1:2))
+    par(mar=c(4,4,2,1))
+    barplot(sh.expo.pct[names(sh.expo.pct) != 'SigB'],
+        main='Shared sSNVs', las=3, border=NA, col='#666666', ylab='Percent')
+    barplot(pr.expo.pct[names(sh.expo.pct) != 'SigB'],
+        main='Private sSNVs', las=3, border=NA, col='#666666', ylab='Percent')
     dev.off()
 }
 

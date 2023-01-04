@@ -46,16 +46,16 @@ suppressMessages(library(svglite))
 if (!("Arial" %in% fonts()))
     stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
-n <- fread(neuron.snv)[celltype=='excitatory_neuron' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
-ni <- fread(neuron.indel)[celltype=='excitatory_neuron' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
+n <- fread(neuron.snv)[BINSIZE==1000 & quantile %in% 1:100][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
+ni <- fread(neuron.indel)[BINSIZE==1000 & quantile %in% 1:100][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
 
-g <- fread(oligo.snv)[celltype=='oligo' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
-gi <- fread(oligo.indel)[celltype=='oligo' & BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
+g <- fread(oligo.snv)[BINSIZE==1000 & quantile %in% 1:100][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
+gi <- fread(oligo.indel)[BINSIZE==1000 & quantile %in% 1:100][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
 
 outtab <- rbind(n, ni, g, gi)
 fwrite(outtab, file=out.csv)
 
-plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','number'), ...) {
+plotfn <- function(n, g, column, linetype=c('separate', 'average'), labtype=c('point','number'), ...) {
     labtype <- match.arg(labtype)
     linetype <- match.arg(linetype)
 
@@ -66,14 +66,10 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
 
     ylim <- range(n$enr, g$enr)*c(0.95,1.05)
     xlim <- range(c(n$quantile, g$quantile))
-    n$type <- paste(n$sample)
-    g$type <- paste(g$sample)
 
     if (linetype == 'average') {
         n$quantile <- as.integer(n$quantile)
         g$quantile <- as.integer(g$quantile)
-        n <- n[sample=='merged']
-        g <- g[sample=='merged']
 
         plot(n[,.(mean(quantile), mean(enr)), by=quantile][,.(V1,V2)],
             type='b', lwd=2, col=1, pch=20, xlim=xlim, ylim=ylim, ...)
@@ -81,20 +77,20 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
             type='b', lwd=2, col=2, pch=20)
         abline(h=1, lty='dashed', col='grey')
     } else {
-        n <- n[sample!='merged']
-        g <- g[sample!='merged']
-        types <- sort(unique(c(n$type,g$type)))
+        types <- sort(unique(c(n[[column]],g[[column]])))
         for (i in 1:length(types)) {
             t <- types[i]
             pf <- if (i == 1) plot else lines
             pch <- ifelse(labtype == 'point', 20, letters[i])
-            pf(n[type == t, .(quantile, enr)], type='b', lwd=2, col=1, pch=pch,
+            ndf <- as.data.frame(n)
+            pf(ndf[ndf[[column]] == t, c('quantile', 'enr')], type='b', lwd=2, col=1, pch=pch,
                 xlim=xlim, ylim=ylim, ...)
         }
         for (i in 1:length(types)) {
             t <- types[i]
             pch <- ifelse(labtype == 'point', 20, letters[i])
-            lines(g[type == t, .(quantile, enr)], type='b', lwd=2, col=2, pch=pch)
+            gdf <- as.data.frame(g)
+            lines(gdf[gdf[[column]] == t, c('quantile', 'enr')], type='b', lwd=2, col=2, pch=pch)
         }
         abline(h=1, lty='dashed', col='grey')
 
@@ -108,14 +104,38 @@ plotfn <- function(n, g, linetype=c('separate', 'average'), labtype=c('point','n
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=5, height=3, pointsize=5, file=outs[i])
-    layout(matrix(1:6, nrow=2, byrow=T))
+    devs[[i]](width=8, height=3, pointsize=5, file=outs[i])
+    layout(matrix(1:10, nrow=2, byrow=T))
     par(mar=c(4,4,2,1))
-    plotfn(n, g, linetype='average', xlab='scATACseq decile', ylab='Obs/exp', main='Merged libraries SNV passAB', family='Arial')
-    plotfn(n, g, labtype='number', xlab='scATACseq decile', ylab='Obs/exp', main='Separate libraries SNV passAB', family='Arial')
+    plotfn(
+        n[celltype=='excitatory_neuron' & sample == 'merged'],
+        g[celltype=='oligo' & sample == 'merged'],
+        linetype='average', xlab='scATACseq decile', ylab='Obs/exp', main='Merged libraries SNV passAB', family='Arial')
+    plotfn(
+        n[sample == 'merged'],
+        g[sample == 'merged'],
+        column='celltype',
+        labtype='number', xlab='scATACseq decile', ylab='Obs/exp', main='Separate cell types SNV passAB', family='Arial')
+    plotfn(
+        n[celltype=='excitatory_neuron' & sample != 'merged'],
+        g[celltype=='oligo' & sample != 'merged'],
+        column='libid',
+        labtype='number', xlab='scATACseq decile', ylab='Obs/exp', main='Separate libraries SNV passAB', family='Arial')
 
-    plotfn(ni, gi, linetype='average', xlab='scATACseq decile', ylab='Obs/exp', main='Merged libraries Indel passAB', family='Arial')
-    plotfn(ni, gi, labtype='number', xlab='scATACseq decile', ylab='Obs/exp', main='Separate libraries Indel passAB', family='Arial')
+    plotfn(
+        ni[celltype=='excitatory_neuron' & sample == 'merged'],
+        gi[celltype=='oligo' & sample == 'merged'],
+        linetype='average', xlab='scATACseq decile', ylab='Obs/exp', main='Merged libraries Indel passAB', family='Arial')
+    plotfn(
+        ni[sample == 'merged'],
+        gi[sample == 'merged'],
+        column='celltype',
+        labtype='number', xlab='scATACseq decile', ylab='Obs/exp', main='Separate cell types Indel passAB', family='Arial')
+    plotfn(
+        n[celltype=='excitatory_neuron' & sample != 'merged'],
+        g[celltype=='oligo' & sample != 'merged'],
+        column='libid',
+        labtype='number', xlab='scATACseq decile', ylab='Obs/exp', main='Separate libraries SNV passAB', family='Arial')
 
     dev.off()
 }

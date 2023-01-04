@@ -205,6 +205,7 @@ for (i in 1:2) {
             }
         }
     }
+    dev.off()
 }
 
 fwrite(d, file=out.csv)

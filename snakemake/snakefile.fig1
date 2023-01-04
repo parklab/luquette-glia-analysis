@@ -1,102 +1,42 @@
 # vim: syntax=python
 
-rule fig1_suppl_chromhmm:
-    input:
-        neuron_snv="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
-        neuron_indel="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
-        oligo_snv="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
-        oligo_indel="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
-    output:
-        svg="fig1/suppl_chromhmm.svg",
-        pdf="fig1/suppl_chromhmm.pdf",
-        csv="fig1/suppl_chromhmm.csv"
-    params:
-        signal_to_plot='eid=E073',
-        # 3_TssFlnk, 10_,11_,12_ (bivalent states) are all tiny genomic regions, creating
-        # huge error bars that make the rest of the plot difficult to read.
-        features="1_TssA,2_TssAFlnk,4_Tx,5_TxWk,6_EnhG,7_Enh,8_ZNF/Rpts,9_Het,13_ReprPC,14_ReprPCWk,15_Quies"
-    resources:
-        mem=1000
-    log:
-        "fig1/suppl_chromhmm.log"
-    script:
-        "scripts/barplot_enrich_new.R"
-
-
-rule fig1_distribution_plot:
-    input:
-        nmut="enrichment/gencode_simplified/bed_regions/neuron___AB/bedenrich/FULL.rda",
-        ni="enrichment/gencode_simplified/bed_regions/neuron___indel_AB/bedenrich/FULL.rda",
-        gmut="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/FULL.rda",
-        gi="enrichment/gencode_simplified/bed_regions/oligo___indel_AB/bedenrich/FULL.rda"
-    output:
-        svg="fig1/panel_c_old.svg",
-        pdf="fig1/panel_c_old.pdf",
-        tsv="fig1/panel_c_old.csv"
-    resources:
-        mem=4000
-    log:
-        "fig1/panel_c_old.log"
-    script:
-        "scripts/barplot_enrich_2x2.R"
-
-
-rule fig1_distribution_plot_new:
+rule genic_distribution:
     input:
         neuron_snv="enrichment/gencode_simplified/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
         neuron_indel="enrichment/gencode_simplified/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
         oligo_snv="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
         oligo_indel="enrichment/gencode_simplified/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
     output:
-        svg="fig1/panel_c.svg",
-        pdf="fig1/panel_c.pdf",
-        csv="fig1/panel_c.csv"
+        svg="fig1/panel_c_genic_enrichment.svg",
+        pdf="fig1/panel_c_genic_enrichment.pdf",
+        csv="fig1/panel_c_genic_enrichment.csv"
     params:
         signal_to_plot='datasource=gencode_simplified',
         features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
     resources:
         mem=1000
     log:
-        "fig1/panel_c.log"
+        "fig1/panel_c_genic_enrichment.log"
     script:
         "scripts/barplot_enrich_new.R"
 
 
-rule fig1_distribution_plot_new_elderly_mda:
-    input:
-        oligo_snv_pta="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
-        oligo_snv_mda="enrichment/gencode_simplified/bed_regions/oligo_mda_2elderly___AB/bedenrich/SUMMARY.rda",
-    output:
-        svg="fig1/suppl_panel_c_mda_elderly.svg",
-        pdf="fig1/suppl_panel_c_mda_elderly.pdf",
-        csv="fig1/suppl_panel_c_mda_elderly.csv"
-    params:
-        signal_to_plot='datasource=gencode_simplified',
-        features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
-    resources:
-        mem=1000
-    log:
-        "fig1/suppl_panel_c_mda_elderly.log"
-    script:
-        "scripts/suppfig2_panel_c.R"
-
-
 # Just a copyover of the default files
-rule fig1_panel_b:
+rule aging_rates:
     input:
         svg="aging_rates/all___mutburden_models___{qualtype}.svg",
         pdf="aging_rates/all___mutburden_models___{qualtype}.pdf",
         models="aging_rates/all___mutburden_models___{qualtype}.csv",
         mutburdens="aging_rates/all___mutburden___{qualtype}.csv"
     output:
-        svg='fig1/panel_b_{qualtype}.svg',
-        pdf='fig1/panel_b_{qualtype}.pdf',
-        mutburdens='fig1/panel_b_{qualtype}_burdens.csv',
-        models='fig1/panel_b_{qualtype}_model.csv'
+        svg='fig1/panel_b_aging_rates_{qualtype}.svg',
+        pdf='fig1/panel_b_aging_rates_{qualtype}.pdf',
+        mutburdens='fig1/panel_b_aging_rates_{qualtype}_burdens.csv',
+        models='fig1/panel_b_aging_rates_{qualtype}_model.csv'
     resources:
         mem=1000
     log:
-        'fig1/panel_b_{qualtype}.log'
+        'fig1/panel_b_aging_rates_{qualtype}.log'
     shell:
         """
         cp -n {input.svg} {output.svg}
@@ -106,8 +46,7 @@ rule fig1_panel_b:
         """
 
 
-
-rule fig1_run_snpeff:
+rule run_snpeff_helper:
     input:
         vcf="vcfs/{celltype}___mut___{qualtype}.vcf"
     output:
@@ -123,35 +62,19 @@ rule fig1_run_snpeff:
         """
 
 
-rule fig1_snpeff_analysis:
+rule snpeff_analysis:
     input:
         "snpeff/neuron___snpeff___AB.vcf",
         "snpeff/neuron___snpeff___indel_AB.vcf",
         "snpeff/oligo___snpeff___AB.vcf",
         "snpeff/oligo___snpeff___indel_AB.vcf"
     output:
-        svg="fig1/panel_d.svg",
-        pdf="fig1/panel_d.pdf",
-        csv="fig1/panel_d.csv"
+        svg="fig1/panel_d_snpeff.svg",
+        pdf="fig1/panel_d_snpeff.pdf",
+        csv="fig1/panel_d_snpeff.csv"
     resources:
         mem=4000
     log:
-        "fig1/panel_d.log"
+        "fig1/panel_d_snpeff.log"
     script:
         "scripts/plot_snpeff.R"
-
-
-rule fig1_suppl_genes:
-    input:
-        neuron="enrichment/gtex_genes/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
-        oligo="enrichment/gtex_genes/bed_regions/oligo___AB/bedenrich/SUMMARY.rda"
-    output:
-        csv="fig1/genes_suppl.csv",
-        pdf="fig1/genes_suppl.pdf",
-        svg="fig1/genes_suppl.svg"
-    resources:
-        mem=8000
-    log:
-        "fig1/genes_suppl.log"
-    script:
-        "scripts/fig1_genes_suppl.R"

@@ -1,149 +1,350 @@
 # vim: syntax=python
 
-import pandas as pd
-
-# Contains bigwig paths and metadata
-cancer_meta = pd.read_csv('manifests/CANCER_SNVDENS.MANIFEST')
-
-scatacseq_meta = pd.read_csv('manifests/SCATACSEQ.MANIFEST')
-
-scrnaseq_meta = pd.read_csv('manifests/SCRNASEQ_EXPRESSION.MANIFEST')
-
-rule fig4a:
+rule fig3_umap_plot:
     input:
-        neuron_muts="input/neuron___mut___A.rda",
-        oligo_muts="input/oligo___mut___A.rda",
-        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
-        # quantile is ignored. raw scores used.
-        cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
-            tumor=sorted(set(cancer_meta['tumor'])))
+        lambda wildcards: "input/any___scatacseq_umap___none.csv" if wildcards.panel_letter == 'b' else "input/any___scrnaseq_umap___none.csv"
     output:
-        pdf='fig4/panel_a.pdf',
-        svg='fig4/panel_a.svg',
-        csv='fig4/panel_a.csv'
+        expand("fig3/panel_{{panel_letter}}_umap_plot.{ext}",
+            ext=[ 'svg', 'pdf', 'jpeg' ])
+    resources:
+        mem=24000
     log:
-        'fig4/panel_a.log'
+        "fig3/panel_{panel_letter}_umap_plot.log"
+    script:
+        "scripts/plot_umap.R"
+
+
+rule fig3a:
+    input:
+        neuron_snv="enrichment/scrnaseq_expression_mc08/quantile/neuron___AB.10quantiles.csv",
+        neuron_indel="enrichment/scrnaseq_expression_mc08/quantile/neuron___indel_AB.10quantiles.csv",
+        oligo_snv="enrichment/scrnaseq_expression_mc08/quantile/oligo___AB.10quantiles.csv",
+        oligo_indel="enrichment/scrnaseq_expression_mc08/quantile/oligo___indel_AB.10quantiles.csv"
+    output:
+        pdf="fig3/panel_a.pdf",
+        svg="fig3/panel_a.svg",
+        csv="fig3/panel_a.csv"
+    log:
+        "fig3/panel_a.log"
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_a.R"
+        "scripts/fig3_panel_a.R"
 
-# same as panel a, but adding in elderly MDA glia
-rule fig4a_supp:
+
+rule fig3b:
     input:
-        neuron_muts="input/neuron___mut___A.rda",
-        oligo_muts="input/oligo_mdapta___mut___A.rda",
-        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
-        # quantile is ignored. raw scores used.
-        cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
-            tumor=sorted(set(cancer_meta['tumor'])))
+        neuron_snv="enrichment/scatacseq/quantile/neuron___AB.10quantiles.csv",
+        neuron_indel="enrichment/scatacseq/quantile/neuron___indel_AB.10quantiles.csv",
+        oligo_snv="enrichment/scatacseq/quantile/oligo___AB.10quantiles.csv",
+        oligo_indel="enrichment/scatacseq/quantile/oligo___indel_AB.10quantiles.csv"
     output:
-        pdf='fig4/panel_a_mdapta_supp.pdf',
-        svg='fig4/panel_a_mdapta_supp.svg',
-        csv='fig4/panel_a_mdapta_supp.csv'
+        pdf="fig3/panel_b.pdf",
+        svg="fig3/panel_b.svg",
+        csv="fig3/panel_b.csv"
     log:
-        'fig4/panel_a_mdapta_supp.log'
+        "fig3/panel_b.log"
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_a.R"
+        "scripts/fig3_panel_b.R"
 
 
-rule fig4b:
+rule fig3c:
     input:
-        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
-        # quantile is ignored. raw scores used.
-        cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
-            tumor=sorted(set(cancer_meta['tumor']))),
-        atac_qbeds=expand('enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{celltype}.1000000binsize_10quantiles.qbed',
-
-            celltype=sorted(set(scatacseq_meta['celltype'])))
+        neuron_snv="enrichment/encode_replichip/quantile/neuron___AB.10quantiles.csv",
+        neuron_indel="enrichment/encode_replichip/quantile/neuron___indel_AB.10quantiles.csv",
+        oligo_snv="enrichment/encode_replichip/quantile/oligo___AB.10quantiles.csv",
+        oligo_indel="enrichment/encode_replichip/quantile/oligo___indel_AB.10quantiles.csv"
     output:
-        barplot_pdf='fig4/panel_b_barplot.pdf',
-        barplot_svg='fig4/panel_b_barplot.svg',
-        heatmap_pdf='fig4/panel_b_heatmap.pdf',
-        heatmap_svg='fig4/panel_b_heatmap.svg',
-        csv='fig4/panel_b.csv'
+        pdf="fig3/panel_c.pdf",
+        svg="fig3/panel_c.svg",
+        csv="fig3/panel_c.csv"
     log:
-        'fig4/panel_b.log'
+        "fig3/panel_c.log"
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_b.R"
+        "scripts/fig3_panel_c.R"
 
-
-
-# Not sure if this should be a main panel (c) or a supplement
-# 
-# NOTICE! NOTICE!
-# We are using scrnaseq_expression_mc02 here because of the 1 MB bins.
-# mc08 (meaning only windows covered 80% by a gene) has only ~250 windows
-# across the genome that are not NA, because genes only cover about 1/3rd
-# of the genome (incl. introns).
-rule fig4c:
+# Version of above but using RepliSeq rather than RepliChIP
+rule fig3c2:
     input:
-        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
-        # quantile is ignored. raw scores used.
-        cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
-            tumor=sorted(set(cancer_meta['tumor']))),
-        rna_qbeds=expand('enrichment/scrnaseq_expression_mc02/quantile/qbed/scrnaseq___expression___combined___combined___{celltype}.1000000binsize_10quantiles.qbed',
-
-            celltype=sorted(set(scrnaseq_meta['celltype'])))
+        neuron_snv="enrichment/repliseq/quantile/neuron___AB.10quantiles.csv",
+        neuron_indel="enrichment/repliseq/quantile/neuron___indel_AB.10quantiles.csv",
+        oligo_snv="enrichment/repliseq/quantile/oligo___AB.10quantiles.csv",
+        oligo_indel="enrichment/repliseq/quantile/oligo___indel_AB.10quantiles.csv"
     output:
-        barplot_pdf='fig4/panel_c_barplot.pdf',
-        barplot_svg='fig4/panel_c_barplot.svg',
-        heatmap_pdf='fig4/panel_c_heatmap.pdf',
-        heatmap_svg='fig4/panel_c_heatmap.svg',
-        csv='fig4/panel_c.csv'
+        pdf="fig3/panel_c2.pdf",
+        svg="fig3/panel_c2.svg",
+        csv="fig3/panel_c2.csv"
     log:
-        'fig4/panel_c.log'
+        "fig3/panel_c2.log"
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_c.R"
+        "scripts/fig3_panel_c2.R"
 
-if 'make_pcawg_metadata' not in config.keys():
-    # not affected by 2 excluded samples
-    pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
-    pcawg_tumors = sorted(set(pcawg_meta['tumor']))
-else:
-    pcawg_tumors = []
 
-rule fig4d:
+rule fig3d:
     input:
-        genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
-        cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo/{tumor}.rda", tumor=pcawg_tumors)
+        neuron_snv="enrichment/roadmap_histone_signal_brain/quantile/neuron___AB.10quantiles.csv",
+        neuron_indel="enrichment/roadmap_histone_signal_brain/quantile/neuron___indel_AB.10quantiles.csv",
+        oligo_snv="enrichment/roadmap_histone_signal_brain/quantile/oligo___AB.10quantiles.csv",
+        oligo_indel="enrichment/roadmap_histone_signal_brain/quantile/oligo___indel_AB.10quantiles.csv"
     output:
-        pdf="fig4/panel_d.pdf",
-        svg="fig4/panel_d.svg",
-        csv="fig4/panel_d.csv",
-        supppdf="fig4/panel_d_supplement.pdf",
-        suppsvg="fig4/panel_d_supplement.svg",
-        fullsupppdf="fig4/panel_d_supplement_full.pdf",
-        fullsuppsvg="fig4/panel_d_supplement_full.svg"
+        pdf="fig3/panel_d.pdf",
+        svg="fig3/panel_d.svg",
+        csv="fig3/panel_d.csv"
     log:
-        "fig4/panel_d.log"
+        "fig3/panel_d.log"
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_d.R"
+        "scripts/fig3_panel_d.R"
 
-# Same as above, but add in elderly MDA glia
-rule fig4d_supp:
+
+rule fig3e:
     input:
-        genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
-        cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo_mdapta/{tumor}.rda", tumor=pcawg_tumors)
+        # would like to expand() this but also want to keep names of inputs
+        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_nott="enrichment/nott/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_scatacseq="enrichment/scatacseq/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_gtex="enrichment/gtex_expression_mc08/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_replichip="enrichment/encode_replichip/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_repliseq="enrichment/repliseq/quantile/neuron___A.3quantiles_sigenrich.csv",
+        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_nott="enrichment/nott/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_scatacseq="enrichment/scatacseq/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_gtex="enrichment/gtex_expression_mc08/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_replichip="enrichment/encode_replichip/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/oligo___A.3quantiles_sigenrich.csv"
     output:
-        pdf="fig4/panel_d_mdapta.pdf",
-        svg="fig4/panel_d_mdapta.svg",
-        csv="fig4/panel_d_mdapta.csv",
-        supppdf="fig4/panel_d_mdapta_supplement.pdf",
-        suppsvg="fig4/panel_d_mdapta_supplement.svg",
-        fullsupppdf="fig4/panel_d_mdapta_supplement_full.pdf",
-        fullsuppsvg="fig4/panel_d_mdapta_supplement_full.svg"
+        pdf="fig3/panel_e.pdf",
+        svg="fig3/panel_e.svg"
     log:
-        "fig4/panel_d_mdapta.log"
+        "fig3/panel_e.log"
     resources:
         mem=4000
     script:
-        "scripts/fig4_panel_d.R"
+        "scripts/fig3_panel_e.R"
+
+
+rule fig3_suppl_sbs5:
+    input:
+        # would like to expand() this but also want to keep names of inputs
+        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_nott="enrichment/nott/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_scatacseq="enrichment/scatacseq/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_gtex="enrichment/gtex_expression_mc08/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_replichip="enrichment/encode_replichip/quantile/neuron___A.3quantiles_sigenrich.csv",
+        neuron_repliseq="enrichment/repliseq/quantile/neuron___A.3quantiles_sigenrich.csv",
+        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_nott="enrichment/nott/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_scatacseq="enrichment/scatacseq/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_gtex="enrichment/gtex_expression_mc08/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_replichip="enrichment/encode_replichip/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/oligo___A.3quantiles_sigenrich.csv"
+    output:
+        pdf="fig3/suppl_sbs5.pdf",
+        svg="fig3/suppl_sbs5.svg"
+    log:
+        "fig3/suppl_sbs5.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig3_suppl_sbs5.R"
+
+
+rule fig3e_supplement:
+    input:
+        # would like to expand() this but also want to keep names of inputs
+        histone="enrichment/roadmap_histone_signal_brain/quantile/{celltype}_{sig}___{qualtype}.{nq}quantiles.csv",
+        nott="enrichment/nott/quantile/{celltype}_{sig}___{qualtype}.{nq}quantiles.csv",
+        scatacseq="enrichment/scatacseq/quantile/{celltype}_{sig}___{qualtype}.{nq}quantiles.csv",
+        scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/{celltype}_{sig}___{qualtype}.{nq}quantiles.csv",
+        gtex="enrichment/gtex_expression_mc08/quantile/{celltype}_{sig}___{qualtype}.{nq}quantiles.csv",
+        replichip="enrichment/encode_replichip/quantile/{celltype}_{sig}___{qualtype}.{nq}quantiles.csv",
+        repliseq="enrichment/repliseq/quantile/{celltype}_{sig}___{qualtype}.{nq}quantiles.csv"
+    output:
+        pdf="fig3/panel_e_supplement_{celltype}_{sig}___{qualtype}.{nq}quantiles.pdf",
+        svg="fig3/panel_e_supplement_{celltype}_{sig}___{qualtype}.{nq}quantiles.svg"
+    params:
+        celltype='{celltype}',
+        signame='{sig}'
+    log:
+        "fig3/panel_e_supplement_{celltype}_{sig}___{qualtype}.{nq}quantiles.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig3_panel_e_supplement.R"
+
+
+
+rule fig3_suppl_nott_enhprom:
+    input:
+        neuron_snv="enrichment/nott/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/nott/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/nott/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/nott/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig3/suppl_nott_enhprom.svg",
+        pdf="fig3/suppl_nott_enhprom.pdf",
+        csv="fig3/suppl_nott_enhprom.csv"
+    params:
+        signal_to_plot='datasource=nott_enhprom',
+        features="astrocyte_enhancer,neuron_enhancer,oligo_enhancer,microglia_enhancer,astrocyte_promoter,neuron_promoter,oligo_promoter,microglia_promoter"
+    resources:
+        mem=1000
+    log:
+        "fig3/suppl_nott_enhprom_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
+
+rule fig3_suppl_boca2_peaks:
+    input:
+        neuron_snv="enrichment/boca2/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/boca2/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/boca2/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/boca2/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig3/suppl_boca2_peaks.svg",
+        pdf="fig3/suppl_boca2_peaks.pdf",
+        csv="fig3/suppl_boca2_peaks.csv"
+    params:
+        signal_to_plot='region=DLPFC',
+        features="GABA,GLU,OLIG,MGAS"
+    resources:
+        mem=1000
+    log:
+        "fig3/suppl_boca2_peaks_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
+
+rule fig3_suppl_dna_repair_hotspots:
+    input:
+        neuron_snv="enrichment/dna_repair_hotspots/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/dna_repair_hotspots/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/dna_repair_hotspots/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/dna_repair_hotspots/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig3/suppl_dna_repair_hotspots.svg",
+        pdf="fig3/suppl_dna_repair_hotspots.pdf",
+        csv="fig3/suppl_dna_repair_hotspots.csv"
+    params:
+        signal_to_plot='datasource=dnarepair',
+        features="SAR-seq,Repair-seq"
+    resources:
+        mem=1000
+    log:
+        "fig3/suppl_dna_repair_hotspots_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
+rule fig3_suppl_hic_tads:
+    input:
+        neuron_snv="enrichment/hic_tads/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/hic_tads/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/hic_tads/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/hic_tads/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig3/suppl_hic_tads.svg",
+        pdf="fig3/suppl_hic_tads.pdf",
+        csv="fig3/suppl_hic_tads.csv"
+    params:
+        signal_to_plot='datasource=hic_tads',
+        features="ME45_Adult_Rep1_A,ME45_Adult_Rep1_B"
+    resources:
+        mem=1000
+    log:
+        "fig3/suppl_hic_tads_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
+
+rule fig3_foldchange:
+    input:
+        neuron_atac="enrichment/scatacseq_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda",
+        oligo_atac="enrichment/scatacseq_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda",
+        neuron_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda",
+        oligo_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda"
+    output:
+        pdf='fig3/rna_atac_foldchange.pdf',
+        svg='fig3/rna_atac_foldchange.svg',
+        csv='fig3/rna_atac_foldchange.csv'
+    log:
+        'fig3/rna_atac_foldchange.log'
+    resources:
+        mem=4000
+    script:
+        "scripts/fig3_rna_atac_foldchange.R"
+
+
+
+rule fig3_suppl_gtex_expression:
+    input:
+        "enrichment/gtex_expression_mc08/quantile/{celltype}___{qualtype}.10quantiles.csv"
+    output:
+        "fig3/suppl_gtex_expression_{celltype}___{qualtype}.svg",
+        "fig3/suppl_gtex_expression_{celltype}___{qualtype}.pdf",
+        "fig3/suppl_gtex_expression_{celltype}___{qualtype}.csv"
+    params:
+        ignore='BINSIZE=10000,BINSIZE=100000,BINSIZE=1000000',
+        group='datasource',
+        highlight='group=Brain'
+    log:
+        "fig3/suppl_gtex_expression_{celltype}___{qualtype}.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/plot_enrichment_grid.R"
+
+
+
+# Just concatenates oligo and neuron tables so that the plot code can
+# put them side by side and match axes.
+rule fig3_suppl_chromhmm_tssa_helper:
+    input:
+        neuron="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___AB.csv",
+        oligo="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___AB.csv"
+    output:
+        "fig3/suppl_chromhmm_tss_complete_table.csv"
+    resources:
+        mem=1000
+    shell:
+        """
+        (echo "celltype,$(head -1 {input.neuron})" ;
+         awk 'BEGIN {{ FS=","; OFS=","; }} {{ if (NR != 1) {{ print "neuron", $0; }} }} ' {input.neuron} ;
+         awk 'BEGIN {{ FS=","; OFS=","; }} {{ if (NR != 1) {{ print "oligo", $0; }} }} ' {input.oligo} ) > {output}
+        """
+
+
+rule fig3_suppl_chromhmm_tssa:
+    input:
+        "fig3/suppl_chromhmm_tss_complete_table.csv"
+    output:
+        "fig3/suppl_chromhmm_tss.svg",
+        "fig3/suppl_chromhmm_tss.pdf",
+        "fig3/suppl_chromhmm_tss.csv"
+    params:
+        ignore='quantile=.,quantile=10_TssBiv,quantile=11_BivFlnk,quantile=12_EnhBiv,quantile=13_ReprPC,quantile=14_ReprPCWk,quantile=15_Quies,quantile=2_TssAFlnk,quantile=3_TxFlnk,quantile=4_Tx,quantile=5_TxWk,quantile=6_EnhG,quantile=7_Enh,quantile=8_ZNF/Rpts,quantile=9_Het,quantile=outside',
+        xlab='eid',
+        xgroup='quantile',
+        ygroup='celltype',
+        highlight='eid=E073'
+    log:
+        "fig3/suppl_chromhmm_tss.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/plot_enrichment.R"

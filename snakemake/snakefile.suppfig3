@@ -1,0 +1,61 @@
+# vim: syntax=python
+
+rule gtex_expression:
+    input:
+        "enrichment/gtex_expression_mc08/quantile/{celltype}___{qualtype}.10quantiles.csv"
+    output:
+        "suppfig3/panel_a_gtex_expression_{celltype}___{qualtype}.svg",
+        "suppfig3/panel_a_gtex_expression_{celltype}___{qualtype}.pdf",
+        "suppfig3/panel_a_gtex_expression_{celltype}___{qualtype}.csv"
+    params:
+        ignore='BINSIZE=10000,BINSIZE=100000,BINSIZE=1000000',
+        group='datasource',
+        highlight='group=Brain'
+    log:
+        "suppfig3/panel_a_gtex_expression_{celltype}___{qualtype}.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/plot_enrichment_grid.R"
+
+
+
+
+
+# Just concatenates oligo and neuron tables so that the plot code can
+# put them side by side and match axes.
+rule chromhmm_tssa_helper:
+    input:
+        neuron="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___AB.csv",
+        oligo="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___AB.csv"
+    output:
+        "suppfig3/chromhmm_tss_complete_table.csv"
+    resources:
+        mem=1000
+    shell:
+        """
+        (echo "celltype,$(head -1 {input.neuron})" ;
+         awk 'BEGIN {{ FS=","; OFS=","; }} {{ if (NR != 1) {{ print "neuron", $0; }} }} ' {input.neuron} ;
+         awk 'BEGIN {{ FS=","; OFS=","; }} {{ if (NR != 1) {{ print "oligo", $0; }} }} ' {input.oligo} ) > {output}
+        """
+
+
+rule chromhmm_tssa:
+    input:
+        "suppfig3/chromhmm_tss_complete_table.csv"
+    output:
+        "suppfig3/panel_c_chromhmm_tss.svg",
+        "suppfig3/panel_c_chromhmm_tss.pdf",
+        "suppfig3/panel_c_chromhmm_tss.csv"
+    params:
+        ignore='quantile=.,quantile=10_TssBiv,quantile=11_BivFlnk,quantile=12_EnhBiv,quantile=13_ReprPC,quantile=14_ReprPCWk,quantile=15_Quies,quantile=2_TssAFlnk,quantile=3_TxFlnk,quantile=4_Tx,quantile=5_TxWk,quantile=6_EnhG,quantile=7_Enh,quantile=8_ZNF/Rpts,quantile=9_Het,quantile=outside',
+        xlab='eid',
+        xgroup='quantile',
+        ygroup='celltype',
+        highlight='eid=E073'
+    log:
+        "suppfig3/panel_c_chromhmm_tss.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/plot_enrichment.R"

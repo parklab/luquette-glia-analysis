@@ -1,0 +1,146 @@
+# vim: syntax=python
+
+####################################################################################
+# UNUSED
+####################################################################################
+
+rule fig4_suppl_boca2_peaks:
+    input:
+        neuron_snv="enrichment/boca2/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/boca2/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/boca2/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/boca2/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig4/suppl_boca2_peaks.svg",
+        pdf="fig4/suppl_boca2_peaks.pdf",
+        csv="fig4/suppl_boca2_peaks.csv"
+    params:
+        signal_to_plot='region=DLPFC',
+        features="GABA,GLU,OLIG,MGAS"
+    resources:
+        mem=1000
+    log:
+        "fig4/suppl_boca2_peaks_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
+rule fig4_suppl_dna_repair_hotspots:
+    input:
+        neuron_snv="enrichment/dna_repair_hotspots/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/dna_repair_hotspots/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/dna_repair_hotspots/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/dna_repair_hotspots/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig4/suppl_dna_repair_hotspots.svg",
+        pdf="fig4/suppl_dna_repair_hotspots.pdf",
+        csv="fig4/suppl_dna_repair_hotspots.csv"
+    params:
+        signal_to_plot='datasource=dnarepair',
+        features="SAR-seq,Repair-seq"
+    resources:
+        mem=1000
+    log:
+        "fig4/suppl_dna_repair_hotspots_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
+rule fig4_suppl_hic_tads:
+    input:
+        neuron_snv="enrichment/hic_tads/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
+        neuron_indel="enrichment/hic_tads/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
+        oligo_snv="enrichment/hic_tads/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
+        oligo_indel="enrichment/hic_tads/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig4/suppl_hic_tads.svg",
+        pdf="fig4/suppl_hic_tads.pdf",
+        csv="fig4/suppl_hic_tads.csv"
+    params:
+        signal_to_plot='datasource=hic_tads',
+        features="ME45_Adult_Rep1_A,ME45_Adult_Rep1_B"
+    resources:
+        mem=1000
+    log:
+        "fig4/suppl_hic_tads_barplot_new.log"
+    script:
+        "scripts/barplot_enrich_new.R"
+
+
+
+rule fig4_foldchange:
+    input:
+        neuron_atac="enrichment/scatacseq_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda",
+        oligo_atac="enrichment/scatacseq_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda",
+        neuron_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda",
+        oligo_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda"
+    output:
+        pdf='fig4/rna_atac_foldchange.pdf',
+        svg='fig4/rna_atac_foldchange.svg',
+        csv='fig4/rna_atac_foldchange.csv'
+    log:
+        'fig4/rna_atac_foldchange.log'
+    resources:
+        mem=4000
+    script:
+        "scripts/fig4_rna_atac_foldchange.R"
+
+
+
+rule fig3_suppl_gtex_expression:
+    input:
+        "enrichment/gtex_expression_mc08/quantile/{celltype}___{qualtype}.10quantiles.csv"
+    output:
+        "fig3/suppl_gtex_expression_{celltype}___{qualtype}.svg",
+        "fig3/suppl_gtex_expression_{celltype}___{qualtype}.pdf",
+        "fig3/suppl_gtex_expression_{celltype}___{qualtype}.csv"
+    params:
+        ignore='BINSIZE=10000,BINSIZE=100000,BINSIZE=1000000',
+        group='datasource',
+        highlight='group=Brain'
+    log:
+        "fig3/suppl_gtex_expression_{celltype}___{qualtype}.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/plot_enrichment_grid.R"
+
+
+
+# Just concatenates oligo and neuron tables so that the plot code can
+# put them side by side and match axes.
+rule fig3_suppl_chromhmm_tssa_helper:
+    input:
+        neuron="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___AB.csv",
+        oligo="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___AB.csv"
+    output:
+        "fig3/suppl_chromhmm_tss_complete_table.csv"
+    resources:
+        mem=1000
+    shell:
+        """
+        (echo "celltype,$(head -1 {input.neuron})" ;
+         awk 'BEGIN {{ FS=","; OFS=","; }} {{ if (NR != 1) {{ print "neuron", $0; }} }} ' {input.neuron} ;
+         awk 'BEGIN {{ FS=","; OFS=","; }} {{ if (NR != 1) {{ print "oligo", $0; }} }} ' {input.oligo} ) > {output}
+        """
+
+
+rule fig3_suppl_chromhmm_tssa:
+    input:
+        "fig3/suppl_chromhmm_tss_complete_table.csv"
+    output:
+        "fig3/suppl_chromhmm_tss.svg",
+        "fig3/suppl_chromhmm_tss.pdf",
+        "fig3/suppl_chromhmm_tss.csv"
+    params:
+        ignore='quantile=.,quantile=10_TssBiv,quantile=11_BivFlnk,quantile=12_EnhBiv,quantile=13_ReprPC,quantile=14_ReprPCWk,quantile=15_Quies,quantile=2_TssAFlnk,quantile=3_TxFlnk,quantile=4_Tx,quantile=5_TxWk,quantile=6_EnhG,quantile=7_Enh,quantile=8_ZNF/Rpts,quantile=9_Het,quantile=outside',
+        xlab='eid',
+        xgroup='quantile',
+        ygroup='celltype',
+        highlight='eid=E073'
+    log:
+        "fig3/suppl_chromhmm_tss.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/plot_enrichment.R"

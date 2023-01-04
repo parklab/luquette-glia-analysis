@@ -520,15 +520,17 @@ scrnaseq_meta = pd.read_csv('manifests/SCRNASEQ_EXPRESSION_FOLDCHANGE.MANIFEST')
 
 # Not trivial to generalize because the whole set of background bigwigs
 # needs to be known.
+
+
 rule make_foldchange_qbed_scrnaseq:
     input:
-        target="enrichment/scrnaseq_expression_{mincov}/quantile/qbed/scrnaseq___expression___UMB1465___DAPI___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed",
-        background=expand("enrichment/scrnaseq_expression_{{mincov}}/quantile/qbed/scrnaseq___expression___UMB1465___DAPI___{scrnaseq_celltype}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
+        target="enrichment/scrnaseq_expression_mc08/quantile/qbed/scrnaseq___expression___combined___combined___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed",
+        background=expand("enrichment/scrnaseq_expression_mc08/quantile/qbed/scrnaseq___expression___combined___combined___{scrnaseq_celltype}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
             scrnaseq_celltype=sorted(set(scrnaseq_meta['celltype'])))
     output:
-        qbed="enrichment/scrnaseq_expression_{mincov}_foldchange/quantile/qbed/scrnaseq_foldchange___expression___UMB1465___DAPI___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed"
+        qbed="enrichment/scrnaseq_expression_mc08_foldchange/quantile/qbed/scrnaseq_foldchange___expression___combined___combined___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed"
     log:
-        "enrichment/scrnaseq_expression_{mincov}_foldchange/quantile/qbed/scrnaseq_foldchange___expression___UMB1465___DAPI___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.log"
+        "enrichment/scrnaseq_expression_mc08_foldchange/quantile/qbed/scrnaseq_foldchange___expression___combined___combined___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.log"
     resources:
         mem=8000
     script:
@@ -641,74 +643,6 @@ rule pcawg_make_tumor_vcf:
         """
 
 
-rule pcawg_snpeff:
-    input:
-        "data/pcawg/tumor_vcfs/{tumor}.vcf"
-    output:
-        "data/pcawg/snpeff_vcfs/{tumor}.snpeff.vcf"
-    log:
-        "data/pcawg/snpeff_vcfs/{tumor}.snpeff.log"
-    resources:
-        mem=8000
-    shell:
-        """
-        snakemake/scripts/run_snpeff_pcawg.sh {input} {output} > {log} 2>&1
-        """
-
-
-# Same as above, but input format is different. Also add some extra VCF
-# tags to the normal cell VCFs.
-ruleorder: pcawg_snpeff_singlecell > pcawg_snpeff
-rule pcawg_snpeff_singlecell:
-    input:
-        "vcfs/{celltype}___mut___{qualtype}.vcf"
-    output:
-        tmp=temp("data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf.tmp"),
-        vcf="data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf"
-    log:
-        "data/pcawg/snpeff_vcfs/{celltype}___{qualtype}.snpeff.log"
-    params:
-        celltype='{celltype}'
-    resources:
-        mem=8000
-    shell:
-        """
-        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=."; print $0 }}' {input} > {output.tmp} \
-            | snakemake/scripts/run_snpeff_pcawg.sh {output.tmp} {output.vcf} > {log} 2>&1
-        """
-
-
-rule pcawg_parse_snpeff:
-    input:
-        "data/pcawg/snpeff_vcfs/{tumor_or_celltype}.snpeff.vcf"
-    output:
-        "data/pcawg/{tumor_or_celltype}.gene_mutations.txt"
-    resources:
-        mem=8000
-    shell:
-        """
-        snakemake/scripts/parse_pcawg_snpeff.sh {input} > {output}
-        """
-
-
-rule pcawg_gene_mutation_odds_ratios:
-    input:
-        neuron="data/pcawg/neuron___AB.gene_mutations.txt",
-        oligo="data/pcawg/oligo___AB.gene_mutations.txt",
-        tumor="data/pcawg/{tumor}.gene_mutations.txt"
-    output:
-        rda="data/pcawg/{tumor}.gene_mutation_odds_ratios.rda"
-    log:
-        "data/pcawg/{tumor}.gene_mutation_odds_ratios.log"
-    resources:
-        mem=8000
-    shell:
-        """
-        snakemake/scripts/pcawg_gene_odds_ratio.R \
-            {input.tumor} {input.neuron} {input.oligo} {output.rda} > {log} 2>&1
-        """
-
-
 rule make_gencode_gene_regions:
     input:
         "data/gencode/gencode.v26lift37.annotation.gtf"
@@ -752,6 +686,23 @@ rule make_gencode_gene_bed:
     shell:
         """
         awk 'BEGIN {{ OFS="\t"; }} {{ if ($1 ~ /chr[0-9]+/) {{ match($0, /gene_name [^;]*/);  print $1, $4, $5, substr($0, RSTART, RLENGTH); }} }}' {input} \
+            | sed -e 's/gene_name //' \
+            | tr -d '"' > {output}
+        """
+
+
+rule make_gencode_gene_bed_protein_coding:
+    input:
+        "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf"
+    output:
+        "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed"
+    log:
+        "data/gtex/make_gencode_gene_bed.protein_coding.log"
+    resources:
+        mem=1000
+    shell:
+        """
+        awk 'BEGIN {{ OFS="\t"; }} {{ if ($1 ~ /chr[0-9]+/ && $0 ~ /gene_type "protein_coding";/) {{ match($0, /gene_name [^;]*/);  print $1, $4, $5, substr($0, RSTART, RLENGTH); }} }}' {input} \
             | sed -e 's/gene_name //' \
             | tr -d '"' > {output}
         """

@@ -116,7 +116,9 @@ rule fig2_panel_d:
         suppl_pdf='fig2/panel_d_supplement.pdf',
         suppl_svg='fig2/panel_d_supplement.svg',
         spectra_csv='fig2/panel_d_spectra.csv',
-        expo_csv='fig2/panel_d_exposures.csv'
+        expo_pdf='fig2/panel_d_exposures_barplot.pdf',
+        expo_svg='fig2/panel_d_exposures_barplot.svg',
+        expo_csv='fig2/panel_d_exposures_barplot.csv'
     log:
         'fig2/panel_d.log'
     resources:

@@ -9,20 +9,15 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@input['neuron_histone'],
-        snakemake@input['neuron_nott'],
-        snakemake@input['neuron_scatacseq'],
-        snakemake@input['neuron_scrnaseq'],
-        snakemake@input['neuron_gtex'],
-        snakemake@input['neuron_replichip'],
-        snakemake@input['neuron_repliseq'],
-        snakemake@input['oligo_histone'],
-        snakemake@input['oligo_nott'],
-        snakemake@input['oligo_scatacseq'],
-        snakemake@input['oligo_scrnaseq'],
-        snakemake@input['oligo_gtex'],
-        snakemake@input['oligo_replichip'],
-        snakemake@input['oligo_repliseq'],
+        snakemake@params['celltype'],
+        snakemake@params['signame'],
+        snakemake@input['histone'],
+        snakemake@input['nott'],
+        snakemake@input['scatacseq'],
+        snakemake@input['scrnaseq'],
+        snakemake@input['gtex'],
+        snakemake@input['replichip'],
+        snakemake@input['repliseq'],
         snakemake@output['pdf'],
         snakemake@output['svg']
     ))
@@ -31,21 +26,17 @@ if ('snakemake' %in% ls()) {
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) != 16) {
-    cat('this script mirrors fig3_panel_e.R except the input tables do not have a "sigclass" column\n')
-    cat("WARNING! WARNING!\n")
-    cat('this script should ONLY be applied to neuron_sbs16 and oligo_sbs1 outputs!\n')
-    cat("WARNING! WARNING!\n")
-    stop('usage: fig3_panel_e_supplement.R {neuron_sbs16 signals: histone, nott, scatacseq, scrnaseq, gtex, replichip, repliseq} {oligo_sbs1 signals: <same as neuron>} out.pdf out.svg')
+if (length(args) != 11) {
+    stop('usage: fig3_panel_e_supplement.R {neuron|oligo} sig_name histone.csv nott.csv scatacseq.csv scrnaseq.csv gtex.csv replichip.csv repliseq.csv out.pdf out.svg')
 }
 
 
-neuron.fs <- args[1:7]
-names(neuron.fs) <- c('histone', 'nott', 'scatacseq', 'scrnaseq', 'gtex', 'replichip', 'repliseq')
-oligo.fs <- args[8:14]
-names(oligo.fs) <- c('histone', 'nott', 'scatacseq', 'scrnaseq', 'gtex', 'replichip', 'repliseq')
-out.pdf <- args[15]
-out.svg <- args[16]
+celltype <- args[1]
+signame <- args[2]
+in.fs <- args[3:9]
+names(in.fs) <- c('histone', 'nott', 'scatacseq', 'scrnaseq', 'gtex', 'replichip', 'repliseq')
+out.pdf <- args[10]
+out.svg <- args[11]
 
 for (f in c(out.pdf, out.svg)) {
     if (file.exists(f))
@@ -61,17 +52,11 @@ if (!("Arial" %in% fonts()))
 
 library(data.table)
 
-# BINSIZE = 1000   -- not doing 1000000 anymore
-# ourcell = neuron, oligo
-# IF <ourcell == neuron>
-#     sigclass = SBS5, SBS12, SBS16, SBS89
-# IF <ourcell == oligo>
-#     sigclass = SBS1, SBS5, SBS32, SBS89
 # atac_celltype = oligo, OPC, excitatory_neuron, inhibitory_neuron
 # rna_celltype = OPCs, Oligodendrocytes, Excitatory-Neurons, Inhibitory-Neurons
 
-# <BINSIZE> <sigclass>
-# output format:
+
+# Tracks we use:
 # roadmap_histone eid=E073 inactive(mark=H3K27me3 | mark=H3K9me3)
 # roadmap_histone eid=E073 active(not above)
 # nott celltype=<celltype> active(mark=H3K27ac | mark=H3K4me3)
@@ -79,57 +64,64 @@ library(data.table)
 # nott mark=ATAC celltype=<celltype>
 # scrnaseq celltype=<rna_celltype> letter(over donor,selection)
 # gtex tissue=Brain_-_Frontal_Cortex__BA9_
-# IF <BINSIZE == 1000000>
-#    replichip neural_progenitor(encid=ENCFF469TYS | encid=ENCFF907YXU)
-#        ENCFF203XOM -> ENCFF469TYS
-#        ENCFF320GYL ->
-#        ENCFF580VOP ->
-#        ENCFF702XRT -> ENCFF907YXU
 
 # set pdev=NULL to allow the caller to layout the panel
-make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.1mb=TRUE) {
+#
+# all.tracks - plot all tracks, not the suggested tracks above
+make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.1mb=TRUE, all.tracks=TRUE) {
     ourcell <- match.arg(ourcell)
     col <- ifelse(ourcell == 'neuron', 1, 2)
 
-    # Adds a sigclass column to these files; remember that this script should ONLY be applied to neuron_sbs16 and oligo_sbs1 outputs
+    # This code is stolen from the sigenrich analysis in which the tables of
+    # enrichment levels have a "sigclass" column corresponding to each signature in the
+    # reduced COSMIC set. This script plots the output of a regular {,q}bedenrich that is
+    # run on {celltype}_sbs{sig} mutation sets, which are just a subset of the complete
+    # mutation calls that approximate a particular signature (e.g., C>T at CpGs for SBS1).
+    # These tables do not have the requisite sigclass column, so add it here.
     wrap.fread <- function(...) {
-        if (ourcell == 'neuron') {
-            fread(...)[, sigclass := 'ATN:T>C']
-        } else if (ourcell == 'oligo') {
-            fread(...)[, sigclass := 'NCG:C>T']
-        } else {
-            stop(paste('unknown value for ourcell:', ourcell))
-        }
+        fread(...)[, sigclass := sig][quantile %in% 1:50][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
     }
 
-    hst <- wrap.fread(files['histone'])[eid=='E073' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    hst <- wrap.fread(files['histone'])
+    if (!all.tracks)
+        hst <- hst[eid == 'E073']
 
     nott_celltype <- ourcell
-    nott <- wrap.fread(files['nott'])[celltype == nott_celltype & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    nott <- wrap.fread(files['nott'])
+    if (!all.tracks)
+        nott <- nott[celltype == nott_celltype]
 
     atac_celltypes <- if (ourcell == 'oligo') c('OPC', 'oligo') else c('excitatory_neuron', 'inhibitory_neuron')
-    atac <- wrap.fread(files['scatacseq'])[libid=='librarymerged' & celltype %in% atac_celltypes & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    atac <- wrap.fread(files['scatacseq'])[libid=='librarymerged']
+    if (!all.tracks)
+        atac <- atac[celltype %in% atac_celltypes]
 
     rna_celltypes <- if (ourcell == 'oligo') c('OPCs', 'Oligodendrocytes') else c('Excitatory-Neurons', 'Inhibitory-Neurons')
-    rna <- wrap.fread(files['scrnaseq'])[celltype %in% rna_celltypes & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    rna <- wrap.fread(files['scrnaseq'])
+    if (!all.tracks)
+        rna <- rna[celltype %in% rna_celltypes]
     # Make a line for each donor,selection.celltype combo
     #rna$linegroup <- paste(rna$donor, rna$selection, rna$celltype)
     # Make an average line for each celltype
     rna <- rna[,.(enr=mean(enr)), by=.(BINSIZE, quantile, celltype)]
-#print(rna)
 
     # GTEx using just BA9
-    #gtex <- wrap.fread(paste0('gtex08_', ourcell, '_A_3quantiles.csv'))[tissue=='Brain_-_Frontal_Cortex__BA9_' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))]
-    gtex <- wrap.fread(files['gtex'])[group=='Brain' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    gtex <- wrap.fread(files['gtex'])[group=='Brain']
+    if (!all.tracks)
+        gtex <- gtex[tissue=='Brain_-_Frontal_Cortex__BA9_']
 
-    repli <- wrap.fread(files['replichip'])[encid %in% c('ENCFF469TYS', 'ENCFF907YXU') & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    repli <- wrap.fread(files['replichip'])
     # have to reverse quantile to make 1=early .. N=late
     repli$quantile <- (max(repli$quantile):1)[as.integer(repli$quantile)]
     repli <- repli[order(as.integer(quantile))]
+    if (!all.tracks)
+        repli <- repli[encid %in% c('ENCFF469TYS', 'ENCFF907YXU')]
 
-    repliseq <- wrap.fread(files['repliseq'])[celltype == 'SK-N-SH' & quantile %in% 1:10 & sigclass==sig][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list(ourcell, 'snv')]
+    repliseq <- wrap.fread(files['repliseq'])
     # have to reverse quantile to make 1=early .. N=late
     repliseq$quantile <- (max(repliseq$quantile):1)[as.integer(repliseq$quantile)]
+    if (!all.tracks)
+        repliseq <- repliseq[celltype == 'SK-N-SH']
 
     if (!is.null(pdev)) {
         if (plot.1mb) {
@@ -142,63 +134,74 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.
     }
     par(mar=c(5,2,3,0.1))
 
+    xlab <- function(data) {
+        nq <- length(unique(data$quantile))
+print(unique(data$quantile))
+print(nq)
+        if (nq == 3) "Thirds"
+        else if (nq == 4) "Quartiles"
+        else if (nq == 5) "Pentiles"
+        else if (nq == 10) "Deciles"
+        else paste0(as.character(nq), 'iles')
+    }
+
     # inactive marks
     plotfn(hst[mark %in% c('H3K27me3', 'H3K9me3') & BINSIZE==1000],
             typecol='mark',
-            labtype='number', xlab='Thirds', ylab='', main='Inactive marks',
+            labtype='number', xlab=xlab(hst), ylab='', main='Inactive marks',
             add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(hst[mark %in% c('H3K27me3', 'H3K9me3') & BINSIZE==1000000],
                 typecol='mark',
-                labtype='number', xlab='Thirds', ylab='', main='Inactive marks',
+                labtype='number', xlab=xlab(hst), ylab='', main='Inactive marks',
                 add.legend=T, col=col)
     }
 
     # active marks
     plotfn(hst[!(mark %in% c('H3K27me3', 'H3K9me3')) & BINSIZE==1000],
             typecol='mark',
-            labtype='number', xlab='Thirds', ylab='', main='Active marks',
+            labtype='number', xlab=xlab(hst), ylab='', main='Active marks',
             add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(hst[!(mark %in% c('H3K27me3', 'H3K9me3')) & BINSIZE==1000000],
                 typecol='mark',
-                labtype='number', xlab='Thirds', ylab='', main='Active marks',
+                labtype='number', xlab=xlab(hst), ylab='', main='Active marks',
                 add.legend=T, col=col)
     }
 
     # Nott active marks
     plotfn(nott[mark %in% c('H3K27ac', 'H3K4me3') & BINSIZE==1000],
             typecol='mark',
-            labtype='number', xlab='Thirds', ylab='', main='Nott active marks',
+            labtype='number', xlab=xlab(nott), ylab='', main='Nott active marks',
             add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(nott[mark %in% c('H3K27ac', 'H3K4me3') & BINSIZE==1000000],
                 typecol='mark',
-                labtype='number', xlab='Thirds', ylab='', main='Nott active marks',
+                labtype='number', xlab=xlab(nott), ylab='', main='Nott active marks',
                 add.legend=T, col=col)
     }
 
     # scATAC-seq
     plotfn(atac[BINSIZE==1000],
             typecol='celltype',
-            labtype='number', xlab='Thirds', ylab='', main='scATAC-seq',
+            labtype='number', xlab=xlab(atac), ylab='', main='scATAC-seq',
             add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(atac[BINSIZE==1000000],
                 typecol='celltype',
-                labtype='number', xlab='Thirds', ylab='', main='scATAC-seq',
+                labtype='number', xlab=xlab(atac), ylab='', main='scATAC-seq',
                 add.legend=T, col=col)
     }
 
     # Nott ATAC
     plotfn(nott[mark == 'ATAC' & BINSIZE==1000],
             typecol='mark',
-            labtype='number', xlab='Thirds', ylab='', main='Nott ATAC',
+            labtype='number', xlab=xlab(nott), ylab='', main='Nott ATAC',
             add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(nott[mark == 'ATAC' & BINSIZE==1000000],
                 typecol='mark',
-                labtype='number', xlab='Thirds', ylab='', main='Nott ATAC',
+                labtype='number', xlab=xlab(nott), ylab='', main='Nott ATAC',
                 add.legend=T, col=col)
     }
 
@@ -206,25 +209,25 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.
     plotfn(rna[BINSIZE==1000],
             #typecol='linegroup',
             typecol='celltype',
-            labtype='number', xlab='Thirds', ylab='', main='scRNA-seq',
+            labtype='number', xlab=xlab(rna), ylab='', main='scRNA-seq',
             add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(rna[BINSIZE==1000000],
                 #typecol='linegroup',
                 typecol='celltype',
-                labtype='number', xlab='Thirds', ylab='', main='scRNA-seq',
+                labtype='number', xlab=xlab(rna), ylab='', main='scRNA-seq',
                 add.legend=T, col=col)
     }
 
     # GTEx
     plotfn(gtex[BINSIZE==1000],
             typecol='tissue',
-            labtype='number', xlab='Thirds', ylab='', main='GTEx expression',
+            labtype='number', xlab=xlab(gtex), ylab='', main='GTEx expression',
             add.legend=!plot.1mb, col=col)
     if (plot.1mb) {
         plotfn(gtex[BINSIZE==1000000],
                 typecol='tissue',
-                labtype='number', xlab='Thirds', ylab='', main='GTEx expression',
+                labtype='number', xlab=xlab(gtex), ylab='', main='GTEx expression',
                 add.legend=T, col=col)
     }
 
@@ -235,7 +238,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.
         plotfn(repli[BINSIZE==1000000],
                 typecol='encid',
                 labtype='number', linetype='average',
-                xlab='Thirds', ylab='', main='Replication timing (1 MB, RepliChIP)',
+                xlab=xlab(repli), ylab='', main='Replication timing (1 MB, RepliChIP)',
                 add.legend=!plot.1mb, col=col)
         # above is linetype=average, meaning add.legend never happens
         plot(1, pch=NA, xlab='', ylab='', xaxt='n', yaxt='n', bty='n')
@@ -244,7 +247,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.
         plotfn(repli[BINSIZE==1000000],
                 typecol='encid',
                 labtype='number', linetype='average',
-                xlab='Thirds', ylab='', main='Replication timing',
+                xlab=xlab(repli), ylab='', main='Replication timing',
                 add.legend=T, col=col)
     }
 
@@ -252,7 +255,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.
     plotfn(repliseq[BINSIZE==1000],
             typecol='celltype',
             labtype='number', linetype='average',
-            xlab='Thirds', ylab='', main='Replication timing (RepliSeq)',
+            xlab=xlab(repliseq), ylab='', main='Replication timing (RepliSeq)',
             add.legend=!plot.1mb, col=col)
         # above is linetype=average, meaning add.legend never happens
         plot(1, pch=NA, xlab='', ylab='', xaxt='n', yaxt='n', bty='n')
@@ -261,7 +264,7 @@ make.panel <- function(files, sig, ourcell=c('neuron', 'oligo'), pdev=x11, plot.
         plotfn(repli[BINSIZE==1000000],
                 typecol='celltype',
                 labtype='number', linetype='average',
-                xlab='Thirds', ylab='', main='Replication timing (RepliSeq)',
+                xlab=xlab(repli), ylab='', main='Replication timing (RepliSeq)',
                 add.legend=T, col=col)
     }
 }
@@ -310,26 +313,15 @@ plotfn <- function(n, typecol, linetype=c('separate', 'average'), labtype=c('poi
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=10, height=6, pointsize=5, file=outs[i])
-    layout(rbind(
-        matrix(1:18, nrow=2, byrow=F),
-        18+matrix(1:18, nrow=2, byrow=F)), height=c(2,3,2,3))
+    devs[[i]](width=10, height=3, pointsize=5, file=outs[i])
+    #layout(rbind(
+        #matrix(1:9, nrow=3, byrow=F),
+        #9+matrix(1:9, nrow=3, byrow=F)),
+        #height=c(2,3))
+    layout(matrix(1:18, byrow=F, nrow=2), height=c(2,3))
     par(mar=c(5,2,3,0.1))
-    # did more sigs for exploratory analysis, now just do panels for paper
-    #for (sig in c('SBS1', 'SBS5', 'SBS32', 'SBS89')) {
-    for (sig in 'NCG:C>T') {
-        print(c('oligo', sig))
-        #make.panel(sig=sig, ourcell='oligo', pdev=function(...) pdf(file=paste0('oligo_', sig, '_v2.pdf'), ...))
-        make.panel(files=oligo.fs, sig=sig, ourcell='oligo', pdev=NULL, plot.1mb=FALSE)
-        #dev.off()
-    }
-    #for (sig in c('SBS5', 'SBS12', 'SBS16', 'SBS89')) {
-    for (sig in 'ATN:T>C') {
-        print(c('neuron', sig))
-        #make.panel(sig=sig, ourcell='neuron', pdev=function(...) pdf(file=paste0('neuron', sig, '_v2.pdf'), ...))
-        make.panel(files=neuron.fs, sig=sig, ourcell='neuron', pdev=NULL, plot.1mb=FALSE)
-        #dev.off()
-    }
+
+    make.panel(files=in.fs, sig=signame, ourcell=celltype, pdev=NULL, plot.1mb=FALSE, all.tracks=FALSE)
 
     dev.off()
 }

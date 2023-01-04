@@ -51,14 +51,22 @@ library(data.table)
 
 # reversing quantiles so that high values = late replication timing
 n <- fread(neuron.snv)[BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'snv')]
-n$quantile <- 10 - as.integer(n$quantile) + 1
 ni <- fread(neuron.indel)[BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('neuron', 'indel')]
-ni$quantile <- 10 - as.integer(ni$quantile) + 1
 
 g <- fread(oligo.snv)[BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'snv')]
-g$quantile <- 10 - as.integer(g$quantile) + 1
 gi <- fread(oligo.indel)[BINSIZE==1000 & quantile %in% 1:10][order(as.integer(quantile))][, c('mutsfrom', 'muttype') := list('oligo', 'indel')]
-gi$quantile <- 10 - as.integer(gi$quantile) + 1
+
+# Reverse so that greater decile = late
+# XXX: NO longer doing this - want greater decile <=> active chromatin,
+# which is early.
+#n$quantile <- 10 - as.integer(n$quantile) + 1
+#ni$quantile <- 10 - as.integer(ni$quantile) + 1
+#g$quantile <- 10 - as.integer(g$quantile) + 1
+#gi$quantile <- 10 - as.integer(gi$quantile) + 1
+n$quantile <- as.integer(n$quantile)
+ni$quantile <- as.integer(ni$quantile)
+g$quantile <- as.integer(g$quantile)
+gi$quantile <- as.integer(gi$quantile)
 
 outtab <- rbind(n, ni, g, gi)
 fwrite(outtab, file=out.csv)

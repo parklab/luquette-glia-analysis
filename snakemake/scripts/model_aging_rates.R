@@ -115,6 +115,12 @@ for (i in 1:2) {
 
 fwrite(combined.burdens, file=outcsv)
 
+for (i in 1:length(models)) {
+    m <- models[[i]]
+    print(names(models)[i])
+    print(summary(m$model))
+}
+
 all.models <- rbindlist(lapply(1:length(models), function(i) {
     m <- models[[i]]
     coefs <- coef(summary(m$model))

@@ -30,7 +30,7 @@ rule genic_distribution_elderly_mda:
     resources:
         mem=1000
     log:
-        "suppfig2/suppl_panel_c_mda_elderly.log"
+        "suppfig2/panel_c_mda_elderly.log"
     script:
         "scripts/suppfig2_panel_c.R"
 
@@ -42,7 +42,8 @@ rule individual_gene_enrichment:
     output:
         csv="suppfig2/panel_d_genes.csv",
         pdf="suppfig2/panel_d_genes.pdf",
-        svg="suppfig2/panel_d_genes.svg"
+        svg="suppfig2/panel_d_genes.svg",
+        jpeg="suppfig2/panel_d_genes.jpeg"
     resources:
         mem=8000
     log:

@@ -2,9 +2,9 @@
 
 rule umap_plots:
     input:
-        lambda wildcards: "input/any___scatacseq_umap___none.csv" if wildcards.panel_letter == 'b' else "input/any___scrnaseq_umap___none.csv"
+        lambda wildcards: "input/any___scatacseq_umap___none.csv" if wildcards.panel_letter == 'c' else "input/any___scrnaseq_umap___none.csv"
     output:
-        expand("fig3/panel_{{panel_letter}}_umap_plot.{ext}",
+        expand("fig4/panel_{{panel_letter}}_umap_plot.{ext}",
             ext=[ 'svg', 'pdf', 'jpeg' ])
     resources:
         mem=24000
@@ -23,11 +23,12 @@ rule many_enrichment_analyses:
         neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron___A.10quantiles.csv",
         oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo___A.10quantiles.csv",
         oligo_scatacseq="enrichment/scatacseq/quantile/oligo___A.10quantiles.csv",
-        oligo_repliseq="enrichment/repliseq/quantile/oligo___A.10quantiles.csv"
-        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo___A.10quantiles.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/oligo___A.10quantiles.csv",
+        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo___A.10quantiles.csv"
     output:
         pdf="fig4/panels_cdefg_enrichment_analyses.pdf",
-        svg="fig4/panels_cdefg_enrichment_analyses.svg"
+        svg="fig4/panels_cdefg_enrichment_analyses.svg",
+        csv="fig4/panels_cdefg_enrichment_analyses.csv"
     log:
         "fig4/panels_cdefg_enrichment_analyses.log"
     resources:
@@ -54,7 +55,7 @@ rule chromhmm_states:
     resources:
         mem=1000
     log:
-        "fig1/panel_h_chromhmm.log"
+        "fig4/panel_h_chromhmm.log"
     script:
         "scripts/barplot_enrich_new.R"
 

@@ -70,14 +70,14 @@ colors[emphasize] <- c('orange','black','red','purple')
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=3.25, height=2, pointsize=5, file=outs[i])
-    par(mar=c(8,4,3,1))
-    barplot.oddsrats <- sort(odds.mat[which(xaxis==100),], decreasing=TRUE)
+    devs[[i]](width=2, height=3.25, pointsize=5, file=outs[i])
+    par(mar=c(4,8,0.1,1))
+    barplot.oddsrats <- sort(odds.mat[which(xaxis==100),], decreasing=FALSE)
     print(barplot.oddsrats)
     barplot(barplot.oddsrats,
-        cex.names=0.8, las=3, border=F, col=colors[names(barplot.oddsrats)],
-        ylim=c(0,1.4), ylab='Odds ratio (OL odds / neuron odds)')
-    abline(h=1, lty='dashed')
+        cex.names=0.8, border=F, col=colors[names(barplot.oddsrats)],
+        xlim=c(0,1.4), ylab='', xlab='Odds ratio (OL odds / neuron odds)', horiz=TRUE, las=1)
+    abline(v=1, lty='dashed')
     dev.off()
 }
 

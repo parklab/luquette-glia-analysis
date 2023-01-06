@@ -22,7 +22,7 @@ rule genic_distribution:
 
 
 # Just a copyover of the default files
-rule aging_rates:
+rule aging_rates_figure:
     input:
         svg="aging_rates/all___mutburden_models___{qualtype}.svg",
         pdf="aging_rates/all___mutburden_models___{qualtype}.pdf",

@@ -19,7 +19,20 @@ rule gtex_expression:
         "scripts/plot_enrichment_grid.R"
 
 
-
+rule repliseq_individual_cell_lines:
+    input:
+        neuron_repliseq="enrichment/repliseq/quantile/neuron___{qualtype}.10quantiles.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/oligo___{qualtype}.10quantiles.csv"
+    output:
+        pdf="suppfig3/panel_b_repliseq___{qualtype}.pdf",
+        svg="suppfig3/panel_b_repliseq___{qualtype}.svg",
+        csv="suppfig3/panel_b_repliseq___{qualtype}.csv"
+    log:
+        "suppfig3/panel_b_repliseq___{qualtype}.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/suppfig3_panel_b.R"
 
 
 # Just concatenates oligo and neuron tables so that the plot code can

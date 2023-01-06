@@ -66,11 +66,11 @@ rule cosmic_snv_vs_age_plots:
 # 5559 - 5559-Oligo-5, 5559-Oligo-8
 rule fig2_shared_snv_analysis:
     input:
-        object1=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-5_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-F11_scan2_object.rda'),
-        object2=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-8_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-G10_scan2_object.rda'),
+        object1=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-5_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-F11_scan2_object_rescue.rda'),
+        object2=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-8_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-G10_scan2_object_rescue.rda'),
         cosmic="mutsigs/cosmic_reduced___A.csv",
         sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv",
-        aging_model="fig1/panel_b_A_model.csv",
+        aging_model="fig1/panel_b_aging_rates_A_model.csv",
         aging_model_sigs="fig2/panel_c_A.csv"
     output:
         muts="fig2/oligo_pair_{sample_id}_mutations.csv",

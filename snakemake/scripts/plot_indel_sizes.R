@@ -51,21 +51,23 @@ fwrite(table(rbind(data.frame(CellType='neuron', IndelLength=nsize), data.frame(
 
 axisat <- c(min(c(nsize,gsize)), -20, -10, -5, -1, 1, 5, 10, max(c(nsize,gsize)))
 
-figwidth=4
-figheight=6
+figwidth=2.5
+figheight=2.5
 devs <- list(svglite, pdf)
 outs <- c(outsvg, outpdf)
 for (i in 1:2) {
-    devs[[i]](file=outs[i], width=figwidth, height=figheight)
+    devs[[i]](file=outs[i], width=figwidth, height=figheight, pointsize=5)
 
-    xlim <- range(c(nsize, gsize))
-    layout(1:2)
-    plot(table(nsize), col=1, xlim=xlim, xaxt='n',
-        main='Neurons', xlab='Indel size (< 0 = deletion)', ylab='Number')
-    axis(side=1, at=axisat)
-    plot(table(gsize), col=2, xlim=xlim, xaxt='n',
-        main='Oligo', xlab='Indel size (< 0 = deletion)', ylab='Number')
-    axis(side=1, at=axisat)
+    #xlim <- range(c(gsize, nsize))
+    xlim <- c(-30, 30)
+    gdens <- density(gsize)
+    ndens <- density(nsize)
+    ylim <- range(pretty(range(c(0, ndens$y, gdens$y))))
+    plot(ndens, col=1, ylim=ylim, xlim=xlim,
+        main='Indel size distribution',
+        xlab='Indel size (< 0 = deletion)', ylab='Density')
+    lines(gdens, col=2)
+    legend('topright', bty='n', legend=c('Neurons', 'Oligodendrocytes'), lwd=2, col=1:2)
 }
 
 if ('snakemake' %in% ls()) {

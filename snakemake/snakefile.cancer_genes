@@ -54,8 +54,9 @@ rule pcawg_gene_mutation_odds_ratios:
     input:
         neuron="cancer_genes/gene_mutations/{celltype1}___AB.txt",
         oligo="cancer_genes/gene_mutations/{celltype2}___AB.txt",
-        tumor="cancer_genes/gene_mutations/{tumor}.txt",
-        genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
+        tumor="cancer_genes/gene_mutations/{tumor}.txt" #,
+        # omitting the bed file falls back to SnpEff, meaning no gene filtration
+        #genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
     output:
         rda="cancer_genes/odds_ratios/{celltype1}___vs___{celltype2}/{tumor}.rda"
     log:
@@ -65,8 +66,9 @@ rule pcawg_gene_mutation_odds_ratios:
     shell:
         """
         snakemake/scripts/pcawg_gene_odds_ratio.R \
-            {input.tumor} {input.neuron} {input.oligo} {input.genes_bed} {output.rda} > {log} 2>&1
+            {input.tumor} {input.neuron} {input.oligo} {output.rda} > {log} 2>&1
         """
+            #{input.tumor} {input.neuron} {input.oligo} {input.genes_bed} {output.rda} > {log} 2>&1
 
 
 rule run_dndscv_cancer:

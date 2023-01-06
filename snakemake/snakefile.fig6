@@ -110,16 +110,15 @@ else:
 
 rule top_cancer_gene_enrichment:
     input:
-        genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
         cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo/{tumor}.rda", tumor=pcawg_tumors)
     output:
         pdf="fig6/panel_d.pdf",
         svg="fig6/panel_d.svg",
         csv="fig6/panel_d.csv",
-        supppdf="fig6/panel_d_supplement.pdf",
-        suppsvg="fig6/panel_d_supplement.svg",
-        fullsupppdf="fig6/panel_d_supplement_full.pdf",
-        fullsuppsvg="fig6/panel_d_supplement_full.svg"
+        supppdf="suppfig5/cancer_gene_ors.pdf",
+        suppsvg="suppfig5/cancer_gene_ors.svg",
+        fullsupppdf="suppfig5/cancer_gene_ors_full.pdf",
+        fullsuppsvg="suppfig5/cancer_gene_ors_full.svg"
     log:
         "fig6/panel_d.log"
     resources:
@@ -130,16 +129,15 @@ rule top_cancer_gene_enrichment:
 # Same as above, but add in elderly MDA glia
 rule top_cancer_gene_enrichment_with_mda_ols:
     input:
-        genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
         cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo_mdapta/{tumor}.rda", tumor=pcawg_tumors)
     output:
         pdf="fig6/panel_d_mdapta.pdf",
         svg="fig6/panel_d_mdapta.svg",
         csv="fig6/panel_d_mdapta.csv",
-        supppdf="fig6/panel_d_mdapta_supplement.pdf",
-        suppsvg="fig6/panel_d_mdapta_supplement.svg",
-        fullsupppdf="fig6/panel_d_mdapta_supplement_full.pdf",
-        fullsuppsvg="fig6/panel_d_mdapta_supplement_full.svg"
+        supppdf="suppfig5/cancer_gene_ors_mdapta.pdf",
+        suppsvg="suppfig5/cancer_gene_ors_mdapta.svg",
+        fullsupppdf="suppfig5/cancer_gene_ors_mdapta_full.pdf",
+        fullsuppsvg="suppfig5/cancer_gene_ors_mdapta_full.svg"
     log:
         "fig6/panel_d_mdapta.log"
     resources:

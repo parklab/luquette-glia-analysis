@@ -13,15 +13,16 @@ if ('snakemake' %in% ls()) {
         snakemake@input['oligo'],
         snakemake@output['csv'],
         snakemake@output['pdf'],
-        snakemake@output['svg']
+        snakemake@output['svg'],
+        snakemake@output['jpeg']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) != 5) {
-    stop('usage: fig1_genes_suppl.R neuron.SUMMARY.rda oligo.SUMMARY.rda out.csv out.pdf out.svg')
+if (length(args) != 6) {
+    stop('usage: fig1_genes_suppl.R neuron.SUMMARY.rda oligo.SUMMARY.rda out.csv out.pdf out.svg out.jpeg')
 }
 
 
@@ -30,8 +31,9 @@ oligo.rda <- args[2]
 out.csv <- args[3]
 out.pdf <- args[4]
 out.svg <- args[5]
+out.jpeg <- args[6]
 
-for (f in c(out.csv, out.pdf, out.svg)) {
+for (f in c(out.csv, out.pdf, out.svg, out.jpeg)) {
     if (file.exists(f))
         stop(paste('output file', f, 'already exists, please delete it first'))
 }
@@ -71,10 +73,13 @@ minp <- pmin(combined$neuron.pval, combined$oligo.pval)
 xlim <- combined[, range(pretty(range(-log10(neuron.pval) * sign(log(neuron.enr)), na.rm=TRUE)))]
 ylim <- combined[, range(pretty(range(-log10(oligo.pval) * sign(log(oligo.enr)), na.rm=TRUE)))]
 
-devs=list(pdf, svglite)
-outs=c(out.pdf, out.svg)
-for (i in 1:2) {
-    devs[[i]](width=4, height=4, pointsize=5, file=outs[i])
+devs=list(pdf, svglite, jpeg)
+outs=c(out.pdf, out.svg, out.jpeg)
+for (i in 1:3) {
+    if (i == 3)
+        devs[[i]](width=4, height=4, pointsize=5, file=outs[i], unit='in', res=600)
+    else
+        devs[[i]](width=4, height=4, pointsize=5, file=outs[i])
     par(mar=c(4,4,3,1))
 
     plot(combined[,.(-log10(neuron.pval) * sign(log(neuron.enr)), -log10(oligo.pval) * sign(log(oligo.enr)))],

@@ -9,14 +9,15 @@ rule many_enrichment_analyses_signature_specific:
         neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron___A.3quantiles_sigenrich.csv",
         oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo___A.3quantiles_sigenrich.csv",
         oligo_scatacseq="enrichment/scatacseq/quantile/oligo___A.3quantiles_sigenrich.csv",
-        oligo_repliseq="enrichment/repliseq/quantile/oligo___A.3quantiles_sigenrich.csv"
-        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/oligo___A.3quantiles_sigenrich.csv",
+        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo___A.3quantiles_sigenrich.csv"
     output:
         pdf="fig5/all_panels_enrichment_analyses.pdf",
-        svg="fig5/all_panels_enrichment_analyses.svg"
+        svg="fig5/all_panels_enrichment_analyses.svg",
+        csv="fig5/all_panels_enrichment_analyses.csv"
     log:
         "fig5/all_panels_enrichment_analyses.log"
     resources:
         mem=4000
     script:
-        "scripts/fig5_all_panels.R"
+        "scripts/fig5_allpanels.R"

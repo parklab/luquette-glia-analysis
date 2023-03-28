@@ -17,20 +17,20 @@ rule umap_plots:
 rule many_enrichment_analyses:
     input:
         # would like to expand() this but also want to keep names of inputs
-        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/neuron___A.10quantiles.csv",
-        neuron_scatacseq="enrichment/scatacseq/quantile/neuron___A.10quantiles.csv",
-        neuron_repliseq="enrichment/repliseq/quantile/neuron___A.10quantiles.csv",
-        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron___A.10quantiles.csv",
-        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo___A.10quantiles.csv",
-        oligo_scatacseq="enrichment/scatacseq/quantile/oligo___A.10quantiles.csv",
-        oligo_repliseq="enrichment/repliseq/quantile/oligo___A.10quantiles.csv",
-        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo___A.10quantiles.csv"
+        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/neuron{half}___AB.10quantiles.csv",
+        neuron_scatacseq="enrichment/scatacseq/quantile/neuron{half}___AB.10quantiles.csv",
+        neuron_repliseq="enrichment/repliseq/quantile/neuron{half}___AB.10quantiles.csv",
+        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron{half}___AB.10quantiles.csv",
+        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo{half}___AB.10quantiles.csv",
+        oligo_scatacseq="enrichment/scatacseq/quantile/oligo{half}___AB.10quantiles.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/oligo{half}___AB.10quantiles.csv",
+        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo{half}___AB.10quantiles.csv"
     output:
-        pdf="fig4/panels_cdefg_enrichment_analyses.pdf",
-        svg="fig4/panels_cdefg_enrichment_analyses.svg",
-        csv="fig4/panels_cdefg_enrichment_analyses.csv"
+        pdf="fig4/panels_cdefg_enrichment_analyses{half}.pdf",
+        svg="fig4/panels_cdefg_enrichment_analyses{half}.svg",
+        csv="fig4/panels_cdefg_enrichment_analyses{half}.csv"
     log:
-        "fig4/panels_cdefg_enrichment_analyses.log"
+        "fig4/panels_cdefg_enrichment_analyses{half}.log"
     resources:
         mem=4000
     script:

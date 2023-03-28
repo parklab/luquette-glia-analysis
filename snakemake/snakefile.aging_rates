@@ -9,6 +9,10 @@ def mut_burden_analysis_input(wildcards):
 
     if wildcards.celltype == 'neuron':
         d['prevburdens'] = "scan2_paper_output/Collected_SCAN2_%s_burdens.csv" % ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV')
+    if wildcards.celltype == 'neuron_half1':
+        d['prevburdens'] = "scan2_paper_output/Collected_SCAN2_%s_burdens_half1.csv" % ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV')
+    if wildcards.celltype == 'neuron_half2':
+        d['prevburdens'] = "scan2_paper_output/Collected_SCAN2_%s_burdens_half2.csv" % ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV')
     return(d)
 
 

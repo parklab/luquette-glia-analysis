@@ -15,6 +15,11 @@ manifest = pd.read_csv('manifests/INPUT_MANIFEST', sep='\t',comment='#')
 celltypes = set(manifest['celltype'])
 qualtypes = set(manifest['qualtype'])
 celltypes_to_compute = [ 'neuron', 'oligo' ]
+
+# PTA neurons/oligos were randomly divided into two groups within each
+# age class (infant, adolescent, adult, elderly) to provide some guidance
+# on how many single cells might be needed to derive a robust signal.
+celltypes_halves = [ 'neuron_half1', 'neuron_half2', 'oligo_half1', 'oligo_half2' ]
 snv_qualtypes = [ 'A', 'AB' ]
 indel_qualtypes = [ 'indel_A', 'indel_AB' ]
 all_qualtypes = snv_qualtypes + indel_qualtypes
@@ -67,7 +72,8 @@ wildcard_constraints:
     cosmic='cosmic_full|cosmic_reduced',
     panel_letter='a|b|c|d|e|f|g|h|i|j|k|l',
     tumor='[^\.]+',  # No longer need this -[^\.]'   # Tumor codes are formatted XXXX-YYYY 
-    sig='sbs1|sbs16|sbs32'  # for "simplified" analysis of sbs1 and sbs16 enrichment using CG:C>T and ATN:T>C rather than signature fitting
+    sig='sbs1|sbs16|sbs32',  # for "simplified" analysis of sbs1 and sbs16 enrichment using CG:C>T and ATN:T>C rather than signature fitting
+    half='|_half1|_half2'
     #umap='atac|rna',
 
 
@@ -130,6 +136,8 @@ rule fig4:
         "fig4/panel_a_umap_plot.pdf",
         "fig4/panel_c_umap_plot.pdf",
         "fig4/panels_cdefg_enrichment_analyses.pdf",
+        "fig4/panels_cdefg_enrichment_analyses_half1.pdf",
+        "fig4/panels_cdefg_enrichment_analyses_half2.pdf",
         "fig4/panel_h_chromhmm.pdf",
         "fig4/panel_h_chromhmm.csv",
         "fig4/panel_i_nott_enhprom.pdf",
@@ -208,10 +216,10 @@ rule misc:
 rule aging_rates:
     input:
         expand('aging_rates/{celltype}___mutburden___{qualtype}.csv',
-            celltype=[ 'all' ] + celltypes_to_compute,
+            celltype=[ 'all' ] + celltypes_to_compute + celltypes_halves,
             qualtype=[ 'A', 'indel_A' ]),  # only passA calls are used
         expand('aging_rates/all___mutburden_models___{qualtype}.csv',
-            celltype=celltypes_to_compute,
+            #celltype=celltypes_to_compute,
             qualtype=[ 'A', 'indel_A' ])
 
 
@@ -220,16 +228,16 @@ rule aging_rates:
 rule mutsigs:
     input:
         expand("mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.{output}",
-            celltype=celltypes_to_compute,
+            celltype=celltypes_to_compute + celltypes_halves,
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg', 'csv' ]),
         expand("mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{qualtype}.csv",
-            celltype=celltypes_to_compute,
+            celltype=celltypes_to_compute + celltypes_halves,
             qualtype=[ 'A', 'indel_A' ]),
         expand("mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv",
             qualtype=[ 'A', 'indel_A' ]),
         expand("mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.{output}",
-            celltype=celltypes_to_compute,
+            celltype=celltypes_to_compute + celltypes_halves,
             qualtype=[ 'A', 'indel_A' ],
             output=[ 'pdf', 'svg' ]),
         expand("mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.{output}",
@@ -271,14 +279,14 @@ rule enrichment:
     input:
         # All quantile-based enrichment analyses of total mutation burden
         expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=celltypes_to_compute,
+            celltype=celltypes_to_compute + celltypes_halves,
             qualtype=all_qualtypes,
             nquantiles=qsizes_to_compute,
             datasource=quantile_datasources,
             output=[ 'svg', 'pdf', 'csv' ]),
         # Enrichment analysis of specific regions
         expand('enrichment/{datasource}/bed_regions/{celltype}___{qualtype}.{output}',
-            celltype=celltypes_to_compute,
+            celltype=celltypes_to_compute + celltypes_halves,
             qualtype=all_qualtypes,
             datasource=bed_region_datasources,
             output=[ 'svg', 'pdf', 'csv' ]),

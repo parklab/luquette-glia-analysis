@@ -1,0 +1,10 @@
+sample,donor,amp,type,age,color,plotage,outlier,ageclass
+GliaLC-5-B12,1278,MDA,mda_sox10,0.4,orange,-1,FALSE,infant
+GliaLC-5-D10,1278,MDA,mda_sox10,0.4,orange,-1,FALSE,infant
+GliaLC-5-H10,1278,MDA,mda_sox10,0.4,orange,-1,FALSE,infant
+GliaLC-5-H11,1278,MDA,mda_sox10,0.4,orange,-1,FALSE,infant
+GliaLC-6-B10,5871,MDA,mda_sox10,2,orange,2,FALSE,infant
+GliaLC-6-D10,5871,MDA,mda_sox10,2,orange,2,FALSE,infant
+GliaLC-6-F10,5871,MDA,mda_sox10,2,orange,2,FALSE,infant
+GliaLC-6-F12,5871,MDA,mda_sox10,2,orange,2,FALSE,infant
+GliaLC-6-H12,5871,MDA,mda_sox10,2,orange,2,FALSE,infant

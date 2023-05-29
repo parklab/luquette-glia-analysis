@@ -1,0 +1,11 @@
+sample,donor,amp,type,age,color,plotage,outlier,ageclass
+GliaLC-6-C1,5171,MDA,mda_gfap,79,purple,79,FALSE,elderly
+GliaLC-6-C2,5171,MDA,mda_gfap,79,purple,79,FALSE,elderly
+GliaLC-6-F3,5171,MDA,mda_gfap,79,purple,79,FALSE,elderly
+GliaLC-6-G3,5171,MDA,mda_gfap,79,purple,79,FALSE,elderly
+GliaLC-6-H3,5171,MDA,mda_gfap,79,purple,79,FALSE,elderly
+GliaLC-4-D8,5657,MDA,mda_gfap,82,purple,81,FALSE,elderly
+GliaLC-4-F7,5657,MDA,mda_gfap,82,purple,81,FALSE,elderly
+GliaLC-4-F9,5657,MDA,mda_gfap,82,purple,81,FALSE,elderly
+GliaLC-4-H7,5657,MDA,mda_gfap,82,purple,81,FALSE,elderly
+GliaLC-4-H8,5657,MDA,mda_gfap,82,purple,81,FALSE,elderly

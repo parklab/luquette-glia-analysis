@@ -26,7 +26,7 @@ args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 8) {
     cat('muttype must be either SNV or Indel\n')
     cat('when amptype=MDA (case sensitive), Lodato et al. signature B is added to COSMIC, but its exposure is REMOVED from the output\n')
-    stop("usage: analyze_cosmic_aging.R muttype amptype mutations.csv mutburden.csv cosmic.csv out.mutmat.csv out.expo.csv")
+    stop("usage: analyze_cosmic_aging.R muttype amptype mutations.csv mutburden.csv cosmic.csv lodato_signatures.csv out.mutmat.csv out.expo.csv")
 }
 
 muttype <- args[1]

@@ -115,12 +115,14 @@ print(ylims)
     plotfn(tab[datasource == 'scrnaseq'],
             labtype='number', main='scRNA-seq', show.title=show.title,
             add.legend=add.legend, ylim=ylims, ylab='Obs / Exp',
+            neuron.col=colors['neuron'], oligo.col=colors['oligo'],
             yaxis=TRUE, xaxis=show.xaxis)
 
     # scATAC-seq
     plotfn(tab[datasource == 'scatacseq'],
             labtype='number', main='scATAC-seq',
             add.legend=add.legend, ylim=ylims, show.title=show.title,
+            neuron.col=colors['neuron'], oligo.col=colors['oligo'],
             ylab='', yaxis=FALSE, xaxis=show.xaxis)
 
     # RepliSeq
@@ -128,18 +130,21 @@ print(ylims)
             labtype='number', linetype='average',
             main='Replication timing', show.title=show.title,
             add.legend=add.legend, ylim=ylims,
+            neuron.col=colors['neuron'], oligo.col=colors['oligo'],
             ylab='', yaxis=FALSE, xaxis=show.xaxis)
 
     # active marks
     plotfn(tab[datasource == 'active_histone_mark'],
             labtype='number', main='Active histone marks',
             add.legend=add.legend, ylim=ylims, show.title=show.title,
+            neuron.col=colors['neuron'], oligo.col=colors['oligo'],
             ylab='', yaxis=FALSE, xaxis=show.xaxis)
 
     # inactive marks
     plotfn(tab[datasource == 'inactive_histone_mark'],
             labtype='number', main='Inactive histone marks',
             add.legend=add.legend, ylim=ylims, show.title=show.title,
+            neuron.col=colors['neuron'], oligo.col=colors['oligo'],
             ylab='', yaxis=FALSE, xaxis=show.xaxis)
 }
 
@@ -232,8 +237,8 @@ for (i in 1:2) {
     devs[[i]](width=6.5, height=(6.5/5)*3+0.1, pointsize=5, file=outs[i])
 
     layout(rbind(matrix(1:10, nrow=2), 10+matrix(1:10,nrow=2)), height=c(1,5,5,5))
-    make.panels(tab=all.data[muttype=='snv'], show.title=TRUE, show.xaxis=FALSE)
-    make.panels(tab=all.data[muttype=='indel'], show.title=FALSE, show.xaxis=TRUE, add.legend=TRUE)
+    make.panels(tab=all.data[muttype=='snv'], show.title=TRUE, show.xaxis=FALSE) #, colors=c(neuron='purple', oligo='orange'))
+    make.panels(tab=all.data[muttype=='indel'], show.title=FALSE, show.xaxis=TRUE, add.legend=TRUE) #, colors=c(neuron='purple', oligo='orange'))
     dev.off()
 }
 

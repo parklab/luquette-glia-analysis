@@ -117,14 +117,14 @@ else:
 rule make_dndscv_table:
     input:
         csvs=expand('cancer_genes/dndscv/{celltype}___{qualtype}.csv',
-                      celltype = [ 'neuron', 'oligo', 'oligo_mda_2elderly', 'oligo_mdapta' ],
+                      celltype = [ 'neuron', 'oligo', 'mda_gfap_elderly', 'mda_sox10_elderly', 'oligo_mdapta' ],
                       qualtype = [ 'A', 'AB' ]) +
              expand('cancer_genes/dndscv/{tumor}.csv', tumor=pcawg_tumors)
     output:
         csv='cancer_genes/dndscv/dndscv_table.csv'
     params:
         sampletags=expand('{celltype}_{qualtype}',
-                      celltype = [ 'neuron', 'oligo', 'oligo_mda_2elderly', 'oligo_mdapta' ],
+                      celltype = [ 'neuron', 'oligo', 'mda_gfap_elderly', 'mda_sox10_elderly', 'oligo_mdapta' ],
                       qualtype = [ 'A', 'AB' ]) +
                    expand('cancer_{tumor}', tumor=pcawg_tumors)
     log:

@@ -67,7 +67,48 @@ oligo:
         5871-Oligo-4: scan2_output/tiny_objects/5871-Oligo-4_scan2_object_rescue.rda
         5871-Oligo-5: scan2_output/tiny_objects/5871-Oligo-5_scan2_object_rescue.rda
         5871-Oligo-7: scan2_output/tiny_objects/5871-Oligo-7_scan2_object_rescue.rda
-oligo_mda_2infants:
+mda_gfap:
+        GliaLC-5-B7: scan2_output/tiny_objects/1278-GliaLC-5-B7_scan2_object_rescue.rda
+        GliaLC-5-B8: scan2_output/tiny_objects/1278-GliaLC-5-B8_scan2_object_rescue.rda
+        GliaLC-5-C7: scan2_output/tiny_objects/1278-GliaLC-5-C7_scan2_object_rescue.rda
+        GliaLC-5-E7: scan2_output/tiny_objects/1278-GliaLC-5-E7_scan2_object_rescue.rda
+        GliaLC-5-G7: scan2_output/tiny_objects/1278-GliaLC-5-G7_scan2_object_rescue.rda
+        GliaLC-6-A7: scan2_output/tiny_objects/5871-GliaLC-6-A7_scan2_object_rescue.rda
+        GliaLC-6-D8: scan2_output/tiny_objects/5871-GliaLC-6-D8_scan2_object_rescue.rda
+        GliaLC-6-E7: scan2_output/tiny_objects/5871-GliaLC-6-E7_scan2_object_rescue.rda
+        GliaLC-6-G7: scan2_output/tiny_objects/5871-GliaLC-6-G7_scan2_object_rescue.rda
+        GliaLC-6-H7: scan2_output/tiny_objects/5871-GliaLC-6-H7_scan2_object_rescue.rda
+        GliaLC-6-C1: scan2_output/tiny_objects/5171-GliaLC-6-C1_scan2_object_rescue.rda
+        GliaLC-6-C2: scan2_output/tiny_objects/5171-GliaLC-6-C2_scan2_object_rescue.rda
+        GliaLC-6-F3: scan2_output/tiny_objects/5171-GliaLC-6-F3_scan2_object_rescue.rda
+        GliaLC-6-G3: scan2_output/tiny_objects/5171-GliaLC-6-G3_scan2_object_rescue.rda
+        GliaLC-6-H3: scan2_output/tiny_objects/5171-GliaLC-6-H3_scan2_object_rescue.rda
+        GliaLC-4-D8: scan2_output/tiny_objects/5657-GliaLC-4-D8_scan2_object_rescue.rda
+        GliaLC-4-F7: scan2_output/tiny_objects/5657-GliaLC-4-F7_scan2_object_rescue.rda
+        GliaLC-4-F9: scan2_output/tiny_objects/5657-GliaLC-4-F9_scan2_object_rescue.rda
+        GliaLC-4-H7: scan2_output/tiny_objects/5657-GliaLC-4-H7_scan2_object_rescue.rda
+        GliaLC-4-H8: scan2_output/tiny_objects/5657-GliaLC-4-H8_scan2_object_rescue.rda
+mda_sox10:
+        GliaLC-5-B12: scan2_output/tiny_objects/1278-GliaLC-5-B12_scan2_object_rescue.rda
+        GliaLC-5-D10: scan2_output/tiny_objects/1278-GliaLC-5-D10_scan2_object_rescue.rda
+        GliaLC-5-H10: scan2_output/tiny_objects/1278-GliaLC-5-H10_scan2_object_rescue.rda
+        GliaLC-5-H11: scan2_output/tiny_objects/1278-GliaLC-5-H11_scan2_object_rescue.rda
+        GliaLC-6-B10: scan2_output/tiny_objects/5871-GliaLC-6-B10_scan2_object_rescue.rda
+        GliaLC-6-D10: scan2_output/tiny_objects/5871-GliaLC-6-D10_scan2_object_rescue.rda
+        GliaLC-6-F10: scan2_output/tiny_objects/5871-GliaLC-6-F10_scan2_object_rescue.rda
+        GliaLC-6-F12: scan2_output/tiny_objects/5871-GliaLC-6-F12_scan2_object_rescue.rda
+        GliaLC-6-H12: scan2_output/tiny_objects/5871-GliaLC-6-H12_scan2_object_rescue.rda
+        GliaLC-6-A5: scan2_output/tiny_objects/5171-GliaLC-6-A5_scan2_object_rescue.rda
+        GliaLC-6-B4: scan2_output/tiny_objects/5171-GliaLC-6-B4_scan2_object_rescue.rda
+        GliaLC-6-B5: scan2_output/tiny_objects/5171-GliaLC-6-B5_scan2_object_rescue.rda
+        GliaLC-6-E6: scan2_output/tiny_objects/5171-GliaLC-6-E6_scan2_object_rescue.rda
+        GliaLC-6-G4: scan2_output/tiny_objects/5171-GliaLC-6-G4_scan2_object_rescue.rda
+        GliaLC-4-B12: scan2_output/tiny_objects/5657-GliaLC-4-B12_scan2_object_rescue.rda
+        GliaLC-4-D12: scan2_output/tiny_objects/5657-GliaLC-4-D12_scan2_object_rescue.rda
+        GliaLC-4-E12: scan2_output/tiny_objects/5657-GliaLC-4-E12_scan2_object_rescue.rda
+        GliaLC-4-F11: scan2_output/tiny_objects/5657-GliaLC-4-F11_scan2_object_rescue.rda
+        GliaLC-4-G10: scan2_output/tiny_objects/5657-GliaLC-4-G10_scan2_object_rescue.rda
+mda_all_infant:
         GliaLC-5-G7: scan2_output/tiny_objects/1278-GliaLC-5-G7_scan2_object_rescue.rda
         GliaLC-5-B12: scan2_output/tiny_objects/1278-GliaLC-5-B12_scan2_object_rescue.rda
         GliaLC-5-B7: scan2_output/tiny_objects/1278-GliaLC-5-B7_scan2_object_rescue.rda
@@ -87,7 +128,28 @@ oligo_mda_2infants:
         GliaLC-6-B10: scan2_output/tiny_objects/5871-GliaLC-6-B10_scan2_object_rescue.rda
         GliaLC-6-E7: scan2_output/tiny_objects/5871-GliaLC-6-E7_scan2_object_rescue.rda
         GliaLC-6-A7: scan2_output/tiny_objects/5871-GliaLC-6-A7_scan2_object_rescue.rda
-oligo_mda_2elderly:
+mda_gfap_infant:
+        GliaLC-5-B7: scan2_output/tiny_objects/1278-GliaLC-5-B7_scan2_object_rescue.rda
+        GliaLC-5-B8: scan2_output/tiny_objects/1278-GliaLC-5-B8_scan2_object_rescue.rda
+        GliaLC-5-C7: scan2_output/tiny_objects/1278-GliaLC-5-C7_scan2_object_rescue.rda
+        GliaLC-5-E7: scan2_output/tiny_objects/1278-GliaLC-5-E7_scan2_object_rescue.rda
+        GliaLC-5-G7: scan2_output/tiny_objects/1278-GliaLC-5-G7_scan2_object_rescue.rda
+        GliaLC-6-A7: scan2_output/tiny_objects/5871-GliaLC-6-A7_scan2_object_rescue.rda
+        GliaLC-6-D8: scan2_output/tiny_objects/5871-GliaLC-6-D8_scan2_object_rescue.rda
+        GliaLC-6-E7: scan2_output/tiny_objects/5871-GliaLC-6-E7_scan2_object_rescue.rda
+        GliaLC-6-G7: scan2_output/tiny_objects/5871-GliaLC-6-G7_scan2_object_rescue.rda
+        GliaLC-6-H7: scan2_output/tiny_objects/5871-GliaLC-6-H7_scan2_object_rescue.rda
+mda_sox10_infant:
+        GliaLC-5-B12: scan2_output/tiny_objects/1278-GliaLC-5-B12_scan2_object_rescue.rda
+        GliaLC-5-D10: scan2_output/tiny_objects/1278-GliaLC-5-D10_scan2_object_rescue.rda
+        GliaLC-5-H10: scan2_output/tiny_objects/1278-GliaLC-5-H10_scan2_object_rescue.rda
+        GliaLC-5-H11: scan2_output/tiny_objects/1278-GliaLC-5-H11_scan2_object_rescue.rda
+        GliaLC-6-B10: scan2_output/tiny_objects/5871-GliaLC-6-B10_scan2_object_rescue.rda
+        GliaLC-6-D10: scan2_output/tiny_objects/5871-GliaLC-6-D10_scan2_object_rescue.rda
+        GliaLC-6-F10: scan2_output/tiny_objects/5871-GliaLC-6-F10_scan2_object_rescue.rda
+        GliaLC-6-F12: scan2_output/tiny_objects/5871-GliaLC-6-F12_scan2_object_rescue.rda
+        GliaLC-6-H12: scan2_output/tiny_objects/5871-GliaLC-6-H12_scan2_object_rescue.rda
+mda_all_elderly:
         GliaLC-6-E6: scan2_output/tiny_objects/5171-GliaLC-6-E6_scan2_object_rescue.rda
         GliaLC-6-H3: scan2_output/tiny_objects/5171-GliaLC-6-H3_scan2_object_rescue.rda
         GliaLC-6-A5: scan2_output/tiny_objects/5171-GliaLC-6-A5_scan2_object_rescue.rda
@@ -107,6 +169,28 @@ oligo_mda_2elderly:
         GliaLC-4-D8: scan2_output/tiny_objects/5657-GliaLC-4-D8_scan2_object_rescue.rda
         GliaLC-4-F9: scan2_output/tiny_objects/5657-GliaLC-4-F9_scan2_object_rescue.rda
         GliaLC-4-H8: scan2_output/tiny_objects/5657-GliaLC-4-H8_scan2_object_rescue.rda
+        GliaLC-4-G10: scan2_output/tiny_objects/5657-GliaLC-4-G10_scan2_object_rescue.rda
+mda_gfap_elderly:
+        GliaLC-6-C1: scan2_output/tiny_objects/5171-GliaLC-6-C1_scan2_object_rescue.rda
+        GliaLC-6-C2: scan2_output/tiny_objects/5171-GliaLC-6-C2_scan2_object_rescue.rda
+        GliaLC-6-F3: scan2_output/tiny_objects/5171-GliaLC-6-F3_scan2_object_rescue.rda
+        GliaLC-6-G3: scan2_output/tiny_objects/5171-GliaLC-6-G3_scan2_object_rescue.rda
+        GliaLC-6-H3: scan2_output/tiny_objects/5171-GliaLC-6-H3_scan2_object_rescue.rda
+        GliaLC-4-D8: scan2_output/tiny_objects/5657-GliaLC-4-D8_scan2_object_rescue.rda
+        GliaLC-4-F7: scan2_output/tiny_objects/5657-GliaLC-4-F7_scan2_object_rescue.rda
+        GliaLC-4-F9: scan2_output/tiny_objects/5657-GliaLC-4-F9_scan2_object_rescue.rda
+        GliaLC-4-H7: scan2_output/tiny_objects/5657-GliaLC-4-H7_scan2_object_rescue.rda
+        GliaLC-4-H8: scan2_output/tiny_objects/5657-GliaLC-4-H8_scan2_object_rescue.rda
+mda_sox10_elderly:
+        GliaLC-6-A5: scan2_output/tiny_objects/5171-GliaLC-6-A5_scan2_object_rescue.rda
+        GliaLC-6-B4: scan2_output/tiny_objects/5171-GliaLC-6-B4_scan2_object_rescue.rda
+        GliaLC-6-B5: scan2_output/tiny_objects/5171-GliaLC-6-B5_scan2_object_rescue.rda
+        GliaLC-6-E6: scan2_output/tiny_objects/5171-GliaLC-6-E6_scan2_object_rescue.rda
+        GliaLC-6-G4: scan2_output/tiny_objects/5171-GliaLC-6-G4_scan2_object_rescue.rda
+        GliaLC-4-B12: scan2_output/tiny_objects/5657-GliaLC-4-B12_scan2_object_rescue.rda
+        GliaLC-4-D12: scan2_output/tiny_objects/5657-GliaLC-4-D12_scan2_object_rescue.rda
+        GliaLC-4-E12: scan2_output/tiny_objects/5657-GliaLC-4-E12_scan2_object_rescue.rda
+        GliaLC-4-F11: scan2_output/tiny_objects/5657-GliaLC-4-F11_scan2_object_rescue.rda
         GliaLC-4-G10: scan2_output/tiny_objects/5657-GliaLC-4-G10_scan2_object_rescue.rda
 oligo_mdapta:
         1278-Oligo-5: scan2_output/tiny_objects/1278-Oligo-5_scan2_object_rescue.rda
@@ -160,7 +244,7 @@ oligo_mdapta:
         GliaLC-4-F9: scan2_output/tiny_objects/5657-GliaLC-4-F9_scan2_object_rescue.rda
         GliaLC-4-H8: scan2_output/tiny_objects/5657-GliaLC-4-H8_scan2_object_rescue.rda
         GliaLC-4-G10: scan2_output/tiny_objects/5657-GliaLC-4-G10_scan2_object_rescue.rda
-oligo_mda:
+mda_all:
         GliaLC-5-G7: scan2_output/tiny_objects/1278-GliaLC-5-G7_scan2_object_rescue.rda
         GliaLC-5-B12: scan2_output/tiny_objects/1278-GliaLC-5-B12_scan2_object_rescue.rda
         GliaLC-5-B7: scan2_output/tiny_objects/1278-GliaLC-5-B7_scan2_object_rescue.rda

@@ -1,2 +1,16 @@
 scan2_output/full_objects/*.rda
 scan2_output/depth_profiles/*.tab.gz
+fig*/
+suppfig*/
+supptables/
+aging_rates/
+alignability/
+cancer_genes/
+cluster-logs/
+data/
+enrichment/
+input/
+logs/
+mutsigs/
+scan2/
+tables/

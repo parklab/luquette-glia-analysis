@@ -4,26 +4,26 @@ rule supptable1:
     input:
         neuron="input/neuron___meta___any.csv",
         oligo="input/oligo___meta___any.csv",
-        oligomda="input/oligo_mda___meta___any.csv"
+        mda="input/mda_all___meta___any.csv"
     resources:
         mem=100
     output:
         "supptables/SuppTable1.csv"
     shell:
         """
-        (cat {input.neuron} ; tail -n +2 {input.oligo} ; tail -n +2 {input.oligomda}) > {output}
+        (cat {input.neuron} ; tail -n +2 {input.oligo} ; tail -n +2 {input.mda}) > {output}
         """
 
 rule supptable2:
     input:
         neuron="input/neuron___unfiltered_mut___any.csv",
         oligo="input/oligo___unfiltered_mut___any.csv",
-        oligomda="input/oligo_mda_2elderly___mut___any.csv"
+        mda_all="input/mda_all___mut___any.csv"
     output:
         "supptables/SuppTable2.csv"
     resources:
         mem=100
     shell:
         """
-        (cat {input.neuron} ; tail -n +2 {input.oligo} ; tail -n +2 {input.oligomda}) > {output}
+        (cat {input.neuron} ; tail -n +2 {input.oligo} ; tail -n +2 {input.mda_all}) > {output}
         """

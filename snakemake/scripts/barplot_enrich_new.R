@@ -169,14 +169,18 @@ for (i in 1:2) {
                     get.ylim(es=eslist[[2]], shift=1, scale=100, use.boot=T)))
     plot.one(point.ests=list(setNames(eslist[[1]]$enr, rownames(eslist[[1]])), eslist[[2]]$enr),
         bars=lapply(eslist[1:2], function(es) es[, c("enr.boot.0.95.lb", "enr.boot.0.95.ub")]),
-        ylim=ylim, family='Arial', main=paste0('sSNVs\n', signal_to_plot_string))
+        #ylim=ylim, family='Arial', main=paste0('sSNVs\n', signal_to_plot_string))
+        # UPDATE: 5/2/23 - removing Arial family, doesn't seem to work well
+        ylim=ylim, main=paste0('sSNVs\n', signal_to_plot_string))
 
     # plot2: indels
     ylim <- range(c(get.ylim(es=eslist[[3]], shift=1, scale=100, use.boot=T),
                     get.ylim(es=eslist[[4]], shift=1, scale=100, use.boot=T)))
     plot.one(point.ests=list(setNames(eslist[[3]]$enr, rownames(eslist[[3]])), eslist[[4]]$enr),
         bars=lapply(eslist[3:4], function(es) es[, c("enr.boot.0.95.lb", "enr.boot.0.95.ub")]),
-        ylim=ylim, family='Arial', main=paste0('sIndels\n', signal_to_plot_string))
+        #ylim=ylim, family='Arial', main=paste0('sIndels\n', signal_to_plot_string))
+        # UPDATE: 5/2/23 - removing Arial family, doesn't seem to work well
+        ylim=ylim, main=paste0('sIndels\n', signal_to_plot_string))
 
     dev.off()
 }

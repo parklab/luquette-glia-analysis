@@ -100,8 +100,8 @@ fwrite(muttab, file=out.muts.csv)
 
 # Use leave-one-out hSNPs to quantify misclassification of shared as private.
 # All hSNPs are should be shared.
-hsnptab <- combine.dfs(r1@gatk[resampled.training.site == TRUE & muttype == 'snv'][, pass := resampled.training.pass],
-                       r2@gatk[resampled.training.site == TRUE & muttype == 'snv'][, pass := resampled.training.pass])
+hsnptab <- combine.dfs(r1@gatk[resampled.training.site == TRUE & muttype == 'snv'][, pass := training.pass],
+                       r2@gatk[resampled.training.site == TRUE & muttype == 'snv'][, pass := training.pass])
 
 # IMPORTANT: because `cosmic` contains SigB for MDA samples, there is no
 # need to further correct for sig B when using get.sbs1().

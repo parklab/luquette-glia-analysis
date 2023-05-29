@@ -33,17 +33,17 @@ rule cancer_density_correlation:
 rule cancer_density_correlation_with_mda_ols:
     input:
         neuron_muts="input/neuron___mut___A.rda",
-        oligo_muts="input/oligo_mdapta___mut___A.rda",
+        oligo_muts="input/{mdatype}_elderly___mut___A.rda",
         tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
         # quantile is ignored. raw scores used.
         cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
             tumor=sorted(set(cancer_meta['tumor'])))
     output:
-        pdf='fig6/panel_a_mdapta_supp.pdf',
-        svg='fig6/panel_a_mdapta_supp.svg',
-        csv='fig6/panel_a_mdapta_supp.csv'
+        pdf='fig6/panel_a_{mdatype}_elderly_supp.pdf',
+        svg='fig6/panel_a_{mdatype}_elderly_supp.svg',
+        csv='fig6/panel_a_{mdatype}_elderly_supp.csv'
     log:
-        'fig6/panel_a_mdapta_supp.log'
+        'fig6/panel_a_{mdatype}_elderly_supp.log'
     resources:
         mem=4000
     script:

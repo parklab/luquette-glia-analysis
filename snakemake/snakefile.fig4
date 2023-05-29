@@ -37,6 +37,29 @@ rule many_enrichment_analyses:
         "scripts/fig4_panels_cdefg.R"
 
 
+rule many_enrichment_analyses_mda:
+    input:
+        # would like to expand() this but also want to keep names of inputs
+        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/mda_gfap_elderly___A.10quantiles.csv",
+        neuron_scatacseq="enrichment/scatacseq/quantile/mda_gfap_elderly___A.10quantiles.csv",
+        neuron_repliseq="enrichment/repliseq/quantile/mda_gfap_elderly___A.10quantiles.csv",
+        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/mda_gfap_elderly___A.10quantiles.csv",
+        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/mda_sox10_elderly___A.10quantiles.csv",
+        oligo_scatacseq="enrichment/scatacseq/quantile/mda_sox10_elderly___A.10quantiles.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/mda_sox10_elderly___A.10quantiles.csv",
+        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/mda_sox10_elderly___A.10quantiles.csv"
+    output:
+        pdf="fig4/panels_cdefg_enrichment_analyses_mda_elderly.pdf",
+        svg="fig4/panels_cdefg_enrichment_analyses_mda_elderly.svg",
+        csv="fig4/panels_cdefg_enrichment_analyses_mda_elderly.csv"
+    log:
+        "fig4/panels_cdefg_enrichment_analyses_mda_elderly.log"
+    resources:
+        mem=4000
+    script:
+        "scripts/fig4_panels_cdefg.R"
+
+
 rule chromhmm_states:
     input:
         neuron_snv="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
@@ -60,6 +83,28 @@ rule chromhmm_states:
         "scripts/barplot_enrich_new.R"
 
 
+rule chromhmm_states_mda:
+    input:
+        oligo_pta="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___A/bedenrich/SUMMARY.rda",
+        mda_gfap="enrichment/roadmap_chromhmm_brain/bed_regions/mda_gfap_elderly___A/bedenrich/SUMMARY.rda",
+        mda_sox10="enrichment/roadmap_chromhmm_brain/bed_regions/mda_sox10_elderly___A/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig4/panel_h_chromhmm_mda_elderly.svg",
+        pdf="fig4/panel_h_chromhmm_mda_elderly.pdf",
+        csv="fig4/panel_h_chromhmm_mda_elderly.csv"
+    params:
+        signal_to_plot='eid=E073',
+        # 3_TssFlnk, 10_,11_,12_ (bivalent states) are all tiny genomic regions, creating
+        # huge error bars that make the rest of the plot difficult to read.
+        features="1_TssA,2_TssAFlnk,4_Tx,5_TxWk,6_EnhG,7_Enh,8_ZNF/Rpts,9_Het,13_ReprPC,14_ReprPCWk,15_Quies"
+    resources:
+        mem=1000
+    log:
+        "fig4/panel_h_chromhmm_mda_elderly.log"
+    script:
+        "scripts/barplot_enrich_new_mda_comparison.R"
+
+
 rule nott_enhancers_and_promoters:
     input:
         neuron_snv="enrichment/nott/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
@@ -79,6 +124,26 @@ rule nott_enhancers_and_promoters:
         "fig4/panel_i_nott_enhprom.log"
     script:
         "scripts/barplot_enrich_new.R"
+
+
+rule nott_enhancers_and_promoters_mda:
+    input:
+        oligo_pta="enrichment/nott/bed_regions/oligo___A/bedenrich/SUMMARY.rda",
+        mda_gfap="enrichment/nott/bed_regions/mda_gfap_elderly___A/bedenrich/SUMMARY.rda",
+        mda_sox10="enrichment/nott/bed_regions/mda_sox10_elderly___A/bedenrich/SUMMARY.rda"
+    output:
+        svg="fig4/panel_i_nott_enhprom_mda_elderly.svg",
+        pdf="fig4/panel_i_nott_enhprom_mda_elderly.pdf",
+        csv="fig4/panel_i_nott_enhprom_mda_elderly.csv"
+    params:
+        signal_to_plot='datasource=nott_enhprom',
+        features="astrocyte_enhancer,neuron_enhancer,oligo_enhancer,microglia_enhancer,astrocyte_promoter,neuron_promoter,oligo_promoter,microglia_promoter"
+    resources:
+        mem=1000
+    log:
+        "fig4/panel_i_nott_enhprom_mda_elderly.log"
+    script:
+        "scripts/barplot_enrich_new_mda_comparison.R"
 
 
 ####################################################################################

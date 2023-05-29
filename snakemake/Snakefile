@@ -16,6 +16,9 @@ celltypes = set(manifest['celltype'])
 qualtypes = set(manifest['qualtype'])
 celltypes_to_compute = [ 'neuron', 'oligo' ]
 
+mda_celltypes = [ 'mda_gfap', 'mda_sox10' ]
+mda_celltypes_by_age = [ 'mda_gfap_elderly', 'mda_sox10_elderly', 'mda_gfap_infant', 'mda_sox10_infant' ]
+
 # PTA neurons/oligos were randomly divided into two groups within each
 # age class (infant, adolescent, adult, elderly) to provide some guidance
 # on how many single cells might be needed to derive a robust signal.
@@ -25,7 +28,7 @@ indel_qualtypes = [ 'indel_A', 'indel_AB' ]
 all_qualtypes = snv_qualtypes + indel_qualtypes
 
 # Constant config variables for the enrichment pipeline
-binsizes = [ '1000', '10000', '100000', '1000000' ]
+binsizes = [ '1000' ] #, '10000', '100000', '1000000' ]
 qsizes = [ 3, 5, 10, 50 ]
 qsizes_to_compute = [ 10, 50 ]
 
@@ -44,11 +47,14 @@ enrichment_config = {
     # These parameters should not change between analyses
     'qbed_from_bigwig_script': 'snakemake/scripts/make_qbed_from_bigwig.sh',
     'quantiles': qsizes,
-    # must match binsizes
+    # must match binsizes.
+    # UPDATE 5/2/23: removing larger bin sizes that were not used. As noted,
+    # certain pipeline elements (like enrichment) use config['tiles'].keys()
+    # to find all bin sizes.
     'tiles': {
-        '1000000': 'alignability/genome_tiles/genome_tiles_1000000binsize.bed',
-        '100000':  'alignability/genome_tiles/genome_tiles_100000binsize.bed',
-        '10000':   'alignability/genome_tiles/genome_tiles_10000binsize.bed',
+        #'1000000': 'alignability/genome_tiles/genome_tiles_1000000binsize.bed',
+        #'100000':  'alignability/genome_tiles/genome_tiles_100000binsize.bed',
+        #'10000':   'alignability/genome_tiles/genome_tiles_10000binsize.bed',
         '1000':    'alignability/genome_tiles/genome_tiles_1000binsize.bed'
     },
     'masks': {
@@ -73,7 +79,8 @@ wildcard_constraints:
     panel_letter='a|b|c|d|e|f|g|h|i|j|k|l',
     tumor='[^\.]+',  # No longer need this -[^\.]'   # Tumor codes are formatted XXXX-YYYY 
     sig='sbs1|sbs16|sbs32',  # for "simplified" analysis of sbs1 and sbs16 enrichment using CG:C>T and ATN:T>C rather than signature fitting
-    half='|_half1|_half2'
+    half='|_half1|_half2',
+    mdatype='mda_all|mda_gfap|mda_sox10'
     #umap='atac|rna',
 
 
@@ -96,8 +103,10 @@ rule suppfig2:
     input:
         "suppfig2/panel_b_indelsize.pdf",
         "suppfig2/panel_b_indelsize.csv",
-        "suppfig2/panel_c_mda_elderly.pdf",
-        "suppfig2/panel_c_mda_elderly.csv",
+        expand('suppfig2/panel_c_{mdatype}_{ageclass}.{ext}',
+            mdatype=[ 'mda_gfap', 'mda_sox10' ],
+            ageclass=[ 'elderly', 'infant' ],
+            ext=[ 'pdf', 'csv' ]),
         "suppfig2/panel_d_genes.pdf",
         "suppfig2/panel_d_genes.jpeg",
         "suppfig2/panel_d_genes.csv"
@@ -138,10 +147,15 @@ rule fig4:
         "fig4/panels_cdefg_enrichment_analyses.pdf",
         "fig4/panels_cdefg_enrichment_analyses_half1.pdf",
         "fig4/panels_cdefg_enrichment_analyses_half2.pdf",
+        "fig4/panels_cdefg_enrichment_analyses_mda_elderly.pdf",
         "fig4/panel_h_chromhmm.pdf",
         "fig4/panel_h_chromhmm.csv",
+        "fig4/panel_h_chromhmm_mda_elderly.pdf",
+        "fig4/panel_h_chromhmm_mda_elderly.csv",
         "fig4/panel_i_nott_enhprom.pdf",
         "fig4/panel_i_nott_enhprom.csv",
+        "fig4/panel_i_nott_enhprom_mda_elderly.pdf",
+        "fig4/panel_i_nott_enhprom_mda_elderly.csv",
         #"fig4/panel_e_supplement_3quantiles.pdf",
         #"fig4/panel_e_supplement_5quantiles.pdf",
         #"fig4/panel_e_supplement_10quantiles.pdf",
@@ -184,8 +198,12 @@ rule fig6:
     input:
         "fig6/panel_a.pdf",
         "fig6/panel_a.csv",
-        "fig6/panel_a_mdapta_supp.pdf",
-        "fig6/panel_a_mdapta_supp.csv",
+        #"fig6/panel_a_mdapta_supp.pdf",
+        #"fig6/panel_a_mdapta_supp.csv",
+        "fig6/panel_a_mda_gfap_elderly_supp.pdf",
+        "fig6/panel_a_mda_gfap_elderly_supp.csv",
+        "fig6/panel_a_mda_sox10_elderly_supp.pdf",
+        "fig6/panel_a_mda_sox10_elderly_supp.csv",
         "fig6/panel_b_barplot.pdf",
         "fig6/panel_b_heatmap.pdf",
         "fig6/panel_b.csv",
@@ -247,16 +265,16 @@ rule mutsigs:
         expand("mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.{output}",
             qualtype=[ 'A' ],
             output=[ 'pdf', 'svg', 'csv' ]),
-        expand("mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.{output}",
-            celltype=[ 'oligo_mda', 'oligo_mda_2infants', 'oligo_mda_2elderly' ],
+        expand("mutsigs/raw_spectra/{mdatype}___raw_spectrum___{qualtype}.{output}",
+            mdatype=mda_celltypes_by_age,  # WANT by_age
             qualtype=[ 'A' ],
             output=[ 'pdf', 'svg', 'csv' ]),
-        expand("mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.{output}",
-            celltype=[ 'oligo_mda', 'oligo_mda_2infants', 'oligo_mda_2elderly', 'oligo_mdapta' ],
+        expand("mutsigs/cosmic_aging/{mdatype}___barplots___{qualtype}.{output}",
+            mdatype=mda_celltypes, #_by_age,
             qualtype=[ 'A' ],
             output=[ 'pdf', 'svg' ]),
-        expand("mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.{output}",
-            celltype=[ 'oligo_mda', 'oligo_mda_2infants', 'oligo_mda_2elderly' ],
+        expand("mutsigs/cosmic_aging/{mdatype}___cosmic_models_vs_age___{qualtype}.{output}",
+            mdatype=mda_celltypes, #_by_age,
             qualtype=[ 'A' ],
             output=[ 'pdf', 'svg', 'csv' ])
 
@@ -291,15 +309,16 @@ rule enrichment:
             datasource=bed_region_datasources,
             output=[ 'svg', 'pdf', 'csv' ]),
         # Just for MDA. Copy/paste because there are no indel classes for MDA (qualtypes=indel_A, etc).
+        # UPDATE 5/2/23: also removing pass=AB
         expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=[ 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ],
-            qualtype=[ 'A', 'AB' ],
+            celltype=[ 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ] + mda_celltypes_by_age,
+            qualtype=[ 'A' ],
             nquantiles=qsizes_to_compute,
             datasource=quantile_datasources,
             output=[ 'svg', 'pdf', 'csv' ]),
         expand('enrichment/{datasource}/bed_regions/{celltype}___{qualtype}.{output}',
-            celltype=[ 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ],
-            qualtype=[ 'A', 'AB' ],
+            celltype=[ 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ] + mda_celltypes_by_age,
+            qualtype=[ 'A' ],
             datasource=bed_region_datasources,
             output=[ 'svg', 'pdf', 'csv' ])
 

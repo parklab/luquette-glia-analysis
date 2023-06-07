@@ -7,8 +7,22 @@
 word=$1
 shift
 
+# Always require slurm-drmaa. The SCAN2 commands implicitly require it.
+module load slurm-drmaa
+
+# Ensure sentieon is set up
+which sentieon
+if [ "x$?" == "x1" ]; then
+    echo "sentieon is not on your \$PATH and might not be properly enabled. be sure to set the"
+    echo "following environment variables:"
+    echo "export SENTIEON_LICENSE=address_of_license_server:portnumber"
+    echo "export SENTIEON_INSTALL_DIR=/path/to/sentieon_toplevel"
+    echo "export PATH=\$PATH:/path/to/sentieon_toplevel/bin"
+    exit 1
+fi
+
 # $flags is always built added to, never taken from
-flags='-s=snakemake/Snakefile --dir=. --latency-wait=60 --rerun-incomplete --rerun-triggers=mtime'
+flags='-s=snakemake/Snakefile --dir=. --latency-wait=60 --rerun-incomplete' # --rerun-triggers=mtime'
         #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
 jobflag='-j=10'
 kgflag=''
@@ -32,12 +46,13 @@ elif [ "x$word" == 'xlocal' ]; then
     jobflag='-j=6' #20'
     kgflag='--keep-going'
 elif [ "x$word" == "xcluster" ]; then
-    echo "be sure to run: module load slurm-drmaa"
+    #echo "be sure to run: module load slurm-drmaa"
+
     mkdir -p cluster-logs
     usedrmaa='true'
     jobflag='-j=1000'
     kgflag='--keep-going'
-    flags="$flags $@ --max-status-checks-per-second=0.1 --restart-times=2"
+    flags="$flags $@ --max-status-checks-per-second=0.5" # --restart-times=2"  # this is handled earlier
     #flags="--max-jobs-per-second 0.05 --max-status-checks-per-second 0.1 --restart-times 2"
 else
     echo "usage: $0 {dry,unlock,make_pcawg_metadata,test,local,cluster} [optional snakemake arguments]"
@@ -49,7 +64,8 @@ fi
 if [ $usedrmaa == "true" ]; then
     snakemake $flags $kgflag \
         --max-threads=12 $jobflag \
-        --drmaa=' -p priopark -A park_contrib --mem={resources.mem} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'
+        --drmaa=' -p priopark -A park_contrib --mem={resources.mem_mb} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'
 else
+    echo "snakemake $flags $kgflag --max-threads=12 $jobflag"
     snakemake $flags $kgflag --max-threads=12 $jobflag
 fi

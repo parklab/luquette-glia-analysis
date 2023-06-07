@@ -9,20 +9,21 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@input[1], snakemake@output[1]
+        snakemake@input['rda'], snakemake@output['vcf'], snakemake@params['samplename']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) != 2) {
+if (length(args) != 3) {
     cat('assumes in.rda contains only one object\n')
-    stop("usage: rda_to_csv.r in.rda out.vcf")
+    stop("usage: rda_to_csv.r in.rda out.vcf samplename")
 }
 
 inrda <- args[1]
 outvcf <- args[2]
+sample.name <- args[3]
 
 if (file.exists(outvcf))
     stop(paste('output file', outvcf, 'already exists, please delete it first'))
@@ -35,7 +36,7 @@ f <- file(outvcf)
 vcf.header <- c("##fileformat=VCFv4.0", "##source=rda_to_vcf.R", 
     "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
 vcf.header <- c(vcf.header, paste(c("#CHROM", "POS", "ID", 
-    "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", 'dummy'), 
+    "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", sample.name), 
     collapse = "\t"))
 writeLines(vcf.header, con = f)
 

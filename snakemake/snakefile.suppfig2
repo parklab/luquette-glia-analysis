@@ -9,28 +9,28 @@ rule fig1_indel_size_analysis:
         "suppfig2/panel_b_indelsize.pdf",
         "suppfig2/panel_b_indelsize.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "suppfig2/panel_b_indelsize.log"
     script:
         "scripts/plot_indel_sizes.R"
 
 
-rule genic_distribution_mda_elderly:
+rule genic_distribution_mda: #_elderly:
     input:
         oligo_snv_pta="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
-        oligo_snv_mda="enrichment/gencode_simplified/bed_regions/{mdatype}_elderly___AB/bedenrich/SUMMARY.rda",
+        oligo_snv_mda="enrichment/gencode_simplified/bed_regions/{mdatype}_{ageclass}___AB/bedenrich/SUMMARY.rda",
     output:
-        svg="suppfig2/panel_c_{mdatype}_elderly.svg",
-        pdf="suppfig2/panel_c_{mdatype}_elderly.pdf",
-        csv="suppfig2/panel_c_{mdatype}_elderly.csv"
+        svg="suppfig2/panel_c_{mdatype}_{ageclass}.svg",
+        pdf="suppfig2/panel_c_{mdatype}_{ageclass}.pdf",
+        csv="suppfig2/panel_c_{mdatype}_{ageclass}.csv"
     params:
         signal_to_plot='datasource=gencode_simplified',
         features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
     resources:
-        mem=1000
+        mem_mb=1000
     log:
-        "suppfig2/panel_c_{mdatype}_elderly.log"
+        "suppfig2/panel_c_{mdatype}_{ageclass}.log"
     script:
         "scripts/suppfig2_panel_c.R"
 
@@ -45,7 +45,7 @@ rule individual_gene_enrichment:
         svg="suppfig2/panel_d_genes.svg",
         jpeg="suppfig2/panel_d_genes.jpeg"
     resources:
-        mem=8000
+        mem_mb=8000
     log:
         "suppfig2/panel_d_genes.log"
     script:

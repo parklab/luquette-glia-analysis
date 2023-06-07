@@ -1,0 +1,293 @@
+# vim: syntax=python
+
+import yaml
+
+with open('metadata/bams.yaml') as yf:
+    bams = yaml.load(yf, Loader=yaml.FullLoader)
+
+# `bams` is a dict mapping donor ID -> list(single cell bams, bulk bams, other bams), where
+# each of the elements in the above list are also dicts mapping sample ID -> bam path.
+# Here, flatten `bams` into just a list of file paths with no related metadata.
+allbams = sum([ list(bams[k][bt].values()) for k in bams.keys() for bt in bams[k].keys()  ], [])
+
+
+# I don't know how to check the git commit ID of the installed R package (or
+# how to condition a snakemake rule on a commit ID rather than an output file).
+# So this rule would not be capable of keeping the R version updated, but will
+# work once. It's mostly here for posterity.
+rule download_specific_scan2_rpkg_version:
+    input:
+    output:
+        # The real result of this rule is installing the R package. This directory
+        # just serves as a flawed way of forcing this rule to run in roughly the
+        # right dependency order.
+        dir=directory('scan2/r-scan2_specific_commit')
+    log:
+    params:
+        commit_id="aafa87ddb4151ab06f41e6479185d638023c5e31"
+        # Real commit used is below. This contains one update to a script that
+        # summarizes tables at the very end of the SCAN2 pipeline, so it isn't
+        # worth rerunning all of SCAN2 to update this param.
+        #commit_id="73b2a85e429c424fe91e8b516d890c775cce65ea"
+    localrule: True
+    threads: 1
+    resources:
+        mem_mb=250
+    shell:
+        """
+        git clone https://github.com/parklab/r-scan2.git {output.dir}
+        cd {output.dir}
+        git checkout -q {params.commit_id}
+        R CMD INSTALL --build .
+        """
+
+
+rule download_specific_scan2_version:
+    input:
+        # This is a directory, no particular file is of importance
+        'scan2/r-scan2_specific_commit'
+    output:
+        dir=directory('scan2/SCAN2_specific_commit'),
+        scan2_bin="scan2/SCAN2_specific_commit/bin/scan2",
+        scan2_snakefile="scan2/SCAN2_specific_commit/snakemake/Snakefile",
+        scan2_scripts=directory("scan2/SCAN2_specific_commit/scripts")
+    log:
+    params:
+        commit_id="b8858c1eb4cea9a7bc8d2d004f7a6c97ef473140"
+        # Real commit used is below. This contains one update to a script that
+        # summarizes tables at the very end of the SCAN2 pipeline, so it isn't
+        # worth rerunning all of SCAN2 to update this param.
+        #commit_id="79acc3482aef01afde0d59f06b7e44fcbe2118e6"
+    localrule: True
+    threads: 1
+    resources:
+        mem_mb=250
+    shell:
+        # rm: Snakemake creates empty directories to contain scan2 and Snakefile.
+        # git-clone will not clone a repository into a non-empty directory.
+        """
+        rm -fr {output.dir}
+        git clone https://github.com/parklab/SCAN2.git {output.dir}
+        cd {output.dir}
+        git checkout -q {params.commit_id}
+        """
+
+
+rule download_hs37d5:
+    input:
+    output:
+        fasta='resources/human_g1k_v37_decoy.fasta',
+        tmp_fasta=temp('resources/human_g1k_v37_decoy.fasta.gz'),
+        fai='resources/human_g1k_v37_decoy.fasta.fai',
+        tmp_fai=temp('resources/human_g1k_v37_decoy.fasta.fai.gz'),
+        fadict='resources/human_g1k_v37_decoy.dict',
+        tmp_fadict=temp('resources/human_g1k_v37_decoy.dict.gz')
+    shell:
+        """
+        wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.fasta.gz \
+            --output-document {output.tmp_fasta}
+        gunzip -c {output.tmp_fasta} > {output.fasta}
+
+        wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.fasta.fai.gz \
+            --output-document {output.tmp_fai}
+        gunzip -c {output.tmp_fai} > {output.fai}
+
+        wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.dict.gz \
+            --output-document {output.tmp_fadict}
+        gunzip -c {output.tmp_fadict} > {output.fadict}
+        """
+
+
+rule download_shapeit_b37_refpanel:
+    input:
+    output:
+        autosome_tgz=temp('resources/1000GP_Phase3.tgz'),
+        chrX_tgz=temp('resources/1000GP_Phase3_chrX.tgz')
+    threads: 1
+    resources:
+        mem_mb=250
+    shell:
+        """
+        wget --output-document {output.autosome_tgz} \
+            https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.tgz
+        wget --output-document {output.chrX_tgz} \
+            https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3_chrX.tgz
+        """
+
+
+rule unpack_shapeit_b37_refpanel:
+    input:
+        autosome_tgz='resources/1000GP_Phase3.tgz',
+        chrX_tgz='resources/1000GP_Phase3_chrX.tgz'
+    output:
+        dir=directory('resources/1000GP_Phase3')
+    threads: 1
+    resources:
+        mem_mb=250
+    shell:
+        # The autosome tarball already has a top-level directory called 1000GP_Phase3,
+        # so we only need --directory resources/. The chrX tarball does not have a top
+        # level directory, so we have to supply the full path to --directory.
+        """
+        mkdir -p {output.dir}
+        tar xzvf {input.autosome_tgz} --directory resources/
+        tar xzvf {input.chrX_tgz} --directory {output.dir}
+        """
+
+
+rule scan2_cross_sample_panel_setup:
+    input:
+        scan2_bin="scan2/SCAN2_specific_commit/bin/scan2",
+        scan2_snakefile="scan2/SCAN2_specific_commit/snakemake/Snakefile",
+        scan2_scripts="scan2/SCAN2_specific_commit/scripts",
+        fasta='resources/human_g1k_v37_decoy.fasta',
+        fai='resources/human_g1k_v37_decoy.fasta.fai',
+        fadict='resources/human_g1k_v37_decoy.dict',
+        shapeit_panel='resources/1000GP_Phase3',
+        dbsnp='resources/dbsnp_147_b37_common_all_20160601.vcf',
+        panel_metadata='metadata/panel_metadata_162cells_66ptaols_40mdaglia_56ptaneurons_21bulks_20brains.csv',
+        gatk_regions='metadata/scan2_panel_regions_11537_windows_250kb.no_bad_chunk.txt',
+        bams=allbams,
+        bais=[ bam.replace('.bam', '.bai') for bam in allbams ]
+    output:
+        yaml="scan2/panel/makepanel/scan.yaml"
+    params:
+        bam_flags=lambda wildcards, input: ' '.join([ '--bam ' + bam for bam in input.bams ])
+    localrule: True
+    threads: 1
+    resources:
+        mem_mb=4000
+    shell:
+        # realpath: SCAN2 does not realpath directories by default. Need to supply the
+        # full path because SCAN2 does change the working directory.
+        """
+        {input.scan2_bin} -d scan2/panel/makepanel --snakefile {input.scan2_snakefile} init
+        {input.scan2_bin} -d scan2/panel/makepanel --snakefile {input.scan2_snakefile} config \
+            --verbose \
+            --analysis makepanel \
+            --gatk sentieon_joint \
+            --ref {input.fasta} \
+            --dbsnp {input.dbsnp} \
+            --shapeit-refpanel $(realpath {input.shapeit_panel}) \
+            --regions-file {input.gatk_regions} \
+            --scripts $(realpath {input.scan2_scripts}) \
+            --makepanel-metadata {input.panel_metadata} \
+            {params.bam_flags}
+        {input.scan2_bin} -d scan2/panel/makepanel --snakefile {input.scan2_snakefile} validate
+        """
+
+
+rule scan2_cross_sample_panel:
+    input:
+        scan2_bin="scan2/SCAN2_specific_commit/bin/scan2",
+        scan2_snakefile="scan2/SCAN2_specific_commit/snakemake/Snakefile",
+        yaml="scan2/panel/makepanel/scan.yaml"
+    output:
+        cross_sample_panel=protected("scan2/panel/makepanel/panel/panel.tab.gz"),
+        benchmarks="scan2/panel/makepanel/makepanel_collected_benchmarks.txt"
+    log:
+        'scan2/panel/makepanel/log.txt'
+    threads: 1
+    resources:
+        mem_mb=4000
+    shell:
+        """
+        {input.scan2_bin} -d scan2/panel/makepanel --snakefile {input.scan2_snakefile} \
+            makepanel \
+                --joblimit 1000 \
+                --drmaa ' -p park -A park_contrib -c {{threads}} --mem={{resources.mem_mb}} -t 40:00:00 -o %logdir/slurm-%A.log' \
+                --snakemake-args ' --restart-times=2 --keep-going --max-status-checks-per-second 0.5 --max-jobs-per-second 2'
+        """
+
+
+rule scan2_call_mutations_setup:
+    input:
+        scan2_bin="scan2/SCAN2_specific_commit/bin/scan2",
+        scan2_snakefile="scan2/SCAN2_specific_commit/snakemake/Snakefile",
+        scan2_scripts="scan2/SCAN2_specific_commit/scripts",
+        fasta='resources/human_g1k_v37_decoy.fasta',
+        fai='resources/human_g1k_v37_decoy.fasta.fai',
+        fadict='resources/human_g1k_v37_decoy.dict',
+        shapeit_panel='resources/1000GP_Phase3',
+        dbsnp='resources/dbsnp_147_b37_common_all_20160601.vcf',
+        gatk_regions='metadata/scan2_gatk_regions_1167windows_2500000_no_bad_chunk.txt',
+        sc_bams=lambda wildcards: bams[wildcards.donor]['single_cell'].values(),
+        sc_bais=lambda wildcards: [ bam.replace('.bam', '.bai') for bam in bams[wildcards.donor]['single_cell'].values() ],
+        bulk_bams=lambda wildcards: bams[wildcards.donor]['bulk'].values(),
+        bulk_bais=lambda wildcards: [ bam.replace('.bam', '.bai') for bam in bams[wildcards.donor]['bulk'].values() ],
+        cross_sample_panel="scan2/panel/makepanel/panel/panel.tab.gz"
+    output:
+        yaml="scan2/{donor}/scan2/scan.yaml"
+    params:
+        dir=directory("scan2/{donor}/scan2"),
+        sc_bam_flags=lambda wildcards, input: ' '.join([ '--sc-bam ' + bam for bam in input.sc_bams ]),
+        bulk_bam_flag=lambda wildcards, input: '--bulk-bam ' + input.bulk_bams[0],
+        other_bam_flags=lambda wildcards, input: ' '.join([ '--bam ' + bam for bam in input.bulk_bams[-0] ])
+    localrule: True
+    threads: 1
+    resources:
+        mem_mb=1000
+    shell:
+        # realpath: SCAN2 does not realpath directories by default. Need to supply the
+        # full path because SCAN2 does change the working directory.
+        """
+        {input.scan2_bin} -d {params.dir} --snakefile {input.scan2_snakefile} init
+        {input.scan2_bin} -d {params.dir} --snakefile {input.scan2_snakefile} config \
+            --verbose \
+            --analysis call_mutations \
+            --gatk sentieon_joint \
+            --ref {input.fasta} \
+            --dbsnp {input.dbsnp} \
+            --shapeit-refpanel $(realpath {input.shapeit_panel}) \
+            --regions-file {input.gatk_regions} \
+            --scripts $(realpath {input.scan2_scripts}) \
+            --abmodel-n-cores 10 \
+            --sensitivity-n-cores 10 \
+            {params.sc_bam_flags} \
+            {params.bulk_bam_flag} \
+            --cross-sample-panel {input.cross_sample_panel}
+        {input.scan2_bin} -d {params.dir} --snakefile {input.scan2_snakefile} validate
+        """
+
+
+rule scan2_call_mutations:
+    input:
+        scan2_bin="scan2/SCAN2_specific_commit/bin/scan2",
+        scan2_snakefile="scan2/SCAN2_specific_commit/snakemake/Snakefile",
+        yaml="scan2/{donor}/scan2/scan.yaml"
+    output:
+        dpmatrix=protected("scan2/{donor}/scan2/depth_profile/joint_depth_matrix.tab.gz")
+    params:
+        scan2_output_dir="scan2/{donor}/scan2",
+    log:
+        'scan2/{donor}/scan2/log.txt'
+    threads: 1
+    resources:
+        mem_mb=4000
+    shell:
+        # Very intentionally not putting --drmaa or --snakemake-args as Snakemake params.
+        # Changing these do not change results, but Snakemake may want to rerun jobs
+        # if the params ever did change.
+        """
+        {input.scan2_bin} -d {params.scan2_output_dir} --snakefile {input.scan2_snakefile} \
+            run \
+                --joblimit 800 \
+                --drmaa ' -p park -A park_contrib -c {{threads}} --mem={{resources.mem_mb}} -t 24:00:00 -o %logdir/slurm-%A.log' \
+                --snakemake-args ' --restart-times=2 --keep-going --max-status-checks-per-second 0.5 --max-jobs-per-second 2'
+        """
+
+
+rule scan2_rda_to_vcf:
+    input:
+        rda="scan2/{donor}/scan2/sensitivity/{sample}/scan2_object.rda"
+    output:
+        vcf="vcfs/{qualtype}/{donor}___{sample}.vcf"
+    log:
+        "vcfs/{qualtype}/{donor}___{sample}.log"
+    params:
+        qualtype="{qualtype}"
+    resources:
+        # The full SCAN2 objects are now very large due to the spatial sensitivity models
+        mem_mb=10000
+    script:
+        "scripts/scan2_to_vcf.R"

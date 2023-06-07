@@ -1,0 +1,93 @@
+CONFIGURING THIS PIPELINE
+=========================
+Users must edit snakemake/snakefile.scan2_call_mutations to adapt to their compute
+infrastructures.  The default values will almost certainly not work.  The relevant
+lines to edit are lines 8-9 below.
+
+1   shell:
+2       # Very intentionally not putting --drmaa or --snakemake-args as Snakemake params.
+3       # Changing these do not change results, but Snakemake may want to rerun jobs
+4       # if the params ever did change.
+5       """
+6       {input.scan2_bin} -d {input.scan2_output_dir} --snakefile {input.scan2_snakefile} \
+7           run \
+8               --joblimit 400 \
+9               --drmaa ' -p park -A park_contrib -c {{threads}} --mem={{resources.mem_mb}} -t 24:00:00 -o %logdir/slurm-%A.log' \
+10              --snakemake-args ' --restart-times=2 --rerun-triggers=mtime --keep-going --max-status-checks-per-second 0.5 --max-jobs-per-second 2 --rerun-incomplete'
+11      """
+
+* --joblimit 400 sets the maximum number of jobs EACH SCAN2 RUN MAY USE.  There are
+  currently 20 SCAN2 runs that will be run simultaneously.
+* --drmaa passes its argument through to Snakemake's --drmaa.  See the Snakemake docs
+  for instructions on setting an appropriate DRMAA string.  If you choose to use DRMAA,
+  you will need to install a separate slurm-drmaa package.  Some systems may have this
+  available already via, e.g., `module load slurm-drmaa`.  Note that the Snakemake
+  developers now recommend against --drmaa, instead recommending --cluster.  Currently,
+  Snakemake's --slurm option SHOULD NOT be used as it seems to randomly reduce certain
+  jobs' thread counts to 1, resulting in jobs that can take a month or longer.
+  When adapting our --drmaa flag to another infrastructure, take care to use the
+  {{threads}} and {{resources.mem_mb}} parameters, as these are (somewhat) tuned for
+  each job to be reasonable.
+
+
+
+SCAN2 RESOURCE FILES
+====================
+
+Users should follow the installation instructions at https://github.com/parklab/SCAN2 for
+genome version hs37d5.  However, some amount of this is handled in Snakemake.  Exceptions
+that must be handled by the user are noted here.
+
+
+SCAN2
+=====
+* The SCAN2 pipeline package (https://github.com/parklab/SCAN2) is fully automatic.
+* The SCAN2 R package (https://github.com/parklab/r-scan2) must be installed by the
+  user.  The correct commit ID is recorded in snakemake/Snakefile.scan2 and automates
+  the download and install.  The user must take care not to overwrite this installed
+  r-scan2 version (e.g., even if conda really wants to).  If the version is overwritten,
+  it can be reinstalled by running:
+        cd scan2/r-scan2_specific_commit
+        R CMD INSTALL --build .
+  N.B. as all things in this pipeline, the conda environment must be `conda activate`d
+  before running R CMD INSTALL --build ., or else the R package will be installed to
+  the wrong R library.
+
+
+HUMAN REFERENCE
+===============
+Fully automatic.
+
+
+SIGPROFILERMATRIXGENERATOR REFERENCE
+====================================
+No automation. User must follow instructions at https://github.com/parklab/SCAN2. Briefly,
+with the conda environment active, start python and run the commands:
+    python
+        from SigProfilerMatrixGenerator import install as genInstall
+        genInstall.install('GRCh37', rsync=False, bash=True)
+        quit()
+
+
+SHAPEIT PHASING REFERENCE PANEL
+===============================
+Fully automatic.
+
+
+DBSNP
+=====
+As of 05/31/2023, I do not think the exact version of dbSNP we use (v147 b37 common_all) is
+available for download. It has to be created by downloading a newer version and filtering
+for sites in version 147 or lower.
+
+So for the current analysis, I've simply manually copied over our dbsnp147_b37_common_all
+VCF and associated indexes (.idx) and gzipped version (.gz, .gz.idx).  Any future user of
+this pipeline will need to do the same and name the files as expected by Snakemake:
+
+66402bc8fcfc0be8070ff12ad996f915  resources/dbsnp_147_b37_common_all_20160601.vcf
+a1b77a1704d1b4b6be6a884b99529dbc  resources/dbsnp_147_b37_common_all_20160601.vcf.gz
+96bd7355661911f3165d69dd5bfc16a3  resources/dbsnp_147_b37_common_all_20160601.vcf.gz.tbi
+42f0fd58a5f787467e817c112e99064f  resources/dbsnp_147_b37_common_all_20160601.vcf.idx
+
+The above md5sums may not be correct since newer dbSNP versions may have different
+headers or different INFO fields.

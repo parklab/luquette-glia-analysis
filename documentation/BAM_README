@@ -1,0 +1,13 @@
+Aligned and processed BAM files must be downloaded from dbGaP, project
+phs001485.v4.
+
+There are 183 BAMs in total, with each corresponding to a sample ID in
+metadata/panel_metadata_162cells_66ptaols_40mdaglia_56ptaneurons_21bulks_20brains.csv.
+
+These BAMs and their indexes must be saved in the bams/ directory and be
+named following the convention:
+    bams/{sample_ID}.bam
+    bams/{sample_ID}.bai
+
+This naming convention may not be upheld by dbGaP, so the user must ensure
+proper file naming.

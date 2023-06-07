@@ -32,18 +32,20 @@ binsizes = [ '1000' ] #, '10000', '100000', '1000000' ]
 qsizes = [ 3, 5, 10, 50 ]
 qsizes_to_compute = [ 10, 50 ]
 
+# List of Ns to perform NMF on
+nmf_sig_ns = [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+
 
 with open('metadata/scan2_objects.yaml') as yf:
     scan2_objects = yaml.load(yf, Loader=yaml.FullLoader)
 
+with open('metadata/bams.yaml') as yf:
+    bams = yaml.load(yf, Loader=yaml.FullLoader)
 
 
 # The output directory and signal files are the only parameters that should
 # change between analyses.
 enrichment_config = {
-    #'output_dir': 'path/to/output',
-    #'SIGNAL_MANIFEST': 'path/to/sig.csv',
-
     # These parameters should not change between analyses
     'qbed_from_bigwig_script': 'snakemake/scripts/make_qbed_from_bigwig.sh',
     'quantiles': qsizes,
@@ -80,9 +82,42 @@ wildcard_constraints:
     tumor='[^\.]+',  # No longer need this -[^\.]'   # Tumor codes are formatted XXXX-YYYY 
     sig='sbs1|sbs16|sbs32',  # for "simplified" analysis of sbs1 and sbs16 enrichment using CG:C>T and ATN:T>C rather than signature fitting
     half='|_half1|_half2',
-    mdatype='mda_all|mda_gfap|mda_sox10'
+    mdatype='mda_all|mda_gfap|mda_sox10',
+    nmf_spectype='ID|SBS',
+    nmf_runtype='pta|mda|all',
     #umap='atac|rna',
 
+
+rule scan2_panel_setup:
+    input:
+        "scan2/panel/makepanel/scan.yaml"
+
+rule scan2_panel_run:
+    input:
+        "scan2/panel/makepanel/panel/panel.tab.gz",
+        "scan2/panel/makepanel/makepanel_collected_benchmarks.txt"
+
+rule scan2_setup:
+    input:
+        expand("scan2/{donor}/scan2/scan.yaml", donor=bams.keys())
+
+def unpack_donors_and_samples(bams):
+    ret = []
+    for donor in bams.keys():
+        ret = ret + expand("scan2/{donor}/scan2/sensitivity/{sample}/scan2_object.rda",
+            donor=donor, sample=bams[donor]['single_cell'])
+    return(ret)
+
+rule scan2_call:
+    input:
+        unpack_donors_and_samples(bams)
+
+rule nmf:
+    input:
+        expand('nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/signatures_{n}.pdf',
+            nmf_runtype=[ 'pta', 'mda', 'all' ], nmf_spectype=[ 'SBS', 'ID' ], n=nmf_sig_ns),
+        expand('nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/selection_criteria.pdf',
+            nmf_runtype=[ 'pta', 'mda', 'all' ], nmf_spectype=[ 'SBS', 'ID' ])
 
 
 # Shortcuts to rebuild a single figure at a time
@@ -348,6 +383,9 @@ rule signature_enrichment:
 
 
 include: "snakefile.data"
+include: "snakefile.scan2"
+include: "snakefile.scan2_per_donor"
+include: "snakefile.nmf"
 include: "snakefile.alignability"
 include: "snakefile.aging_rates"
 include: "snakefile.mutsigs"
@@ -395,7 +433,7 @@ use rule * from enrichment_hic_tads as enrichment_hic_tads_*
 # for now, just brute force it
 use rule enrichment_bed_analysis from enrichment_hic_tads as enrichment_hic_tads_enrichment_bed_analysis with:
     resources:
-        mem=128000
+        mem_mb=128000
 
 ########################################################################
 # Roadmap epigenomics chromHMM  state models
@@ -419,7 +457,7 @@ use rule * from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_*
 # -- but leaving in here anyway in case we go back to the full catalog.
 use rule enrichment_bed_analysis from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_enrichment_bed_analysis with:
     resources:
-        mem=42000
+        mem_mb=42000
 
 use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_enrichment_bed_plot with:
     params:
@@ -447,7 +485,7 @@ use rule * from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_
 
 use rule sigenrichment_qbed_analysis from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_sigenrichment_qbed_analysis with:
     resources:
-        mem=lambda wildcards: 96000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+        mem_mb=lambda wildcards: 96000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
 
 use rule enrichment_plot from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_enrichment_plot with:
     params:
@@ -488,7 +526,7 @@ use rule * from enrichment_encode_replichip as enrichment_encode_replichip_*
 
 use rule sigenrichment_qbed_analysis from enrichment_encode_replichip as enrichment_encode_replichip_sigenrichment_qbed_analysis with:
     resources:
-        mem=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+        mem_mb=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
 
 use rule enrichment_plot from enrichment_encode_replichip as enrichment_encode_replichip_enrichment_plot with:
     params:
@@ -528,7 +566,7 @@ use rule * from enrichment_repliseq as enrichment_repliseq_*
 
 use rule sigenrichment_qbed_analysis from enrichment_repliseq as enrichment_repliseq_sigenrichment_qbed_analysis with:
     resources:
-        mem=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+        mem_mb=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
 
 use rule enrichment_plot from enrichment_repliseq as enrichment_repliseq_enrichment_plot with:
     params:
@@ -571,7 +609,7 @@ use rule * from enrichment_conservation as enrichment_conservation_*
 # memory for large windows like 1MB.
 use rule make_qbed_from_bigwig from enrichment_conservation as enrichment_conservation_make_qbed_from_bigwig with:
     resources:
-        mem=65000
+        mem_mb=65000
 
 use rule enrichment_plot from enrichment_conservation as enrichment_conservation_enrichment_plot with:
     params:
@@ -611,7 +649,7 @@ use rule * from enrichment_scatacseq  as enrichment_scatacseq_*
 
 use rule make_qbed_from_bigwig from enrichment_scatacseq as enrichment_scatacseq_make_qbed_from_bigwig with:
     resources:
-        mem=15000
+        mem_mb=15000
 
 use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enrichment_plot with:
     params:

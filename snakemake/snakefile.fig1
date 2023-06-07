@@ -14,7 +14,7 @@ rule genic_distribution:
         signal_to_plot='datasource=gencode_simplified',
         features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "fig1/panel_c_genic_enrichment.log"
     script:
@@ -34,7 +34,7 @@ rule aging_rates_figure:
         mutburdens='fig1/panel_b_aging_rates_{qualtype}_burdens.csv',
         models='fig1/panel_b_aging_rates_{qualtype}_model.csv'
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         'fig1/panel_b_aging_rates_{qualtype}.log'
     shell:
@@ -54,7 +54,7 @@ rule run_snpeff_helper:
     log:
         "snpeff/{celltype}___snpeff___{qualtype}.run_snpeff.log"
     resources:
-        mem=8000
+        mem_mb=8000
     shell:
         """
         snakemake/scripts/run_snpeff.sh \
@@ -73,7 +73,7 @@ rule snpeff_analysis:
         pdf="fig1/panel_d_snpeff.pdf",
         csv="fig1/panel_d_snpeff.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "fig1/panel_d_snpeff.log"
     script:

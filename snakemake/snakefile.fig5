@@ -18,6 +18,6 @@ rule many_enrichment_analyses_signature_specific:
     log:
         "fig5/all_panels_enrichment_analyses.log"
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig5_allpanels.R"

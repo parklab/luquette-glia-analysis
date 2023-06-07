@@ -11,7 +11,7 @@ rule fig2_raw_snv_spectrum:
         pdf="fig2/panel_a.pdf",
         csv="fig2/panel_a.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "fig2/panel_a.log"
     script:
@@ -28,7 +28,7 @@ rule cosmic_snv_barplots:
         pdf="fig2/panel_b___{celltype}___{qualtype}.pdf",
         csv="fig2/panel_b___{celltype}___{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "fig2/panel_b___{celltype}___{qualtype}.log"
     shell:
@@ -49,7 +49,7 @@ rule cosmic_snv_vs_age_plots:
         pdf="fig2/panel_c_{qualtype}.pdf",
         csv="fig2/panel_c_{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "fig2/panel_c_{qualtype}.log"
     shell:
@@ -81,7 +81,7 @@ rule fig2_shared_snv_analysis:
         amptype=lambda wildcards: 'pta' if wildcards.sample_id == '5559' else 'mda'
     resources:
         # The SCAN2 objects are big
-        mem=8000
+        mem_mb=8000
     script:
         "scripts/fit_mrca.R"
 
@@ -104,7 +104,7 @@ rule signature_fitting_related_oligo_pairs:
     log:
         'fig2/panel_d.log'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig2_panel_d.R"
 
@@ -122,6 +122,6 @@ rule infant_oligo_spectra:
     log:
         'fig2/panel_e_infant.log'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig2_panel_e_infant.R"

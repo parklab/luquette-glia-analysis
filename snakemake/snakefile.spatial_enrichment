@@ -15,6 +15,6 @@ rule compute_spatial_mutburden:
     log:
         "enrichment/spatial_burden/{celltype}___{qualtype}___{binsize}binsize___{rolling}rolling.log"
     resources:
-        mem=8000
+        mem_mb=8000
     script:
         "scripts/spatial_mutburden.R"

@@ -45,7 +45,7 @@ rule enrichment_bed_plot:
         ygroup='datasource',
         #highlight=''  # can use e.g., group=Brain to select lines to highlight
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/plot_enrichment.R"
 
@@ -61,7 +61,7 @@ rule enrichment_bed_table:
     benchmark:
         outroot + '/{mutclass}/combined_table.benchmark.txt'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/make_enrichment_table.R"
 
@@ -87,7 +87,7 @@ rule enrichment_bed_analysis:
     params:
         nbootstraps=10000
     resources:
-        mem=15000
+        mem_mb=15000
     log:
         summary=outroot + "/{mutclass}/bedenrich/bedenrich.log"
     benchmark:
@@ -110,7 +110,7 @@ rule enrichment_bed_apply_mask_and_add_metadata:
     params:
         metatags=lambda wildcards: list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, '__metatags__'])[0],
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         ( echo "#{params.metatags}" ;

@@ -8,7 +8,7 @@ rule pcawg_snpeff:
     log:
         "cancer_genes/snpeff_vcfs/{tumor}.snpeff.log"
     resources:
-        mem=8000
+        mem_mb=8000
     shell:
         """
         snakemake/scripts/run_snpeff_pcawg.sh {input} {output} > {log} 2>&1
@@ -29,7 +29,7 @@ rule pcawg_snpeff_singlecell:
     params:
         celltype='{celltype}'
     resources:
-        mem=8000
+        mem_mb=8000
     shell:
         """
         awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=."; print $0 }}' {input} > {output.tmp} \
@@ -43,7 +43,7 @@ rule pcawg_parse_snpeff:
     output:
         "cancer_genes/gene_mutations/{tumor_or_celltype}.txt"
     resources:
-        mem=8000
+        mem_mb=8000
     shell:
         """
         snakemake/scripts/parse_pcawg_snpeff.sh {input} > {output}
@@ -62,7 +62,7 @@ rule pcawg_gene_mutation_odds_ratios:
     log:
         "cancer_genes/odds_ratios/{celltype1}___vs___{celltype2}/{tumor}.log"
     resources:
-        mem=8000
+        mem_mb=8000
     shell:
         """
         snakemake/scripts/pcawg_gene_odds_ratio.R \
@@ -84,7 +84,7 @@ rule run_dndscv_cancer:
     log:
         "cancer_genes/dndscv/{tumor}.log"
     resources:
-        mem=16000
+        mem_mb=16000
     script:
         "scripts/run_dndscv.R"
 
@@ -103,7 +103,7 @@ rule run_dndscv:
     log:
         "cancer_genes/dndscv/{celltype}___{qualtype}.log"
     resources:
-        mem=8000
+        mem_mb=8000
     script:
         "scripts/run_dndscv.R"
 
@@ -130,6 +130,6 @@ rule make_dndscv_table:
     log:
         'cancer_genes/dndscv/dndscv_table.log'
     resources:
-        mem=16000
+        mem_mb=16000
     script:
         "scripts/combine_dndscv_tables.R"

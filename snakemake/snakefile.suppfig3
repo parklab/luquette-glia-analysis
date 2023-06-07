@@ -14,7 +14,7 @@ rule gtex_expression:
     log:
         "suppfig3/panel_a_gtex_expression_{celltype}___{qualtype}.log"
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/plot_enrichment_grid.R"
 
@@ -30,7 +30,7 @@ rule repliseq_individual_cell_lines:
     log:
         "suppfig3/panel_b_repliseq___{qualtype}.log"
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/suppfig3_panel_b.R"
 
@@ -44,7 +44,7 @@ rule chromhmm_tssa_helper:
     output:
         "suppfig3/chromhmm_tss_complete_table.csv"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         (echo "celltype,$(head -1 {input.neuron})" ;
@@ -69,6 +69,6 @@ rule chromhmm_tssa:
     log:
         "suppfig3/panel_c_chromhmm_tss.log"
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/plot_enrichment.R"

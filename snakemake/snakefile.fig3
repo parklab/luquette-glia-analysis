@@ -9,7 +9,7 @@ rule indel_spectrum:
         "fig3/panel_a_spectrum.pdf",
         "fig3/panel_a_spectrum.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "fig3/panel_a_spectrum.log"
     script:
@@ -26,7 +26,7 @@ rule cosmic_indel_barplots:
         pdf="fig3/panel_b___{celltype}___{qualtype}.pdf",
         csv="fig3/panel_b___{celltype}___{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "fig3/panel_b___{celltype}___{qualtype}.log"
     shell:
@@ -47,7 +47,7 @@ rule cosmic_indel_vs_age_plots:
         pdf="fig3/panel_c_{qualtype}.pdf",
         csv="fig3/panel_c_{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "fig3/panel_c_{qualtype}.log"
     shell:

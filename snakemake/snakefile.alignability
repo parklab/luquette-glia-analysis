@@ -17,7 +17,7 @@ rule tile_to_mask:
     output:
         "alignability/genome_tiles/genome_mask_{binsize}binsize.bed"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         grep '0$' {input} > {output}
@@ -37,7 +37,7 @@ rule tile_genome:
     params:
         binsize="{binsize}"
     resources:
-        mem=40000
+        mem_mb=40000
     script:
         "scripts/tile_genome_no_badbins.R"
 
@@ -54,7 +54,7 @@ rule tile_genome_200bp_scatter:
     params:
         binsize="200"
     resources:
-        mem=12000
+        mem_mb=12000
     script:
         "scripts/tile_genome_no_badbins.R"
 
@@ -67,7 +67,7 @@ rule tile_genome_200bp_gather:
     output:
         "alignability/genome_tiles/genome_tiles_200binsize.bed"
     resources:
-        mem=4000
+        mem_mb=4000
     shell:
         """
         cat {input} > {output}
@@ -85,7 +85,7 @@ rule digest_chrom:
     log:
         "alignability/base_tile_size_tables/chr{chr}.log"
     resources:
-        mem=lambda wildcards, input, threads: 3000*threads
+        mem_mb=lambda wildcards, input, threads: 3000*threads
     params:
         chrom="{chr}",
         base_tile_size=100,   # in basepairs
@@ -104,7 +104,7 @@ rule digest_chrom:
         #"alignability/data_plots/chr{chr}.{resolution}.svg",
         #"alignability/data_plots/chr{chr}.{resolution}.pdf"
     #resources:
-        #mem=8000
+        #mem_mb=8000
     #params:
         #"{resolution}"
     #script:
@@ -120,7 +120,7 @@ rule plot_bin_classes:
         expand("alignability/plots/chromosome_bin_classes_barplot.{output}",
             output=['svg', 'pdf'])
     resources:
-        mem=40000
+        mem_mb=40000
     log:
         "alignability/plots/chromosome_bin_classes.log"
     script:

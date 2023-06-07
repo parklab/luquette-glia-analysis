@@ -7,7 +7,7 @@ rule umap_plots:
         expand("fig4/panel_{{panel_letter}}_umap_plot.{ext}",
             ext=[ 'svg', 'pdf', 'jpeg' ])
     resources:
-        mem=24000
+        mem_mb=24000
     log:
         "fig4/panel_{panel_letter}_umap_plot.log"
     script:
@@ -32,7 +32,7 @@ rule many_enrichment_analyses:
     log:
         "fig4/panels_cdefg_enrichment_analyses{half}.log"
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig4_panels_cdefg.R"
 
@@ -55,7 +55,7 @@ rule many_enrichment_analyses_mda:
     log:
         "fig4/panels_cdefg_enrichment_analyses_mda_elderly.log"
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig4_panels_cdefg.R"
 
@@ -76,7 +76,7 @@ rule chromhmm_states:
         # huge error bars that make the rest of the plot difficult to read.
         features="1_TssA,2_TssAFlnk,4_Tx,5_TxWk,6_EnhG,7_Enh,8_ZNF/Rpts,9_Het,13_ReprPC,14_ReprPCWk,15_Quies"
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "fig4/panel_h_chromhmm.log"
     script:
@@ -98,7 +98,7 @@ rule chromhmm_states_mda:
         # huge error bars that make the rest of the plot difficult to read.
         features="1_TssA,2_TssAFlnk,4_Tx,5_TxWk,6_EnhG,7_Enh,8_ZNF/Rpts,9_Het,13_ReprPC,14_ReprPCWk,15_Quies"
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "fig4/panel_h_chromhmm_mda_elderly.log"
     script:
@@ -119,7 +119,7 @@ rule nott_enhancers_and_promoters:
         signal_to_plot='datasource=nott_enhprom',
         features="astrocyte_enhancer,neuron_enhancer,oligo_enhancer,microglia_enhancer,astrocyte_promoter,neuron_promoter,oligo_promoter,microglia_promoter"
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "fig4/panel_i_nott_enhprom.log"
     script:
@@ -139,7 +139,7 @@ rule nott_enhancers_and_promoters_mda:
         signal_to_plot='datasource=nott_enhprom',
         features="astrocyte_enhancer,neuron_enhancer,oligo_enhancer,microglia_enhancer,astrocyte_promoter,neuron_promoter,oligo_promoter,microglia_promoter"
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "fig4/panel_i_nott_enhprom_mda_elderly.log"
     script:
@@ -164,7 +164,7 @@ rule fig4_suppl_boca2_peaks:
         signal_to_plot='region=DLPFC',
         features="GABA,GLU,OLIG,MGAS"
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "fig4/suppl_boca2_peaks_barplot_new.log"
     script:
@@ -185,7 +185,7 @@ rule fig4_suppl_dna_repair_hotspots:
         signal_to_plot='datasource=dnarepair',
         features="SAR-seq,Repair-seq"
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "fig4/suppl_dna_repair_hotspots_barplot_new.log"
     script:
@@ -206,7 +206,7 @@ rule fig4_suppl_hic_tads:
         signal_to_plot='datasource=hic_tads',
         features="ME45_Adult_Rep1_A,ME45_Adult_Rep1_B"
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "fig4/suppl_hic_tads_barplot_new.log"
     script:
@@ -226,6 +226,6 @@ rule fig4_foldchange:
     log:
         'fig4/rna_atac_foldchange.log'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig4_rna_atac_foldchange.R"

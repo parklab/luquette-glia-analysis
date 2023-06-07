@@ -26,7 +26,7 @@ rule collect_mut_burdens:
     params:
         muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel_') else 'snv',
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "aging_rates/{celltype}___mutburden___{qualtype}.log"
     script:
@@ -46,7 +46,7 @@ rule model_aging_rates:
         models="aging_rates/all___mutburden_models___{qualtype}.csv",
         burdens="aging_rates/all___mutburden___{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "aging_rates/all___mutburden_models___{qualtype}.log"
     script:

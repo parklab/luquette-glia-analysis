@@ -11,7 +11,7 @@ rule raw_spectrum:
         sigtype=lambda wildcards: 'id83' if wildcards.qualtype.startswith('indel') else 'sbs96',
         plot_title='{celltype}'
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         csv="mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.log",
     script:
@@ -26,7 +26,7 @@ rule make_cosmic_indel_table:
     output:
         "mutsigs/cosmic_full___indel_A.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "mutsigs/cosmic_full___indel_A.log"
     script:
@@ -39,7 +39,7 @@ rule make_cosmic_snv_table:
     output:
         "mutsigs/cosmic_full___A.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "mutsigs/cosmic_full___A.log"
     script:
@@ -59,7 +59,7 @@ rule fit_cosmic:
         muttype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV',
         amptype=lambda wildcards: 'MDA' if "mda" in wildcards.celltype else 'PTA'
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "mutsigs/{cosmic}/{celltype}___cosmic_fit___{qualtype}.log"
     script:
@@ -78,7 +78,7 @@ rule score_cosmic_sigs:
     log:
         "mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{qualtype}.log"
     resources:
-        mem=8000
+        mem_mb=8000
     params:
         celltype=lambda wildcards: 'Neuron' if wildcards.celltype == 'neuron' else 'Oligo',
         qualtype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV'
@@ -94,7 +94,7 @@ rule select_cosmic_sigs:
     output:
         csv="mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv"
     resources:
-        mem=1000
+        mem_mb=1000
     log:
         "mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.log"
     script:
@@ -115,7 +115,7 @@ rule reduce_cosmic:
     output:
         "mutsigs/cosmic_reduced___{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "mutsigs/cosmic_reduced___{qualtype}.log"
     script:
@@ -134,7 +134,7 @@ rule cosmic_barplots:
         pdf="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.pdf",
         csv="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.log"
     script:
@@ -155,7 +155,7 @@ rule model_cosmic_vs_age_all:
         pdf="mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.pdf",
         csv="mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.log"
     script:
@@ -174,7 +174,7 @@ rule model_cosmic_vs_age_all_mda:
         pdf="mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.pdf",
         csv="mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.log"
     script:
@@ -192,7 +192,7 @@ rule model_cosmic_vs_age:
         pdf="mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.pdf",
         csv="mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.log"
     script:

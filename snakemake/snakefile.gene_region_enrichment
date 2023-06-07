@@ -64,4 +64,4 @@ use rule * from enrichment_gtex_genes as enrichment_gtex_genes_*
 # ~55,000 features, so need more memory. Oligos used ~26G
 use rule enrichment_bed_analysis from enrichment_gtex_genes as enrichment_gtex_genes_enrichment_bed_analysis with:
     resources:
-        mem=48000
+        mem_mb=48000

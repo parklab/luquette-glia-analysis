@@ -6,7 +6,7 @@ rule supptable1:
         oligo="input/oligo___meta___any.csv",
         mda="input/mda_all___meta___any.csv"
     resources:
-        mem=100
+        mem_mb=100
     output:
         "supptables/SuppTable1.csv"
     shell:
@@ -22,7 +22,7 @@ rule supptable2:
     output:
         "supptables/SuppTable2.csv"
     resources:
-        mem=100
+        mem_mb=100
     shell:
         """
         (cat {input.neuron} ; tail -n +2 {input.oligo} ; tail -n +2 {input.mda_all}) > {output}

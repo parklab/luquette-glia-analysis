@@ -23,7 +23,7 @@ rule scatacseq_extract_mapfile:
     output:
         "data/scatacseq/auxiliary/sample_to_cell_map.txt"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         cut -f2,3 -d, {input} | tr ',' '\t' | tr ' ' '_' | tail -n +2 > {output}
@@ -40,7 +40,7 @@ rule scatacseq_frags_to_beds:
     log:
         "data/scatacseq/bed/frags_to_beds.log"
     resources:
-        mem=4000
+        mem_mb=4000
     shell:
         """
         snakemake/scripts/scatacseq_10x_frags_to_bed.py \
@@ -58,7 +58,7 @@ rule scatacseq_bedgraph_to_bigwig:
     log:
         "data/scatacseq/bigwig/transpositions.library{libid}_{atac_celltype}.log"
     resources:
-        mem=4000
+        mem_mb=4000
     shell:
         """
         snakemake/scripts/scatacseq_fragbed_to_bigwig.sh \

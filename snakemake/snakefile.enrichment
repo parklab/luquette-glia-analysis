@@ -70,7 +70,7 @@ rule enrichment_plot:
         group='datasource',
         #highlight=''  # can use e.g., group=Brain to select lines to highlight
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/plot_enrichment_grid.R"
 
@@ -91,7 +91,7 @@ rule sigenrichment_plot:
         group='datasource,sigclass',
         #highlight=''  # can use e.g., group=Brain to select lines to highlight
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/plot_enrichment_grid.R"
 
@@ -106,7 +106,7 @@ rule adapt_sigenrichment_table:
     log:
         outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted.log'
     resources:
-        mem=1000
+        mem_mb=1000
     script:
         "scripts/adapt_sigenrich_table.R"
     
@@ -120,7 +120,7 @@ rule sigenrichment_table:
     log:
         outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich.log'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/make_enrichment_table.R"
 
@@ -135,7 +135,7 @@ rule enrichment_table:
     log:
         outroot + '/{mutclass}/{nquantiles}quantiles.log'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/make_enrichment_table.R"
 
@@ -165,7 +165,7 @@ rule sigenrichment_qbed_analysis:
         colname_for_sig="mutsig"
     resources:
         # XXX: update me: so far, these RAM values work with my data.
-        mem=lambda wildcards: 40000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 20000
+        mem_mb=lambda wildcards: 40000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 20000
     log:
         summary=outroot + "/{mutclass}/sigenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log"
     benchmark:
@@ -187,7 +187,7 @@ rule enrichment_qbed_analysis:
         nbootstraps=10000
     resources:
         # XXX: update me: so far, these RAM values work with my data.
-        mem=lambda wildcards: 48000 if wildcards.binsize == '1000' else 15000
+        mem_mb=lambda wildcards: 48000 if wildcards.binsize == '1000' else 15000
     log:
         summary=outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log"
     benchmark:
@@ -242,7 +242,7 @@ rule make_qbed_from_bigwig:
     benchmark:
         outroot + "/qbed/{signalclass}.benchmark.txt"
     resources:
-        mem=7000
+        mem_mb=7000
     shell:
         """
         set -euo pipefail

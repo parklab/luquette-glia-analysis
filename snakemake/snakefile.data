@@ -24,7 +24,7 @@ rule copy_inputs:
     input:
         lambda wildcards: input_copy_mapping[wildcards.celltype + "___" + wildcards.filetype + "___" + wildcards.qualtype + "." + wildcards.fileext]
     resources:
-        mem=1000
+        mem_mb=1000
     output:
         "input/{celltype}___{filetype}___{qualtype}.{fileext}"
     shell:
@@ -45,7 +45,7 @@ rule mut_csv_to_rda:
         muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel') else 'snv',
         rescue=lambda wildcards: '| rescue == TRUE' if wildcards.qualtype.endswith("AB") else ''
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         Rscript -e 'library(data.table); muts <- fread("{input}"); muts <- muts[muttype == "{params.muttype}" & (pass == TRUE {params.rescue})]; save(muts, file="{output}")'
@@ -58,7 +58,7 @@ rule tables_rda_to_csv:
     output:
         "tables/{celltype}___{filetype}___{qualtype}.csv",
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "tables/{celltype}___{filetype}___{qualtype}.log"
     script:
@@ -67,11 +67,13 @@ rule tables_rda_to_csv:
 
 rule rda_to_vcf:
     input:
-        "input/{celltype}___mut___{qualtype}.rda"
+        rda="input/{celltype}___mut___{qualtype}.rda"
     output:
-        "vcfs/{celltype}___mut___{qualtype}.vcf"
+        vcf="vcfs/{celltype}___mut___{qualtype}.vcf"
+    params:
+        samplename='dummy'
     resources:
-        mem=4000
+        mem_mb=4000
     log:
         "vcfs/{celltype}___mut___{qualtype}.rda_to_vcf.log"
     script:
@@ -83,7 +85,7 @@ rule download_roadmap_narrowpeak:
     output:
         "data/roadmap/histone_marks/narrowPeak/{eid}-{mark}.narrowPeak"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output} \
@@ -96,7 +98,7 @@ rule download_roadmap_bigwig:
     output:
         "data/roadmap/histone_marks/bigwig/{eid}-{mark}.fc.signal.bigwig"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output} \
@@ -109,7 +111,7 @@ rule download_encode_replichip_bigwig:
     output:
         "data/encode/replichip/bigwig/{enc_id}.bigwig"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output} \
@@ -128,7 +130,7 @@ rule make_gtex_signal_bigwig:
     params:
         tissue="{tissue}"
     resources:
-        mem=16000
+        mem_mb=16000
     script:
         "scripts/convert_gtex_expression_to_bigwig.R"
 
@@ -142,7 +144,7 @@ rule map_scrnaseq_to_gtex_gene_model:
     log:
         "data/scrnaseq/expression/scrnaseq_mean_expression_matrix.log"
     resources:
-        mem=16000
+        mem_mb=16000
     script:
         "scripts/map_scrnaseq_to_gtex_gene_model.R"
 
@@ -155,7 +157,7 @@ rule combine_scrnaseq_by_celltype:
     log:
         "data/scrnaseq/expression/scrnaseq_mean_expression_by_celltype_matrix.log"
     resources:
-        mem=8000
+        mem_mb=8000
     script:
         "scripts/combine_scrna_by_celltype.R"
 
@@ -184,7 +186,7 @@ rule make_scrnaseq_signal_bigwig:
     params:
         tissue="{tissue}"
     resources:
-        mem=16000
+        mem_mb=16000
     script:
         "scripts/convert_gtex_expression_to_bigwig.R"
 
@@ -203,7 +205,7 @@ rule make_scrnaseq_by_celltype_signal_bigwig:
     params:
         tissue="{celltype}"
     resources:
-        mem=16000
+        mem_mb=16000
     script:
         "scripts/convert_gtex_expression_to_bigwig.R"
 
@@ -224,7 +226,7 @@ rule download_roadmap_dnamethyl:
     log:
         "data/roadmap/dnamethyl/{methyltype}/bigwig/{enc_id}_{methyltype}.log"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output} \
@@ -246,7 +248,7 @@ rule download_roadmap_chromhmm15:
         tmp1=temp("data/roadmap/chromhmm/15state/bed/{eid}.bed.gz"),
         tmp2=temp("data/roadmap/chromhmm/15state/bed/{eid}.bed"),
     resources:
-        mem=4000
+        mem_mb=4000
     shell:
         """
         wget -O {output.tmp1} \
@@ -264,7 +266,7 @@ rule download_roadmap_chromhmm18:
         tmp1=temp("data/roadmap/chromhmm/18state/bed/{eid}.bed.gz"),
         tmp2=temp("data/roadmap/chromhmm/18state/bed/{eid}.bed"),
     resources:
-        mem=4000
+        mem_mb=4000
     shell:
         """
         wget -O {output.tmp1} \
@@ -279,7 +281,7 @@ rule download_roadmap_histone_peaks:
     output:
         "data/roadmap/histone_marks/narrowPeak/{eid}-{mark}.narrowPeak"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output} \
@@ -292,7 +294,7 @@ rule download_icgc_muts:
     output:
         "data/icgc/final_consensus_passonly.snv_mnv_indel.icgc.public.maf"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output}.gz \
@@ -310,7 +312,7 @@ rule split_cancer_muts_by_type:
     params:
         tumor="{tumor}"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         (echo "chr,pos,refnt,altnt,sample"|tr ',' '\t' ;
@@ -332,8 +334,8 @@ rule make_cancer_snvdens_bigwigs:
         # this extreme memory req is because a 100bp bin x #samples matrix is built
         # cancer types with 200+ samples fail at 96G and I don't know how much memory is truly needed
         # so this very large number is to avoid yet another failure.
-        #mem=lambda wildcards, attempt: 32000 if attempt==1 else 196000
-        mem=196000
+        #mem_mb=lambda wildcards, attempt: 32000 if attempt==1 else 196000
+        mem_mb=196000
     script:
         "scripts/make_cancer_mutdens_bigwigs.R"
 
@@ -343,7 +345,7 @@ rule download_gencode_genes:
     output:
         "data/gencode/gencode.v26lift37.annotation.gtf"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output}.gz "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/GRCh37_mapping/gencode.v26lift37.annotation.gtf.gz"
@@ -360,7 +362,7 @@ rule make_gtex_gene_model:
         gtf="data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.gtf",
         gtf_genes="data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output.script} \
@@ -379,7 +381,7 @@ rule download_nott_bigwigs:
         file="{file}",
         mark=lambda wildcards: 'atac' if 'atac' in wildcards.file else ('h3k27ac' if 'H3K27ac' in wildcards.file else 'h3k4me3')
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output} \
@@ -394,7 +396,7 @@ rule copyover_nott_supptab5:
     output:
         "data/nott/SupplementaryTable5.xlsx"
     resources:
-        mem=100
+        mem_mb=100
     shell:
         "cp -n {input} {output}"
 
@@ -404,7 +406,7 @@ rule download_nott_supptab5:
     output:
         "data/nott/SupplementaryTable5.xlsx"
     resources:
-        mem=1000
+        mem_mb=1000
     message:
         "This rule will always fail because science.org blocks simple wget downloads. Please open `https://www.science.org/doi/suppl/10.1126/science.aay0793/suppl_file/aay0793-nott-table-s5.xlsx` in a web browser and place the file in data/nott/SupplementaryTable5.xlsx"
     shell:
@@ -429,7 +431,7 @@ rule parse_nott_supptab5:
     params:
         out_prefix='data/nott/bed'
     resources:
-        mem=1000
+        mem_mb=1000
     script:
         'scripts/parse_nott2019_supptable.R'
 
@@ -443,7 +445,7 @@ rule make_final_nott_bed:
     output:
         'data/nott/bed/enhancers_and_promoters_all_celltypes.bed'
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         cat {input.beds} | bedtools sort -g {input.genome_ordering} > {output}
@@ -455,7 +457,7 @@ rule download_gtex_expression:
     output:
         "data/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output}.gz \
@@ -470,7 +472,7 @@ rule download_ucsc_conservation:
         phastcons="data/ucsc/conservation/hg19.100way.phastCons.bw",
         phylop="data/ucsc/conservation/hg19.100way.phyloP100way.bw"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output.phylop} "http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phyloP100way/hg19.100way.phyloP100way.bw"
@@ -486,7 +488,7 @@ rule download_repliseq:
     params:
         file="{file}"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output} \
@@ -510,7 +512,7 @@ rule make_foldchange_qbed_scatacseq:
     log:
         "enrichment/scatacseq_foldchange/quantile/qbed/scatacseq_foldchange___librarymerged___merged___{scatacseq_celltype}.{binsize}binsize_{nquantiles}quantiles.log"
     resources:
-        mem=8000
+        mem_mb=8000
     script:
         "scripts/make_foldchange_qbed.R"
 
@@ -532,7 +534,7 @@ rule make_foldchange_qbed_scrnaseq:
     log:
         "enrichment/scrnaseq_expression_mc08_foldchange/quantile/qbed/scrnaseq_foldchange___expression___combined___combined___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.log"
     resources:
-        mem=8000
+        mem_mb=8000
     script:
         "scripts/make_foldchange_qbed.R"
 
@@ -547,7 +549,7 @@ rule pcawg_copy_icgc_maf:
     output:
         "input/any___cancer_icgc___none.maf"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         cat {input} | tr -d '\r' > {output}
@@ -560,7 +562,7 @@ rule pcawg_copy_tcga_maf:
     output:
         "input/any___cancer_tcga___none.maf"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         cat {input} | tr -d '\r' > {output}
@@ -573,7 +575,7 @@ rule pcawg_get_donor_ids:
     output:
         "data/pcawg/any___{project}___donor_ids.txt"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         ( head -1 {input} | cut -f42,43 ;
@@ -589,7 +591,7 @@ rule pcawg_make_metadata:
     output:
         "metadata/pcawg_metadata.csv"
     resources:
-        mem=4000
+        mem_mb=4000
     shell:
         "snakemake/scripts/make_pcawg_metadata.R {input.ss} {input.icgc} {input.tcga} {output}"
 
@@ -616,7 +618,7 @@ rule pcawg_extract_sample_vcf:
     params:
         donor_id='{donor}'
     resources:
-        mem=4000
+        mem_mb=4000
     shell:
         """
         snakemake/scripts/pcawg_extract_one_maf.sh \
@@ -634,7 +636,7 @@ rule pcawg_make_tumor_vcf:
         "data/pcawg/tumor_vcfs/{tumor}.vcf"
     resources:
         # needs the entire VCF in RAM for sort
-        mem=8000
+        mem_mb=8000
     params:
         tumor="{tumor}"
     shell:
@@ -649,7 +651,7 @@ rule make_gencode_gene_regions:
     output:
         "data/gencode/gene_regions.bed"
     resources:
-        mem=8000
+        mem_mb=8000
     shell:
         "snakemake/scripts/make_gene_regions.R {input} {output}"
 
@@ -660,7 +662,7 @@ rule simplify_gencode_gene_regions:
     output:
         "data/gencode/gene_regions_simplified.bed"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         sed -e 's/upstream$/intergenic/g' \
@@ -682,7 +684,7 @@ rule make_gencode_gene_bed:
     log:
         "data/gtex/make_gencode_gene_bed.log"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         awk 'BEGIN {{ OFS="\t"; }} {{ if ($1 ~ /chr[0-9]+/) {{ match($0, /gene_name [^;]*/);  print $1, $4, $5, substr($0, RSTART, RLENGTH); }} }}' {input} \
@@ -699,7 +701,7 @@ rule make_gencode_gene_bed_protein_coding:
     log:
         "data/gtex/make_gencode_gene_bed.protein_coding.log"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         awk 'BEGIN {{ OFS="\t"; }} {{ if ($1 ~ /chr[0-9]+/ && $0 ~ /gene_type "protein_coding";/) {{ match($0, /gene_name [^;]*/);  print $1, $4, $5, substr($0, RSTART, RLENGTH); }} }}' {input} \
@@ -719,7 +721,7 @@ rule subset_by_mutsig:
     params:
         sig='{sig}'
     resources:
-        mem=12000
+        mem_mb=12000
     script:
         "scripts/subset_by_mutsig.R"
 
@@ -732,7 +734,7 @@ rule machado2022_sbsblood_wget:
     log:
         "data/machado2022_sbsblood/wget.log"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output} \
@@ -753,7 +755,7 @@ rule machado2022_sbsblood_convert:
     params:
         sheet_number=8
     resources:
-        mem=1000
+        mem_mb=1000
     script:
         "scripts/get_machado2022_sbsblood.R"
 
@@ -765,7 +767,7 @@ rule leesix2018_hspc_spectrum_get:
     log:
         "data/leesix2018_hspc/wget.log"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output} \
@@ -784,7 +786,7 @@ rule leesix2018_hspc_spectrum_convert:
     log:
         "data/leesix2018_hspc/convert.log"
     resources:
-        mem=1000
+        mem_mb=1000
     script:
         "scripts/get_leesix2018_hspc.R"
 
@@ -800,7 +802,7 @@ rule copyover_boca2_peaks:
     output:
         "data/boca2/OCRs_DLPFC.bed"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         (gunzip -c {input.GABA} | awk 'BEGIN {{ OFS="\t"; }} {{ print $0, "GABA"; }}';
@@ -817,7 +819,7 @@ rule download_sarseq_hotspots:
         gzbed=temp("data/dna_repair_hotspots/Wu2021_SARseq_peaks_overlap.bed.gz"),
         bed="data/dna_repair_hotspots/Wu2021_SARseq_peaks_overlap.bed"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         wget -O {output.gzbed} \
@@ -832,7 +834,7 @@ rule copyover_repairseq_supptab:
     output:
         "data/dna_repair_hotspots/Reid2021_SupplementaryTable1.xlsx"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         "cp -n {input} {output}"
 
@@ -846,7 +848,7 @@ rule parse_repairseq_supptab:
     log:
         'data/nott/dna_repair_hotspots/parse_reid2021_supptable.log'
     resources:
-        mem=1000
+        mem_mb=1000
     params:
         out_prefix='data/dna_repair_hotspots'
     script:
@@ -861,7 +863,7 @@ rule make_final_dna_repair_hotspot_bed:
     output:
         "data/dna_repair_hotspots/DNArepair_hotspots.bed"
     resources:
-        mem=1000
+        mem_mb=1000
     shell:
         """
         cat {input.repairseq} {input.sarseq} \

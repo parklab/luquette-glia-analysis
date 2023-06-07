@@ -11,7 +11,7 @@ rule make_sensitivity_bigwig:
     log:
         "spatial_sensitivity/bigwig/{sample}.log"
     resources:
-        mem=12000
+        mem_mb=12000
     script:
         "scripts/make_hsnp_sensitivity_track.R"
 
@@ -23,7 +23,7 @@ rule make_sensitivity_bed:
     output:
         bed="spatial_sensitivity/bed/{sample}.{binsize}binsize.bed"
     resources:
-        mem=16000
+        mem_mb=16000
     shell:
         """
         bigWigAverageOverBed {input.bigwig} {input.tile} {output.bed}

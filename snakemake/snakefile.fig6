@@ -25,7 +25,7 @@ rule cancer_density_correlation:
     log:
         'fig6/panel_a.log'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig6_panel_a.R"
 
@@ -45,7 +45,7 @@ rule cancer_density_correlation_with_mda_ols:
     log:
         'fig6/panel_a_{mdatype}_elderly_supp.log'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig6_panel_a.R"
 
@@ -68,7 +68,7 @@ rule cancer_density_vs_scatacseq:
     log:
         'fig6/panel_b.log'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig6_panel_b.R"
 
@@ -97,7 +97,7 @@ rule cancer_density_vs_scrnaseq:
     log:
         'fig6/panel_c.log'
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig6_panel_c.R"
 
@@ -122,7 +122,7 @@ rule top_cancer_gene_enrichment:
     log:
         "fig6/panel_d.log"
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig6_panel_d.R"
 
@@ -141,6 +141,6 @@ rule top_cancer_gene_enrichment_with_mda_ols:
     log:
         "fig6/panel_d_mdapta.log"
     resources:
-        mem=4000
+        mem_mb=4000
     script:
         "scripts/fig6_panel_d.R"

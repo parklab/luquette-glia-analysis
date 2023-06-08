@@ -163,12 +163,12 @@ UMB5943,5943-190613-ctxBA4,bulk,bulk,bulk,69,elderly,1,FALSE
 5871,5871_OL3,PTA,oligo,SOX10,2,infant,2,FALSE
 5871,5871_OL6,PTA,oligo,SOX10,2,infant,2,FALSE
 5871,5871_OL8,PTA,oligo,SOX10,2,infant,2,FALSE
-CON1901106,11901106_Gy_C1,PTA,PFC neuron,NeuN,,,2,FALSE
-CON1901106,11901106_Gy_C2,PTA,PFC neuron,NeuN,,,2,FALSE
-CON301159,301159_Gyrus_D1,PTA,PFC neuron,NeuN,,,2,FALSE
-CON301159,301159_Gyrus_D3,PTA,PFC neuron,NeuN,,,2,FALSE
-CON1901106,CON1901106_bulk,bulk,bulk,bulk,,,2,FALSE
-CON301159,CON301159_bulk,bulk,bulk,bulk,,,2,FALSE
+CON1901106,11901106_Gy_C1,PTA,PFC neuron,NeuN,67,elderly,2,FALSE
+CON1901106,11901106_Gy_C2,PTA,PFC neuron,NeuN,67,elderly,2,FALSE
+CON301159,301159_Gyrus_D1,PTA,PFC neuron,NeuN,51,adult,2,FALSE
+CON301159,301159_Gyrus_D3,PTA,PFC neuron,NeuN,51,adult,2,FALSE
+CON1901106,CON1901106_bulk,bulk,bulk,bulk,67,elderly,2,FALSE
+CON301159,CON301159_bulk,bulk,bulk,bulk,51,adult,2,FALSE
 1465,1465-cortex_BulkDNA_WGSb,bulk,bulk,bulk,17.5,adolescent,1,FALSE
 1465,1465-heart_BulkDNA_WGSb,bulk,bulk,bulk,17.5,adolescent,1,FALSE
 4638,4638-Bulk-Heart,bulk,bulk,bulk,15.1,adolescent,1,FALSE

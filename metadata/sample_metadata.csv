@@ -1,184 +1,184 @@
-donor,sample,amp,type,selection,age,ageclass,batch,outlier
-1278,GliaLC-5-B12,MDA,oligo,SOX10,0.4,infant,1,FALSE
-1278,GliaLC-5-B7,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE
-1278,GliaLC-5-B8,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE
-1278,GliaLC-5-C7,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE
-1278,GliaLC-5-D10,MDA,oligo,SOX10,0.4,infant,1,FALSE
-1278,GliaLC-5-E12,MDA,oligo,SOX10,0.4,infant,1,FALSE
-1278,GliaLC-5-E7,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE
-1278,GliaLC-5-G7,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE
-1278,GliaLC-5-H10,MDA,oligo,SOX10,0.4,infant,1,FALSE
-1278,GliaLC-5-H11,MDA,oligo,SOX10,0.4,infant,1,FALSE
-5171,GliaLC-6-A5,MDA,oligo,SOX10,79,elderly,1,FALSE
-5171,GliaLC-6-B4,MDA,oligo,SOX10,79,elderly,1,FALSE
-5171,GliaLC-6-B5,MDA,oligo,SOX10,79,elderly,1,FALSE
-5171,GliaLC-6-C1,MDA,Mixed glia,GFAP,79,elderly,1,FALSE
-5171,GliaLC-6-C2,MDA,Mixed glia,GFAP,79,elderly,1,FALSE
-5171,GliaLC-6-E6,MDA,oligo,SOX10,79,elderly,1,FALSE
-5171,GliaLC-6-F3,MDA,Mixed glia,GFAP,79,elderly,1,FALSE
-5171,GliaLC-6-G3,MDA,Mixed glia,GFAP,79,elderly,1,FALSE
-5171,GliaLC-6-G4,MDA,oligo,SOX10,79,elderly,1,FALSE
-5171,GliaLC-6-H3,MDA,Mixed glia,GFAP,79,elderly,1,FALSE
-5657,GliaLC-4-B12,MDA,oligo,SOX10,81,elderly,1,FALSE
-5657,GliaLC-4-D12,MDA,oligo,SOX10,81,elderly,1,FALSE
-5657,GliaLC-4-D8,MDA,Mixed glia,GFAP,81,elderly,1,FALSE
-5657,GliaLC-4-E12,MDA,oligo,SOX10,81,elderly,1,FALSE
-5657,GliaLC-4-F11,MDA,oligo,SOX10,81,elderly,1,FALSE
-5657,GliaLC-4-F7,MDA,Mixed glia,GFAP,81,elderly,1,FALSE
-5657,GliaLC-4-F9,MDA,Mixed glia,GFAP,81,elderly,1,FALSE
-5657,GliaLC-4-G10,MDA,oligo,SOX10,81,elderly,1,FALSE
-5657,GliaLC-4-H7,MDA,Mixed glia,GFAP,81,elderly,1,FALSE
-5657,GliaLC-4-H8,MDA,Mixed glia,GFAP,81,elderly,1,FALSE
-5871,GliaLC-6-A7,MDA,Mixed glia,GFAP,2,infant,1,FALSE
-5871,GliaLC-6-B10,MDA,oligo,SOX10,2,infant,1,FALSE
-5871,GliaLC-6-D10,MDA,oligo,SOX10,2,infant,1,FALSE
-5871,GliaLC-6-D8,MDA,Mixed glia,GFAP,2,infant,1,FALSE
-5871,GliaLC-6-E7,MDA,Mixed glia,GFAP,2,infant,1,FALSE
-5871,GliaLC-6-F10,MDA,oligo,SOX10,2,infant,1,FALSE
-5871,GliaLC-6-F12,MDA,oligo,SOX10,2,infant,1,FALSE
-5871,GliaLC-6-G7,MDA,Mixed glia,GFAP,2,infant,1,FALSE
-5871,GliaLC-6-H12,MDA,oligo,SOX10,2,infant,1,FALSE
-5871,GliaLC-6-H7,MDA,Mixed glia,GFAP,2,infant,1,FALSE
-1278,1278-Oligo-5,PTA,oligo,SOX10,0.4,infant,1,FALSE
-1278,1278-Oligo-7,PTA,oligo,SOX10,0.4,infant,1,FALSE
-1278,1278-Oligo-8,PTA,oligo,SOX10,0.4,infant,1,FALSE
-1465,1465-Oligo-5,PTA,oligo,SOX10,17.5,adolescent,1,FALSE
-1465,1465-Oligo-7,PTA,oligo,SOX10,17.5,adolescent,1,FALSE
-1465,1465-Oligo-8,PTA,oligo,SOX10,17.5,adolescent,1,FALSE
-4638,4638-Neuron-4,PTA,PFC neuron,NeuN,15.1,adolescent,1,FALSE
-4638,4638-Neuron-5,PTA,PFC neuron,NeuN,15.1,adolescent,1,FALSE
-4638,4638-Neuron-6,PTA,PFC neuron,NeuN,15.1,adolescent,1,FALSE
-4638,4638-Oligo-4,PTA,oligo,SOX10,15.1,adolescent,1,FALSE
-4638,4638-Oligo-5,PTA,oligo,SOX10,15.1,adolescent,1,FALSE
-4643,4643-Neuron-3,PTA,PFC neuron,NeuN,42.2,adult,1,FALSE
-4643,4643-Neuron-4,PTA,PFC neuron,NeuN,42.2,adult,1,FALSE
-4643,4643-Neuron-6,PTA,PFC neuron,NeuN,42.2,adult,1,FALSE
-4643,4643-Oligo-5,PTA,oligo,SOX10,42.2,adult,1,FALSE
-4643,4643-Oligo-6,PTA,oligo,SOX10,42.2,adult,1,FALSE
-4643,4643-Oligo-8,PTA,oligo,SOX10,42.2,adult,1,FALSE
-5087,5087-Oligo-4,PTA,oligo,SOX10,44.9,adult,1,FALSE
-5087,5087-Oligo-5,PTA,oligo,SOX10,44.9,adult,1,FALSE
-5087,5087-Oligo-7,PTA,oligo,SOX10,44.9,adult,1,FALSE
-5219,5219-Neuron-2,PTA,PFC neuron,NeuN,77,elderly,1,FALSE
-5219,5219-Neuron-4,PTA,PFC neuron,NeuN,77,elderly,1,FALSE
-5219,5219-Neuron-5,PTA,PFC neuron,NeuN,77,elderly,1,FALSE
-5219,5219-Oligo-5,PTA,oligo,SOX10,77,elderly,1,FALSE
-5219,5219-Oligo-6,PTA,oligo,SOX10,77,elderly,1,FALSE
-5219,5219-Oligo-7,PTA,oligo,SOX10,77,elderly,1,FALSE
-5559,5559-Oligo-3,PTA,oligo,SOX10,19.8,adolescent,1,FALSE
-5559,5559-Oligo-5,PTA,oligo,SOX10,19.8,adolescent,1,FALSE
-5559,5559-Oligo-8,PTA,oligo,SOX10,19.8,adolescent,1,FALSE
-5657,5657-Oligo-3,PTA,oligo,SOX10,82,elderly,1,FALSE
-5657,5657-Oligo-5,PTA,oligo,SOX10,82,elderly,1,FALSE
-5657,5657-Oligo-7,PTA,oligo,SOX10,82,elderly,1,FALSE
-5817,5817-Oligo-4,PTA,oligo,SOX10,0.6,infant,1,FALSE
-5817,5817-Oligo-6,PTA,oligo,SOX10,0.6,infant,1,FALSE
-5817,5817-Oligo-7,PTA,oligo,SOX10,0.6,infant,1,FALSE
-5823,5823-Oligo-6,PTA,oligo,SOX10,82.7,elderly,1,FALSE
-5823,5823-Oligo-7,PTA,oligo,SOX10,82.7,elderly,1,FALSE
-5823,5823-Oligo-8,PTA,oligo,SOX10,82.7,elderly,1,FALSE
-5871,5871-Neuron-4,PTA,PFC neuron,NeuN,2,infant,1,FALSE
-5871,5871-Neuron-5,PTA,PFC neuron,NeuN,2,infant,1,FALSE
-5871,5871-Neuron-6,PTA,PFC neuron,NeuN,2,infant,1,FALSE
-5871,5871-Oligo-4,PTA,oligo,SOX10,2,infant,1,FALSE
-5871,5871-Oligo-5,PTA,oligo,SOX10,2,infant,1,FALSE
-5871,5871-Oligo-7,PTA,oligo,SOX10,2,infant,1,FALSE
-936,936-Oligo-4,PTA,oligo,SOX10,49.2,adult,1,FALSE
-936,936-Oligo-5,PTA,oligo,SOX10,49.2,adult,1,FALSE
-936,936-Oligo-6,PTA,oligo,SOX10,49.2,adult,1,FALSE
-5871,5871-BLK-liver,bulk,bulk,bulk,2,infant,1,FALSE
-1278,1278BA9-A,PTA,PFC neuron,NeuN,0.4,infant,1,FALSE
-1278,1278BA9-B,PTA,PFC neuron,NeuN,0.4,infant,1,FALSE
-1278,1278BA9-C,PTA,PFC neuron,NeuN,0.4,infant,1,FALSE
-1465,1465BA9-A,PTA,PFC neuron,NeuN,17.5,adolescent,1,FALSE
-1465,1465BA9-B,PTA,PFC neuron,NeuN,17.5,adolescent,1,FALSE
-1465,1465BA9-C,PTA,PFC neuron,NeuN,17.5,adolescent,1,FALSE
-1465,1465BA9-D,PTA,PFC neuron,NeuN,17.5,adolescent,1,FALSE
-5087,5087PFC-A,PTA,PFC neuron,NeuN,44.9,adult,1,FALSE
-5087,5087PFC-B,PTA,PFC neuron,NeuN,44.9,adult,1,FALSE
-5087,5087PFC-C,PTA,PFC neuron,NeuN,44.9,adult,1,FALSE
-5559,5559PFC-A,PTA,PFC neuron,NeuN,19.8,adolescent,1,FALSE
-5559,5559PFC-B,PTA,PFC neuron,NeuN,19.8,adolescent,1,FALSE
-5559,5559PFC-C,PTA,PFC neuron,NeuN,19.8,adolescent,1,FALSE
-5657,5657PFC-A,PTA,PFC neuron,NeuN,82,elderly,1,FALSE
-5657,5657PFC-B,PTA,PFC neuron,NeuN,82,elderly,1,FALSE
-5657,5657PFC-C,PTA,PFC neuron,NeuN,82,elderly,1,FALSE
-5817,5817PFC-A,PTA,PFC neuron,NeuN,0.6,infant,1,FALSE
-5817,5817PFC-B,PTA,PFC neuron,NeuN,0.6,infant,1,FALSE
-5817,5817PFC-C,PTA,PFC neuron,NeuN,0.6,infant,1,FALSE
-5823,5823PFC-A,PTA,PFC neuron,NeuN,82.7,elderly,1,FALSE
-5823,5823PFC-B,PTA,PFC neuron,NeuN,82.7,elderly,1,FALSE
-5823,5823PFC-C,PTA,PFC neuron,NeuN,82.7,elderly,1,FALSE
-936,936PFC-A,PTA,PFC neuron,NeuN,49.2,adult,1,FALSE
-936,936PFC-B,PTA,PFC neuron,NeuN,49.2,adult,1,FALSE
-936,936PFC-C,PTA,PFC neuron,NeuN,49.2,adult,1,FALSE
-UMB4976,UMB4976_E1,PTA,PFC neuron,NeuN,104,elderly,1,FALSE
-UMB4976,UMB4976_E2,PTA,PFC neuron,NeuN,104,elderly,1,FALSE
-UMB4976,UMB4976_E3,PTA,PFC neuron,NeuN,104,elderly,1,FALSE
-UMB4976,4976-190613-cer,bulk,bulk,bulk,104,elderly,1,FALSE
-UMB5451,UMB5451_B2,PTA,PFC neuron,NeuN,57,adult,1,FALSE
-UMB5451,UMB5451_B3,PTA,PFC neuron,NeuN,57,adult,1,FALSE
-UMB5451,UMB5451_B5,PTA,PFC neuron,NeuN,57,adult,1,FALSE
-UMB5451,5451-190613-ctxBA4,bulk,bulk,bulk,57,adult,1,FALSE
-UMB5572,UMB5572_D2,PTA,PFC neuron,NeuN,70,elderly,1,FALSE
-UMB5572,UMB5572_D3,PTA,PFC neuron,NeuN,70,elderly,1,FALSE
-UMB5572,UMB5572_D4,PTA,PFC neuron,NeuN,70,elderly,1,FALSE
-UMB5572,UMB5572_bulk,bulk,bulk,bulk,70,elderly,1,FALSE
-UMB5666,UMB5666_F1,PTA,PFC neuron,NeuN,65,elderly,1,FALSE
-UMB5666,UMB5666_F2,PTA,PFC neuron,NeuN,65,elderly,1,FALSE
-UMB5666,UMB5666_F5,PTA,PFC neuron,NeuN,65,elderly,1,FALSE
-UMB5666,UMB5666_bulk,bulk,bulk,bulk,65,elderly,1,FALSE
-UMB5943,UMB5943_C2,PTA,PFC neuron,NeuN,69,elderly,1,FALSE
-UMB5943,UMB5943_C4,PTA,PFC neuron,NeuN,69,elderly,1,FALSE
-UMB5943,UMB5943_C5,PTA,PFC neuron,NeuN,69,elderly,1,FALSE
-UMB5943,5943-190613-ctxBA4,bulk,bulk,bulk,69,elderly,1,FALSE
-1278,1278_OL1,PTA,oligo,SOX10,0.4,infant,2,FALSE
-1278,1278_OL2,PTA,oligo,SOX10,0.4,infant,2,FALSE
-1278,1278_OL4,PTA,oligo,SOX10,0.4,infant,2,FALSE
-1465,1465_OL1,PTA,oligo,SOX10,17.5,adolescent,2,FALSE
-1465,1465_OL2,PTA,oligo,SOX10,17.5,adolescent,2,FALSE
-1465,1465_OL3,PTA,oligo,SOX10,17.5,adolescent,2,FALSE
-4638,4638_OL3,PTA,oligo,SOX10,15.1,adolescent,2,FALSE
-4638,4638_OL8,PTA,oligo,SOX10,15.1,adolescent,2,FALSE
-4643,4643_OL3,PTA,oligo,SOX10,44.2,adult,2,FALSE
-5087,5087_OL2,PTA,oligo,SOX10,44.9,adult,2,FALSE
-5087,5087_OL8,PTA,oligo,SOX10,44.9,adult,2,FALSE
-5219,5219_OL4,PTA,oligo,SOX10,77,elderly,2,FALSE
-5219,5219_OL8,PTA,oligo,SOX10,77,elderly,2,FALSE
-5559,5559_OL1,PTA,oligo,SOX10,19.8,adolescent,2,FALSE
-5559,5559_OL2,PTA,oligo,SOX10,19.8,adolescent,2,FALSE
-5657,5657_OL1,PTA,oligo,SOX10,82,elderly,2,FALSE
-5657,5657_OL2,PTA,oligo,SOX10,82,elderly,2,FALSE
-5657,5657_OL4,PTA,oligo,SOX10,82,elderly,2,FALSE
-5657,5657_OL6,PTA,oligo,SOX10,82,elderly,2,FALSE
-5657,5657_OL8,PTA,oligo,SOX10,82,elderly,2,FALSE
-5817,5817_OL2,PTA,oligo,SOX10,0.6,infant,2,FALSE
-5817,5817_OL3,PTA,oligo,SOX10,0.6,infant,2,FALSE
-5817,5817_OL8,PTA,oligo,SOX10,0.6,infant,2,FALSE
-5823,5823_OL1,PTA,oligo,SOX10,82.7,elderly,2,FALSE
-5823,5823_OL2,PTA,oligo,SOX10,82.7,elderly,2,FALSE
-5823,5823_OL3,PTA,oligo,SOX10,82.7,elderly,2,FALSE
-5823,5823_OL4,PTA,oligo,SOX10,82.7,elderly,2,FALSE
-5823,5823_OL5,PTA,oligo,SOX10,82.7,elderly,2,FALSE
-5871,5871_OL3,PTA,oligo,SOX10,2,infant,2,FALSE
-5871,5871_OL6,PTA,oligo,SOX10,2,infant,2,FALSE
-5871,5871_OL8,PTA,oligo,SOX10,2,infant,2,FALSE
-CON1901106,11901106_Gy_C1,PTA,PFC neuron,NeuN,67,elderly,2,FALSE
-CON1901106,11901106_Gy_C2,PTA,PFC neuron,NeuN,67,elderly,2,FALSE
-CON301159,301159_Gyrus_D1,PTA,PFC neuron,NeuN,51,adult,2,FALSE
-CON301159,301159_Gyrus_D3,PTA,PFC neuron,NeuN,51,adult,2,FALSE
-CON1901106,CON1901106_bulk,bulk,bulk,bulk,67,elderly,2,FALSE
-CON301159,CON301159_bulk,bulk,bulk,bulk,51,adult,2,FALSE
-1465,1465-cortex_BulkDNA_WGSb,bulk,bulk,bulk,17.5,adolescent,1,FALSE
-1465,1465-heart_BulkDNA_WGSb,bulk,bulk,bulk,17.5,adolescent,1,FALSE
-4638,4638-Bulk-Heart,bulk,bulk,bulk,15.1,adolescent,1,FALSE
-4643,4643_Bulk-Liver,bulk,bulk,bulk,42.2,adult,1,FALSE
-5087,5087-hrt-1b1,bulk,bulk,bulk,44.9,adult,1,FALSE
-1278,1278_heart_bulk,bulk,bulk,bulk,0.4,infant,1,FALSE
-5171,5171_cb_bulk,bulk,bulk,bulk,79,elderly,1,FALSE
-5219,5219_cb_bulk,bulk,bulk,bulk,77,elderly,1,FALSE
-5817,5817_liver_bulk,bulk,bulk,bulk,0.6,infant,1,FALSE
-5823,5823-tempmusc-1b1_20170221-WGS,bulk,bulk,bulk,82.7,elderly,1,FALSE
-936,936-hrt-1b1_20170221-WGS,bulk,bulk,bulk,49.2,adult,1,FALSE
-5559,5559-bulk,bulk,bulk,bulk,19.8,adolescent,1,FALSE
-5657,5657-bulk,bulk,bulk,bulk,82,elderly,1,FALSE
+donor,sample,amp,type,selection,age,ageclass,batch,outlier,sex
+1278,GliaLC-5-B12,MDA,oligo,SOX10,0.4,infant,1,FALSE,M
+1278,GliaLC-5-B7,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE,M
+1278,GliaLC-5-B8,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE,M
+1278,GliaLC-5-C7,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE,M
+1278,GliaLC-5-D10,MDA,oligo,SOX10,0.4,infant,1,FALSE,M
+1278,GliaLC-5-E12,MDA,oligo,SOX10,0.4,infant,1,FALSE,M
+1278,GliaLC-5-E7,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE,M
+1278,GliaLC-5-G7,MDA,Mixed glia,GFAP,0.4,infant,1,FALSE,M
+1278,GliaLC-5-H10,MDA,oligo,SOX10,0.4,infant,1,FALSE,M
+1278,GliaLC-5-H11,MDA,oligo,SOX10,0.4,infant,1,FALSE,M
+5171,GliaLC-6-A5,MDA,oligo,SOX10,79,elderly,1,FALSE,M
+5171,GliaLC-6-B4,MDA,oligo,SOX10,79,elderly,1,FALSE,M
+5171,GliaLC-6-B5,MDA,oligo,SOX10,79,elderly,1,FALSE,M
+5171,GliaLC-6-C1,MDA,Mixed glia,GFAP,79,elderly,1,FALSE,M
+5171,GliaLC-6-C2,MDA,Mixed glia,GFAP,79,elderly,1,FALSE,M
+5171,GliaLC-6-E6,MDA,oligo,SOX10,79,elderly,1,FALSE,M
+5171,GliaLC-6-F3,MDA,Mixed glia,GFAP,79,elderly,1,FALSE,M
+5171,GliaLC-6-G3,MDA,Mixed glia,GFAP,79,elderly,1,FALSE,M
+5171,GliaLC-6-G4,MDA,oligo,SOX10,79,elderly,1,FALSE,M
+5171,GliaLC-6-H3,MDA,Mixed glia,GFAP,79,elderly,1,FALSE,M
+5657,GliaLC-4-B12,MDA,oligo,SOX10,81,elderly,1,FALSE,M
+5657,GliaLC-4-D12,MDA,oligo,SOX10,81,elderly,1,FALSE,M
+5657,GliaLC-4-D8,MDA,Mixed glia,GFAP,81,elderly,1,FALSE,M
+5657,GliaLC-4-E12,MDA,oligo,SOX10,81,elderly,1,FALSE,M
+5657,GliaLC-4-F11,MDA,oligo,SOX10,81,elderly,1,FALSE,M
+5657,GliaLC-4-F7,MDA,Mixed glia,GFAP,81,elderly,1,FALSE,M
+5657,GliaLC-4-F9,MDA,Mixed glia,GFAP,81,elderly,1,FALSE,M
+5657,GliaLC-4-G10,MDA,oligo,SOX10,81,elderly,1,FALSE,M
+5657,GliaLC-4-H7,MDA,Mixed glia,GFAP,81,elderly,1,FALSE,M
+5657,GliaLC-4-H8,MDA,Mixed glia,GFAP,81,elderly,1,FALSE,M
+5871,GliaLC-6-A7,MDA,Mixed glia,GFAP,2,infant,1,FALSE,M
+5871,GliaLC-6-B10,MDA,oligo,SOX10,2,infant,1,FALSE,M
+5871,GliaLC-6-D10,MDA,oligo,SOX10,2,infant,1,FALSE,M
+5871,GliaLC-6-D8,MDA,Mixed glia,GFAP,2,infant,1,FALSE,M
+5871,GliaLC-6-E7,MDA,Mixed glia,GFAP,2,infant,1,FALSE,M
+5871,GliaLC-6-F10,MDA,oligo,SOX10,2,infant,1,FALSE,M
+5871,GliaLC-6-F12,MDA,oligo,SOX10,2,infant,1,FALSE,M
+5871,GliaLC-6-G7,MDA,Mixed glia,GFAP,2,infant,1,FALSE,M
+5871,GliaLC-6-H12,MDA,oligo,SOX10,2,infant,1,FALSE,M
+5871,GliaLC-6-H7,MDA,Mixed glia,GFAP,2,infant,1,FALSE,M
+1278,1278-Oligo-5,PTA,oligo,SOX10,0.4,infant,1,FALSE,M
+1278,1278-Oligo-7,PTA,oligo,SOX10,0.4,infant,1,FALSE,M
+1278,1278-Oligo-8,PTA,oligo,SOX10,0.4,infant,1,FALSE,M
+1465,1465-Oligo-5,PTA,oligo,SOX10,17.5,adolescent,1,FALSE,M
+1465,1465-Oligo-7,PTA,oligo,SOX10,17.5,adolescent,1,FALSE,M
+1465,1465-Oligo-8,PTA,oligo,SOX10,17.5,adolescent,1,FALSE,M
+4638,4638-Neuron-4,PTA,PFC neuron,NeuN,15.1,adolescent,1,FALSE,F
+4638,4638-Neuron-5,PTA,PFC neuron,NeuN,15.1,adolescent,1,FALSE,F
+4638,4638-Neuron-6,PTA,PFC neuron,NeuN,15.1,adolescent,1,FALSE,F
+4638,4638-Oligo-4,PTA,oligo,SOX10,15.1,adolescent,1,FALSE,F
+4638,4638-Oligo-5,PTA,oligo,SOX10,15.1,adolescent,1,FALSE,F
+4643,4643-Neuron-3,PTA,PFC neuron,NeuN,42.2,adult,1,FALSE,F
+4643,4643-Neuron-4,PTA,PFC neuron,NeuN,42.2,adult,1,FALSE,F
+4643,4643-Neuron-6,PTA,PFC neuron,NeuN,42.2,adult,1,FALSE,F
+4643,4643-Oligo-5,PTA,oligo,SOX10,42.2,adult,1,FALSE,F
+4643,4643-Oligo-6,PTA,oligo,SOX10,42.2,adult,1,FALSE,F
+4643,4643-Oligo-8,PTA,oligo,SOX10,42.2,adult,1,FALSE,F
+5087,5087-Oligo-4,PTA,oligo,SOX10,44.9,adult,1,FALSE,M
+5087,5087-Oligo-5,PTA,oligo,SOX10,44.9,adult,1,FALSE,M
+5087,5087-Oligo-7,PTA,oligo,SOX10,44.9,adult,1,FALSE,M
+5219,5219-Neuron-2,PTA,PFC neuron,NeuN,77,elderly,1,FALSE,F
+5219,5219-Neuron-4,PTA,PFC neuron,NeuN,77,elderly,1,FALSE,F
+5219,5219-Neuron-5,PTA,PFC neuron,NeuN,77,elderly,1,FALSE,F
+5219,5219-Oligo-5,PTA,oligo,SOX10,77,elderly,1,FALSE,F
+5219,5219-Oligo-6,PTA,oligo,SOX10,77,elderly,1,FALSE,F
+5219,5219-Oligo-7,PTA,oligo,SOX10,77,elderly,1,FALSE,F
+5559,5559-Oligo-3,PTA,oligo,SOX10,19.8,adolescent,1,FALSE,F
+5559,5559-Oligo-5,PTA,oligo,SOX10,19.8,adolescent,1,FALSE,F
+5559,5559-Oligo-8,PTA,oligo,SOX10,19.8,adolescent,1,FALSE,F
+5657,5657-Oligo-3,PTA,oligo,SOX10,82,elderly,1,FALSE,M
+5657,5657-Oligo-5,PTA,oligo,SOX10,82,elderly,1,FALSE,M
+5657,5657-Oligo-7,PTA,oligo,SOX10,82,elderly,1,FALSE,M
+5817,5817-Oligo-4,PTA,oligo,SOX10,0.6,infant,1,FALSE,M
+5817,5817-Oligo-6,PTA,oligo,SOX10,0.6,infant,1,FALSE,M
+5817,5817-Oligo-7,PTA,oligo,SOX10,0.6,infant,1,FALSE,M
+5823,5823-Oligo-6,PTA,oligo,SOX10,82.7,elderly,1,FALSE,F
+5823,5823-Oligo-7,PTA,oligo,SOX10,82.7,elderly,1,FALSE,F
+5823,5823-Oligo-8,PTA,oligo,SOX10,82.7,elderly,1,FALSE,F
+5871,5871-Neuron-4,PTA,PFC neuron,NeuN,2,infant,1,FALSE,M
+5871,5871-Neuron-5,PTA,PFC neuron,NeuN,2,infant,1,FALSE,M
+5871,5871-Neuron-6,PTA,PFC neuron,NeuN,2,infant,1,FALSE,M
+5871,5871-Oligo-4,PTA,oligo,SOX10,2,infant,1,FALSE,M
+5871,5871-Oligo-5,PTA,oligo,SOX10,2,infant,1,FALSE,M
+5871,5871-Oligo-7,PTA,oligo,SOX10,2,infant,1,FALSE,M
+936,936-Oligo-4,PTA,oligo,SOX10,49.2,adult,1,FALSE,F
+936,936-Oligo-5,PTA,oligo,SOX10,49.2,adult,1,FALSE,F
+936,936-Oligo-6,PTA,oligo,SOX10,49.2,adult,1,FALSE,F
+5871,5871-BLK-liver,bulk,bulk,bulk,2,infant,1,FALSE,M
+1278,1278BA9-A,PTA,PFC neuron,NeuN,0.4,infant,1,FALSE,M
+1278,1278BA9-B,PTA,PFC neuron,NeuN,0.4,infant,1,FALSE,M
+1278,1278BA9-C,PTA,PFC neuron,NeuN,0.4,infant,1,FALSE,M
+1465,1465BA9-A,PTA,PFC neuron,NeuN,17.5,adolescent,1,FALSE,M
+1465,1465BA9-B,PTA,PFC neuron,NeuN,17.5,adolescent,1,FALSE,M
+1465,1465BA9-C,PTA,PFC neuron,NeuN,17.5,adolescent,1,FALSE,M
+1465,1465BA9-D,PTA,PFC neuron,NeuN,17.5,adolescent,1,FALSE,M
+5087,5087PFC-A,PTA,PFC neuron,NeuN,44.9,adult,1,FALSE,M
+5087,5087PFC-B,PTA,PFC neuron,NeuN,44.9,adult,1,FALSE,M
+5087,5087PFC-C,PTA,PFC neuron,NeuN,44.9,adult,1,FALSE,M
+5559,5559PFC-A,PTA,PFC neuron,NeuN,19.8,adolescent,1,FALSE,F
+5559,5559PFC-B,PTA,PFC neuron,NeuN,19.8,adolescent,1,FALSE,F
+5559,5559PFC-C,PTA,PFC neuron,NeuN,19.8,adolescent,1,FALSE,F
+5657,5657PFC-A,PTA,PFC neuron,NeuN,82,elderly,1,FALSE,M
+5657,5657PFC-B,PTA,PFC neuron,NeuN,82,elderly,1,FALSE,M
+5657,5657PFC-C,PTA,PFC neuron,NeuN,82,elderly,1,FALSE,M
+5817,5817PFC-A,PTA,PFC neuron,NeuN,0.6,infant,1,FALSE,M
+5817,5817PFC-B,PTA,PFC neuron,NeuN,0.6,infant,1,FALSE,M
+5817,5817PFC-C,PTA,PFC neuron,NeuN,0.6,infant,1,FALSE,M
+5823,5823PFC-A,PTA,PFC neuron,NeuN,82.7,elderly,1,FALSE,F
+5823,5823PFC-B,PTA,PFC neuron,NeuN,82.7,elderly,1,FALSE,F
+5823,5823PFC-C,PTA,PFC neuron,NeuN,82.7,elderly,1,FALSE,F
+936,936PFC-A,PTA,PFC neuron,NeuN,49.2,adult,1,FALSE,F
+936,936PFC-B,PTA,PFC neuron,NeuN,49.2,adult,1,FALSE,F
+936,936PFC-C,PTA,PFC neuron,NeuN,49.2,adult,1,FALSE,F
+UMB4976,UMB4976_E1,PTA,PFC neuron,NeuN,104,elderly,1,FALSE,F
+UMB4976,UMB4976_E2,PTA,PFC neuron,NeuN,104,elderly,1,FALSE,F
+UMB4976,UMB4976_E3,PTA,PFC neuron,NeuN,104,elderly,1,FALSE,F
+UMB4976,4976-190613-cer,bulk,bulk,bulk,104,elderly,1,FALSE,F
+UMB5451,UMB5451_B2,PTA,PFC neuron,NeuN,57,adult,1,FALSE,M
+UMB5451,UMB5451_B3,PTA,PFC neuron,NeuN,57,adult,1,FALSE,M
+UMB5451,UMB5451_B5,PTA,PFC neuron,NeuN,57,adult,1,FALSE,M
+UMB5451,5451-190613-ctxBA4,bulk,bulk,bulk,57,adult,1,FALSE,M
+UMB5572,UMB5572_D2,PTA,PFC neuron,NeuN,70,elderly,1,FALSE,F
+UMB5572,UMB5572_D3,PTA,PFC neuron,NeuN,70,elderly,1,FALSE,F
+UMB5572,UMB5572_D4,PTA,PFC neuron,NeuN,70,elderly,1,FALSE,F
+UMB5572,UMB5572_bulk,bulk,bulk,bulk,70,elderly,1,FALSE,F
+UMB5666,UMB5666_F1,PTA,PFC neuron,NeuN,65,elderly,1,FALSE,M
+UMB5666,UMB5666_F2,PTA,PFC neuron,NeuN,65,elderly,1,FALSE,M
+UMB5666,UMB5666_F5,PTA,PFC neuron,NeuN,65,elderly,1,FALSE,M
+UMB5666,UMB5666_bulk,bulk,bulk,bulk,65,elderly,1,FALSE,M
+UMB5943,UMB5943_C2,PTA,PFC neuron,NeuN,69,elderly,1,FALSE,M
+UMB5943,UMB5943_C4,PTA,PFC neuron,NeuN,69,elderly,1,FALSE,M
+UMB5943,UMB5943_C5,PTA,PFC neuron,NeuN,69,elderly,1,FALSE,M
+UMB5943,5943-190613-ctxBA4,bulk,bulk,bulk,69,elderly,1,FALSE,M
+1278,1278_OL1,PTA,oligo,SOX10,0.4,infant,2,FALSE,M
+1278,1278_OL2,PTA,oligo,SOX10,0.4,infant,2,FALSE,M
+1278,1278_OL4,PTA,oligo,SOX10,0.4,infant,2,FALSE,M
+1465,1465_OL1,PTA,oligo,SOX10,17.5,adolescent,2,FALSE,M
+1465,1465_OL2,PTA,oligo,SOX10,17.5,adolescent,2,FALSE,M
+1465,1465_OL3,PTA,oligo,SOX10,17.5,adolescent,2,FALSE,M
+4638,4638_OL3,PTA,oligo,SOX10,15.1,adolescent,2,FALSE,F
+4638,4638_OL8,PTA,oligo,SOX10,15.1,adolescent,2,FALSE,F
+4643,4643_OL3,PTA,oligo,SOX10,44.2,adult,2,FALSE,F
+5087,5087_OL2,PTA,oligo,SOX10,44.9,adult,2,FALSE,M
+5087,5087_OL8,PTA,oligo,SOX10,44.9,adult,2,FALSE,M
+5219,5219_OL4,PTA,oligo,SOX10,77,elderly,2,FALSE,F
+5219,5219_OL8,PTA,oligo,SOX10,77,elderly,2,FALSE,F
+5559,5559_OL1,PTA,oligo,SOX10,19.8,adolescent,2,FALSE,F
+5559,5559_OL2,PTA,oligo,SOX10,19.8,adolescent,2,FALSE,F
+5657,5657_OL1,PTA,oligo,SOX10,82,elderly,2,FALSE,M
+5657,5657_OL2,PTA,oligo,SOX10,82,elderly,2,FALSE,M
+5657,5657_OL4,PTA,oligo,SOX10,82,elderly,2,FALSE,M
+5657,5657_OL6,PTA,oligo,SOX10,82,elderly,2,FALSE,M
+5657,5657_OL8,PTA,oligo,SOX10,82,elderly,2,FALSE,M
+5817,5817_OL2,PTA,oligo,SOX10,0.6,infant,2,FALSE,M
+5817,5817_OL3,PTA,oligo,SOX10,0.6,infant,2,FALSE,M
+5817,5817_OL8,PTA,oligo,SOX10,0.6,infant,2,FALSE,M
+5823,5823_OL1,PTA,oligo,SOX10,82.7,elderly,2,FALSE,F
+5823,5823_OL2,PTA,oligo,SOX10,82.7,elderly,2,FALSE,F
+5823,5823_OL3,PTA,oligo,SOX10,82.7,elderly,2,FALSE,F
+5823,5823_OL4,PTA,oligo,SOX10,82.7,elderly,2,FALSE,F
+5823,5823_OL5,PTA,oligo,SOX10,82.7,elderly,2,FALSE,F
+5871,5871_OL3,PTA,oligo,SOX10,2,infant,2,FALSE,M
+5871,5871_OL6,PTA,oligo,SOX10,2,infant,2,FALSE,M
+5871,5871_OL8,PTA,oligo,SOX10,2,infant,2,FALSE,M
+CON1901106,11901106_Gy_C1,PTA,PFC neuron,NeuN,67,elderly,2,FALSE,M
+CON1901106,11901106_Gy_C2,PTA,PFC neuron,NeuN,67,elderly,2,FALSE,M
+CON301159,301159_Gyrus_D1,PTA,PFC neuron,NeuN,51,adult,2,FALSE,M
+CON301159,301159_Gyrus_D3,PTA,PFC neuron,NeuN,51,adult,2,FALSE,M
+CON1901106,CON1901106_bulk,bulk,bulk,bulk,67,elderly,2,FALSE,M
+CON301159,CON301159_bulk,bulk,bulk,bulk,51,adult,2,FALSE,M
+1465,1465-cortex_BulkDNA_WGSb,bulk,bulk,bulk,17.5,adolescent,1,FALSE,M
+1465,1465-heart_BulkDNA_WGSb,bulk,bulk,bulk,17.5,adolescent,1,FALSE,M
+4638,4638-Bulk-Heart,bulk,bulk,bulk,15.1,adolescent,1,FALSE,F
+4643,4643_Bulk-Liver,bulk,bulk,bulk,42.2,adult,1,FALSE,F
+5087,5087-hrt-1b1,bulk,bulk,bulk,44.9,adult,1,FALSE,M
+1278,1278_heart_bulk,bulk,bulk,bulk,0.4,infant,1,FALSE,M
+5171,5171_cb_bulk,bulk,bulk,bulk,79,elderly,1,FALSE,M
+5219,5219_cb_bulk,bulk,bulk,bulk,77,elderly,1,FALSE,F
+5817,5817_liver_bulk,bulk,bulk,bulk,0.6,infant,1,FALSE,M
+5823,5823-tempmusc-1b1_20170221-WGS,bulk,bulk,bulk,82.7,elderly,1,FALSE,F
+936,936-hrt-1b1_20170221-WGS,bulk,bulk,bulk,49.2,adult,1,FALSE,F
+5559,5559-bulk,bulk,bulk,bulk,19.8,adolescent,1,FALSE,F
+5657,5657-bulk,bulk,bulk,bulk,82,elderly,1,FALSE,M

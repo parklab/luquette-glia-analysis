@@ -1,0 +1,129 @@
+# vim: syntax=python
+
+import yaml
+
+with open('metadata/bams.yaml') as yf:
+    bams = yaml.load(yf, Loader=yaml.FullLoader)
+
+bams_by_donor = dict(zip(bams.keys(),
+    [ list(bams[d]['single_cell'].values()) + list(bams[d]['bulk'].values()) for d in bams.keys() ]))
+#print(bams_by_donor)
+
+gatk_regions = []
+with open('metadata/chrX_noPARs_gatk_regions_153windows_1000000.txt') as rf:
+    line_no = 0
+    for line in rf:
+        chr, begin, end = line.strip().split('\t')
+        gatk_regions.append(str(chr) + ":" + str(int(begin)+1) + '-' + str(end))
+#print(gatk_regions)
+    
+
+# Adapted from SCAN2's snakemake/snakefile.sentieon_joint
+wildcard_constraints:
+    gatk_chunk="\d+"
+
+
+rule sentieon_gatk_scatter:
+    input:
+        ref='resources/human_g1k_v37_decoy.fasta',
+        dbsnp='resources/dbsnp_147_b37_common_all_20160601.vcf',
+        regionfile='metadata/chrX_noPARs_gatk_regions_153windows_1000000.txt',
+        bams=lambda wildcards: bams_by_donor[wildcards.donor],
+        bais=lambda wildcards: [ b.replace(".bam", '.bai') for b in bams_by_donor[wildcards.donor] ]
+    output:
+        vcf=temp("chrX/{donor}/gatk/hc_raw.mmq60_chunk{gatk_chunk}.vcf"),
+        vcfidx=temp("chrX/{donor}/gatk/hc_raw.mmq60_chunk{gatk_chunk}.vcf.idx")
+    log:
+        "chrX/{donor}/gatk/hc_raw.mmq60_chunk{gatk_chunk}.log"
+    benchmark:
+        "chrX/{donor}/gatk/scatter_benchmark.mmq60_chunk{gatk_chunk}.tsv"
+    params:
+        bamlist=lambda wildcards, input: expand("-i {bam}", bam=input.bams),
+        regionflag=lambda wildcards:
+            "--interval " + gatk_regions[int(wildcards.gatk_chunk) - 1],
+        mmq=60
+    threads: 1
+    resources:
+        mem_mb=lambda wildcards, input, attempt: 200000 if attempt == 3 else (1000 + (9000*(attempt-1)) + 31*(4**(attempt-1))*len(input.bams))
+    shell:
+        """
+        sentieon driver -t {threads} \
+            -r {input.ref} \
+            {params.regionflag} \
+            {params.bamlist} \
+            --algo Haplotyper \
+            -d {input.dbsnp} \
+            --min_map_qual {params.mmq} \
+            --trim_soft_clip \
+            {output.vcf} >& {log}
+        """
+
+
+# Have to make the argument file without overflowing the command
+# line buffer.
+rule make_arg_file:
+    input:
+    output:
+        "chrX/{donor}/gatk/gather_mmq60_args.list"
+    params:
+        gatk_chunks=len(gatk_regions)
+    localrule: True
+    resources:
+        mem_mb=200
+    shell:
+        """
+        for i in `seq 1 {params.gatk_chunks}`; do
+            echo "-V chrX/{wildcards.donor}/gatk/hc_raw.mmq60_chunk$i.vcf" >> {output}
+        done
+        """
+
+
+rule gatk_gather:
+    input:
+        ref='resources/human_g1k_v37_decoy.fasta',
+        vcf=lambda wildcards:
+                expand("chrX/{{donor}}/gatk/hc_raw.mmq60_chunk{gatk_chunk}.vcf",
+                       gatk_chunk=range(1, len(gatk_regions)+1)),
+        argfile="chrX/{donor}/gatk/gather_mmq60_args.list"
+    output:
+        vcf="chrX/{donor}/hc_raw.mmq60.vcf"
+    resources:
+        mem_mb=4000
+    benchmark:
+        "chrX/{donor}/gatk/gather_benchmark.mmq60.tsv"
+    shell:
+        "gatk3 org.broadinstitute.gatk.tools.CatVariants"
+        "    -Xmx3G -Xms3G"
+        "    --arg_file {input.argfile}"
+        "    -R {input.ref}"
+        "    -out {output.vcf}"
+        "    -assumeSorted"
+
+
+rule gatk_vcf_to_tab:
+    input:
+        ref='resources/human_g1k_v37_decoy.fasta',
+        vcf="chrX/{donor}/hc_raw.mmq60.vcf"
+    output:
+        vcf="chrX/{donor}/hc.mmq60.exnonvar_biallelic_bulkcalled.vcf",
+        tab="chrX/{donor}/mmq60.tab.gz",
+        idx="chrX/{donor}/mmq60.tab.gz.tbi"
+    params:
+        bulk_sample=lambda wildcards: list(bams[wildcards.donor]['bulk'].keys())[0]
+    benchmark:
+        "chrX/{donor}/benchmark_gatkvcf_to_tab_mmq60.txt"
+    resources:
+        mem_mb=4000
+    shell:
+        """
+        gatk SelectVariants \
+           --java-options '-Xmx3G -Xms3G' \
+           -R {input.ref} \
+           -V {input.vcf} \
+           --restrict-alleles-to BIALLELIC \
+           --exclude-non-variants \
+           -select 'vc.getGenotype(\"{params.bulk_sample}\").isCalled()' \
+           -O {output.vcf}
+        snakemake/scripts/totab.sh {output.vcf} /dev/stdout | bgzip -c > {output.tab}
+        tabix -p vcf -S 1 {output.tab}
+        """

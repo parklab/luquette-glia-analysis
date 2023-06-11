@@ -32,7 +32,8 @@ rule generate_matrix_snv:
             donorsample=donors_by_samples[wildcards.nmf_runtype])
     output:
         # the name "matrix" must match the first argument of matGen.SigProfilerMatrixGeneratorFunc()
-        out="nmf/{nmf_runtype}/matrix_generator/SBS/output/SBS/matrix.SBS96.all"
+        "nmf/{nmf_runtype}/matrix_generator/SBS/output/SBS/matrix.SBS96.all",
+        "nmf/{nmf_runtype}/matrix_generator/SBS/output/SBS/matrix.SBS384.all"
     params:
         working_dir='nmf/{nmf_runtype}/matrix_generator/SBS/'
     localrule: True
@@ -63,7 +64,8 @@ rule generate_matrix_indel:
             donorsample=donors_by_samples[wildcards.nmf_runtype])
     output:
         # the name "matrix" must match the first argument of matGen.SigProfilerMatrixGeneratorFunc()
-        out="nmf/{nmf_runtype}/matrix_generator/ID/output/ID/matrix.ID83.all"
+        "nmf/{nmf_runtype}/matrix_generator/ID/output/ID/matrix.ID83.all",
+        "nmf/{nmf_runtype}/matrix_generator/ID/output/ID/matrix.ID415.all",
     params:
         working_dir='nmf/{nmf_runtype}/matrix_generator/ID/'
     localrule: True

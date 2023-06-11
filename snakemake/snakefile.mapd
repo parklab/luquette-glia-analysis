@@ -1,0 +1,74 @@
+# vim: syntax=python
+
+rule mapd_varbin:
+    input:
+        bam='bams/{sample}.bam',
+        bin_boundaries="resources/mapd/hg19.bin.boundaries.50k.bowtie.k50.sorted.txt",
+        chrom_sizes='resources/mapd/hg19.chrom.sizes.txt'
+    output:
+        txt="mapd/{sample}.varbin.txt"
+    log:
+        "mapd/{sample}.varbin.log"
+    benchmark:
+        "mapd/{sample}.varbin.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=250
+    shell:
+        """
+        samtools view {input.bam} \
+            | python2 snakemake/scripts/mapd_varbin_50k.py \
+                {output.txt} \
+                {input.bin_boundaries} \
+                {input.chrom_sizes} > {log}
+        """
+
+
+rule mapd_cbs:
+    input:
+        txt="mapd/{sample}.varbin.txt",
+        badbins="resources/mapd/hg19.50k.k50.bad.bins.txt",
+        gcfile="resources/mapd/hg19.varbin.gc.content.50k.bowtie.k50.txt"
+    output:
+        txt="mapd/{sample}.cbs.txt",
+        txt_short="mapd/{sample}.cbs.short.txt"
+    log:
+        "mapd/{sample}.cbs.log"
+    benchmark:
+        "mapd/{sample}.cbs.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=1000
+    shell:
+        """
+        Rscript snakemake/scripts/mapd_cbs.R \
+            {input.txt} \
+            {output.txt} \
+            {output.txt_short} \
+            {input.badbins} \
+            {input.gcfile} > {log}
+        """
+
+
+rule mapd_copynumber:
+    input:
+        txt="mapd/{sample}.cbs.txt",
+        txt_short="mapd/{sample}.cbs.short.txt"
+    output:
+        copynumber="mapd/{sample}.copynumber.txt",
+        mapd="mapd/{sample}.mapd.txt"
+    log:
+        "mapd/{sample}.copynumber.log"
+    benchmark:
+        "mapd/{sample}.copynumber.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=1000
+    shell:
+        """
+        Rscript snakemake/scripts/mapd_copynumber.R \
+            {input.txt} \
+            {input.txt_short} \
+            {output.copynumber} \
+            {output.mapd} > {log}
+        """

@@ -112,6 +112,11 @@ rule scan2_call:
     input:
         unpack_donors_and_samples(bams)
 
+rule chrx:
+    input:
+        expand("chrX/{donor}/mmq60.tab.{ext}",
+            donor=bams.keys(), ext=[ 'gz', 'gz.tbi' ])
+
 rule nmf:
     input:
         expand('nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/signatures_{n}.pdf',
@@ -385,7 +390,9 @@ rule signature_enrichment:
 include: "snakefile.data"
 include: "snakefile.scan2"
 include: "snakefile.scan2_per_donor"
+include: "snakefile.sentieon_for_chrX"
 include: "snakefile.nmf"
+include: "snakefile.mapd"
 include: "snakefile.alignability"
 include: "snakefile.aging_rates"
 include: "snakefile.mutsigs"

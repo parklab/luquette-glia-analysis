@@ -1,0 +1,95 @@
+2a3,5
+> # Ensure any failure in this script prompts a failure in Snakemake
+> set -exo pipefail
+> 
+73a77,79
+> 
+> # UPDATE 6/2023 JL: ls generates an error (due to set -e) since BED files are no longer the
+> # input to this script.
+75,79c81,85
+< if [ -z "${DIR_CELLS_LIST}" ];
+< then
+<     DIR_CELLS_LIST=${DIR_INPUT}/"list"
+<     ls ${DIR_INPUT}/*.{bed,bed.gz} 2>/dev/null | cat > "${DIR_CELLS_LIST}"
+< fi
+---
+> #if [ -z "${DIR_CELLS_LIST}" ];
+> #then
+>     #DIR_CELLS_LIST=${DIR_INPUT}/"list"
+>     #ls ${DIR_INPUT}/*.{bed,bed.gz} 2>/dev/null | cat > "${DIR_CELLS_LIST}"
+> #fi
+107a114,116
+> # UPDATE JL 6/2023: do not let this script manage files, Snakemake is the appropriate
+> # manager.
+> # Don't remove _mapped files, we generate these per sample now
+109,138c118
+< rm -f ${DIR_INPUT}/{data,CNV*,Seg*,results.txt,*{_mapped,.jpeg,.newick,.xml,.cnv}}
+< 
+< # Map user bed files to appropriate bins
+< while read file;
+< do
+<     echo -n "# Processing ${file}... "
+< 
+<     # Make sure exists
+<     if [[ ! "${file}" =~ \.bed$ ]] && [[ ! "${file}" =~ \.bed.gz$ ]]; then
+<         echo "error: file <${file}> doesn't exist"
+<         exit;
+<     fi
+<     echo ""
+< 
+<     # Add "z" to cat to support gzipped files
+<     [[ "${file}" =~ \.gz$ ]] && Z="z" || Z=""
+< 
+<     # If bed file doesn't encode chromosomes using 'chr', add it
+<     firstLineChr=$(${Z}grep --max 1 "chr" ${file} | cut -f1)
+<     if [ "${firstLineChr}" == "" ];
+<     then
+<         echo "# -> no 'chr' detected; rewritting bed files."
+<         awk '{print "chr"$0}' <( ${Z}cat ${file} ) | ( [[ ${Z} == "z" ]] && gzip || cat ) > ${file}_tmp
+<         mv ${file} ${file}_invalidchr
+<         mv ${file}_tmp ${file}
+<     fi
+< 
+<     # Bin reads
+<     ${DIR_SCRIPTS}/binUnsorted ${DIR_GENOME}/${BINNING} ${NB_BINS} <(${Z}cat ${file}) `echo ${file} | awk -F ".bed" '{print $1}'` ${file}_mapped
+< done < ${DIR_CELLS_LIST}
+---
+> #rm -f ${DIR_INPUT}/{data,CNV*,Seg*,results.txt,*{_mapped,.jpeg,.newick,.xml,.cnv}}
+143c123,124
+< rm -f ${DIR_INPUT}/*{_mapped,_binned}
+---
+> # Again, do not remove _mapped files
+> #rm -f ${DIR_INPUT}/*{_mapped,_binned}
+152c133,135
+<     ${DIR_SCRIPTS}/binUnsorted ${DIR_GENOME}/${BINNING} ${NB_BINS} ${SEGMENTATION_REF} Reference ${SEGMENTATION_REF}_mapped
+---
+>     echo "Assuming segmentation reference was already mapped, skipping"
+>     # We also bin this file along with the single cells
+>     #${DIR_SCRIPTS}/binUnsorted ${DIR_GENOME}/${BINNING} ${NB_BINS} ${SEGMENTATION_REF} Reference ${SEGMENTATION_REF}_mapped
+163c146,149
+< ${DIR_SCRIPTS}/process.R ${DIR_GENOME} ${DIR_INPUT} ${statFile} data ${SEGMENTATION} ${BINNING} ${CLUSTERING_LINKAGE} ${CLUSTERING_DISTANCE} ${COLOR} ${SEGMENTATION_REF}_mapped ${FACS} ${FILE_FACS} $( [[ $MASK_SEXCHRS == 1 ]] && echo 0 || echo 1 ) ${MASK_BADBINS}
+---
+> # Minor modification: call the reference XXX_mapped_bulk rather than XXX_mapped so that
+> # it does not get pasted together into `data`.
+> #${DIR_SCRIPTS}/process.R ${DIR_GENOME} ${DIR_INPUT} ${statFile} data ${SEGMENTATION} ${BINNING} ${CLUSTERING_LINKAGE} ${CLUSTERING_DISTANCE} ${COLOR} ${SEGMENTATION_REF}_mapped ${FACS} ${FILE_FACS} $( [[ $MASK_SEXCHRS == 1 ]] && echo 0 || echo 1 ) ${MASK_BADBINS}
+> ${DIR_SCRIPTS}/process.R ${DIR_GENOME} ${DIR_INPUT} ${statFile} data ${SEGMENTATION} ${BINNING} ${CLUSTERING_LINKAGE} ${CLUSTERING_DISTANCE} ${COLOR} ${SEGMENTATION_REF}_mapped_bulk ${FACS} ${FILE_FACS} $( [[ $MASK_SEXCHRS == 1 ]] && echo 0 || echo 1 ) ${MASK_BADBINS}
+170,178c156,159
+< nbCols=$(awk '{ print NF; exit; }' ${DIR_INPUT}/SegCopy)
+< for (( i=1; i<=$nbCols; i++ ));
+< do
+<   currCell=$(cut -f$i ${DIR_INPUT}/SegCopy | head -n 1 | tr -d '"')
+<   if [ "$currCell" == "" ]; then
+<     continue;
+<   fi
+<   cut -f$i ${DIR_INPUT}/SegCopy | tail -n+2 | awk '{if(NR==1) print "1,"$1; else print NR","prev"\n"NR","$1;prev=$1; }' > ${DIR_INPUT}/$currCell.cnv
+< done
+---
+> # UPDATE JL 6/2023: currCell=$(...) fails due to set -exo pipefail and I can't figure
+> # out why. None of the commands exit non-0. This loop just creates an output file
+> # for each column of SegCopy, and we don't use this, so skip it.
+> echo "Skipping extraction of SegCopy columns into per-sample XXX.cnv files.  If this data is necessary, simply parse SegCopy".
+192c173,174
+< tar -czf ${DIR_INPUT}/archive.tar.gz --exclude '*.bed' --exclude '*.bed.gz' --exclude '*.tar.gz' -C ${DIR_INPUT} *
+---
+> echo "Skipping archive.tar.gz creation.. JL 11/2019"
+> #tar -czf ${DIR_INPUT}/archive.tar.gz --exclude '*.bed' --exclude '*.bed.gz' --exclude '*.tar.gz' -C ${DIR_INPUT} *

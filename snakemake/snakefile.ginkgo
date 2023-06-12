@@ -1,0 +1,252 @@
+# vim: syntax=python
+
+import yaml
+
+with open('metadata/bams.yaml') as yf:
+    bams = yaml.load(yf, Loader=yaml.FullLoader)
+
+wildcard_constraints:
+    bulk='|_bulk'
+
+rule ginkgo_download_hg19_resources:
+    input:
+    output:
+        tgz=temp("resources/ginkgo/hg19.tgz")
+    log:
+        "resources/ginkgo/download_hg19.log"
+    benchmark:
+        "resources/ginkgo/download_hg19.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=250
+    shell:
+        """
+        wget -O {output.tgz} \
+            "https://labshare.cshl.edu/shares/schatzlab/www-data/ginkgo/genomes/hg19.tgz"
+        """
+
+
+# Unpack the ginkgo resources into resources/ginkgo, but because Ginkgo has
+# hard-coded paths (relative to the ginkgo.sh script), add a link inside
+# the ginkgo installation to these resources.
+# Must come before rule ginkgo_download to use rules.X.output
+rule ginkgo_unpack_hg19_resources:
+    input:
+        tgz="resources/ginkgo/hg19.tgz"
+    output:
+        # checking just a few random files that we specifically use.
+        # many more are unpacked.
+        resources=expand("resources/ginkgo/hg19/pseudoautosomal/{type}variable_100000_150_bwa",
+            type=[ '', 'GC_', 'bounds_', 'genes_' ])
+    params:
+        # the tarball already contains an hg19 toplevel directory
+        dir="resources/ginkgo"
+    log:
+        "resources/ginkgo/unpack_hg19.log"
+    threads: 1
+    resources:
+        mem_mb=250
+    shell:
+        """
+        tar --directory={params.dir} -xzvf {input.tgz}
+        """
+
+
+rule ginkgo_install:
+    input:
+        patch1="ginkgo/ginkgo_skip_tarball_and_manually_bin_beds_do_not_delete_files_set_exo_pipefail_skip_parsing_segcopy.patch",
+        patch2="ginkgo/ginkgo_use_exact_sample_names_in_output_and_skip_heatmap_plots.patch",
+        resource1="resources/ginkgo/hg19/pseudoautosomal/variable_100000_150_bwa",
+        resource2="resources/ginkgo/hg19/pseudoautosomal/GC_variable_100000_150_bwa",
+        resource3="resources/ginkgo/hg19/pseudoautosomal/bounds_variable_100000_150_bwa",
+        resource4="resources/ginkgo/hg19/pseudoautosomal/genes_variable_100000_150_bwa"
+    output:
+        dir=directory("ginkgo/install"),
+        orig_script='ginkgo/install/cli/ginkgo.sh',
+        patched_script='ginkgo/install/cli/ginkgo_patched.sh',
+        patched_process='ginkgo/install/scripts/process.R',
+        resource1="ginkgo/install/genomes/hg19/pseudoautosomal/variable_100000_150_bwa",
+        resource2="ginkgo/install/genomes/hg19/pseudoautosomal/GC_variable_100000_150_bwa",
+        resource3="ginkgo/install/genomes/hg19/pseudoautosomal/bounds_variable_100000_150_bwa",
+        resource4="ginkgo/install/genomes/hg19/pseudoautosomal/genes_variable_100000_150_bwa"
+    log:
+        "ginkgo/install/install_and_patch_ginkgo.log"
+    params:
+        commit_id="d7c779027f64fd22efe733d29be8b551c3e94f72"
+    localrule: True
+    resources:
+        mem_mb=100
+    shell:
+        # rm -fr output.dir: hack: snakemake creates (touches?) all listed
+        # output files before running the rule, creating a non-empty directory
+        # to which git-clone refuses to write.
+        """
+        rm -fr {output.dir}
+        git clone https://github.com/robertaboukhalil/ginkgo.git {output.dir}
+        cd {output.dir}
+        git checkout -q {params.commit_id}
+        make
+        cd ../..
+        patch -o {output.patched_script} {output.orig_script} {input.patch1}
+        chmod +x ginkgo/install/cli/ginkgo_patched.sh
+        # no patch -o here, patching in place
+        patch ginkgo/install/scripts/process.R {input.patch2}
+        chmod +x ginkgo/install/scripts/process.R
+        mkdir -p {output.dir}/genomes/hg19/pseudoautosomal
+        cp {input.resource1} {output.resource1}
+        cp {input.resource2} {output.resource2}
+        cp {input.resource3} {output.resource3}
+        cp {input.resource4} {output.resource4}
+        """
+
+
+rule ginkgo_bamtobed:
+    input:
+        # run_bamtobed.sh is a SCAN2 script. The scan2 download rule doesn't
+        # specifically name this file, so just ensure the script directory is
+        # there.
+        scan2='scan2/SCAN2_specific_commit/scripts',
+        bam="bams/{sample}.bam"
+    output:
+        bed=temp("ginkgo/{donor}/{sample}.bed")
+    log:
+        "ginkgo/{donor}/{sample}.bamtobed.log"
+    benchmark:
+        "ginkgo/{donor}/{sample}.bamtobed_benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=1000
+    shell:
+        """
+        {input.scan2}/run_bamtobed.sh {input.bam} {output.bed}
+        """
+
+
+rule ginkgo_bin_beds:
+    input:
+        bed="ginkgo/{donor}/{sample}.bed",
+        binfile="ginkgo/install/genomes/hg19/pseudoautosomal/variable_100000_150_bwa"
+    output:
+        # ginkgo expects the same name as the bed file _mapped appended
+        mapped=protected("ginkgo/{donor}/{sample}.bed_mapped{bulk}")
+    log:
+        "ginkgo/{donor}/{sample}{bulk}.bin_beds.log"
+    benchmark:
+        "ginkgo/{donor}/{sample}{bulk}.bin_beds_benchmark.txt"
+    params:
+        # Nonstandard ginkgo: rather than use the file path (minus .bed), use
+        # the sample name. Maybe this will prevent the horribly long ginkgo output
+        # file names.
+        # If it's the bulk sample, use the special name Reference, otherwise just
+        # remove the trailing '.bed' 
+        #name=lambda wildcards: 'Reference' if wildcards.bulk == 'bulk' else wildcards.sample
+        name="{sample}"   # Not treating bulk separately. See discussio about --segmentation=2
+    threads: 1
+    resources:
+        mem_mb=1000
+    shell:
+        # wc -l: the binfile is tiny (28k lines), so no problem rerunning wc every time
+        """
+        ginkgo/install/scripts/binUnsorted \
+            {input.binfile} \
+            $(wc -l {input.binfile} | cut -f1 -d\ ) \
+            {input.bed} \
+            {params.name} \
+            {output.mapped}
+        """
+
+
+rule ginkgo_run:
+    input:
+        script="ginkgo/install/cli/ginkgo_patched.sh",
+        process="ginkgo/install/scripts/process.R",
+        resource="ginkgo/install/genomes/hg19/pseudoautosomal/variable_100000_150_bwa",
+        more_resources=expand("ginkgo/install/genomes/hg19/pseudoautosomal/{type}_variable_100000_150_bwa",
+            type=[ 'GC', 'bounds', 'genes' ]),
+        mapped_beds=lambda wildcards: expand("ginkgo/{{donor}}/{sample}.bed_mapped",
+            sample=list(bams[wildcards.donor]['single_cell'].keys()) + list(bams[wildcards.donor]['bulk'].keys())),
+        # See comments below about explicit use of bulk as reference segmentation
+        #mapped_bulk_bed=lambda wildcards: expand("ginkgo/{{donor}}/{bulk_sample}.bed_mapped_bulk",
+            #bulk_sample=list(bams[wildcards.donor]['bulk'])[0]),
+        #cell_list="ginkgo/{donor}/cell_list.txt"
+    output:
+        # Attempting to detail all output files of Ginkgo so that they're properly
+        # deleted on a pipeline fail.  If any of these stick around, they can sometimes
+        # affect a second run.
+        # Note these output files are all overridden in the per-donor modules.
+        "ginkgo/{donor}/CHR.cnv",
+        "ginkgo/{donor}/END.cnv",
+        "ginkgo/{donor}/CNV1",
+        "ginkgo/{donor}/CNV2",
+        "ginkgo/{donor}/SegBreaks",
+        "ginkgo/{donor}/SegCopy",
+        "ginkgo/{donor}/SegFixed",
+        "ginkgo/{donor}/SegNorm",
+        "ginkgo/{donor}/SegStats",
+        "ginkgo/{donor}/data",
+        "ginkgo/{donor}/results.txt",
+        "ginkgo/{donor}/status.xml",
+        temp("ginkgo/{donor}/ploidyDummy.txt"),
+        temp("ginkgo/{donor}/refDummy.bed_mapped")
+    log:
+        "ginkgo/{donor}/ginkgo.log"
+    benchmark:
+        "ginkgo/{donor}/ginkgo_benchmark.txt"
+    params:
+        #mapped_bulk_bed=lambda wildcards, input: input.mapped_bulk_bed[0].replace("_mapped_bulk", ""),
+        # ginkgo always writes output files to the current directory. that doesn't
+        # go over well with snakemake, since all file paths are relative.
+        workdir="ginkgo/{donor}"
+    threads: 1
+    resources:
+        mem_mb=4000
+    shell:
+        """
+        cd {params.workdir}
+        pwd
+        ls -lah
+        # this file is created by ginkgo.sh. if ginkgo.sh fails and needs to be rerun,
+        # it may still be present. if it is, it causes the run to fail again because
+        # of a paste command that uses all files ending in _mapped.
+        # UPDATE: since it is now marked as an output file, Snakemake should always
+        # delete it before rerunning, but it doesn't hurt to leave this here.
+        rm -f refDummy.bed_mapped
+        ../install/cli/ginkgo_patched.sh \
+            --input `pwd` \
+            --genome hg19 \
+            --binning variable_100000_150_bwa \
+            --maskpsrs
+        ls
+        """
+        # Previously used bulk as a reference segmentation profile.  This has the drawback
+        # of not producing summary plots for the bulk, which we'd like.  Turns out that not
+        # specifically selecting the bulk for segmentation produces equivalent results.
+        # This is because Ginkgo chooses the "single cell" with the lowest variability in
+        # read depth to be the reference, which happens to almost always be (always, in our
+        # experience) the bulk anyway.
+        #   --segmentation 2 \
+        #   --ref $(basename {params.mapped_bulk_bed} _mapped_bulk) \
+        #   --cells $(basename {input.cell_list}) \
+
+
+# This rule isn't necessary when not using --segmentation=2. See above.
+# Bit of a hack: the --cells argument to ginkgo.sh wants a list of .bed
+# files, but we delete those after ginkgo_bin_beds.  The ginkgo script
+# used here is patched to not perform binning because it would happen
+# serially.  This pipeline performs the binning in parallel.
+rule ginkgo_make_cell_list:
+    input:
+        beds=lambda wildcards: expand("ginkgo/{{donor}}/{sample}.bed_mapped",
+            sample=bams[wildcards.donor]['single_cell'].keys())
+    output:
+        cell_list="ginkgo/{donor}/cell_list.txt"
+    localrule: True
+    threads: 1
+    resources:
+        mem_mb=100
+    run:
+        with open(output.cell_list, 'w') as f:
+            for bed in input.beds:
+                f.write(str(bed).replace(".bed_mapped", ".bed") + '\n')
+
+

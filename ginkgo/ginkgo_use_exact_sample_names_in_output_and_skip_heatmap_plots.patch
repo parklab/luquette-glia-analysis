@@ -1,0 +1,31 @@
+68c68
+< raw    = read.table(dat, header=TRUE, sep="\t")
+---
+> raw    = read.table(dat, header=TRUE, sep="\t", check.names=FALSE)
+680,700c680,683
+< write("Making heatRaw.jpeg", stderr())
+< jpeg("heatRaw.jpeg", width=2000, height=1400)
+< heatmap.2(t(rawBPs), Colv=FALSE, Rowv=as.dendrogram(clust), margins=c(5,20), dendrogram="row", trace="none", xlab="Bins", ylab="Samples", cex.main=2, cex.axis=1.5, cex.lab=1.5, cexCol=.001, col=bluered(2))
+< dev.off()
+< 
+< write("Making heatNorm.jpeg", stderr())
+< step=quantile(fixedBPs, c(.98))[[1]]
+< jpeg("heatNorm.jpeg", width=2000, height=1400)
+< heatmap.2(t(fixedBPs), Colv=FALSE, Rowv=as.dendrogram(clust), margins=c(5,20), dendrogram="row", trace="none", xlab="Bins", ylab="Samples", cex.main=2, cex.axis=1.5, cex.lab=1.5, cexCol=.001, col=bluered(15), breaks=seq(0,step,step/15))
+< dev.off()
+< 
+< write("Making heatCN.jpeg", stderr())
+< step=min(20, quantile(finalBPs, c(.98))[[1]])
+< jpeg("heatCN.jpeg", width=2000, height=1400)
+< heatmap.2(t(finalBPs), Colv=FALSE, Rowv=as.dendrogram(clust2), margins=c(5,20), dendrogram="row", trace="none", xlab="Bins", ylab="Samples", cex.main=2, cex.axis=1.5, cex.lab=1.5, cexCol=.001, col=colorRampPalette(c("white","green","green4","violet","purple"))(15), breaks=seq(0,step,step/15))
+< dev.off()
+< 
+< write("Making heatCor.jpeg", stderr())
+< jpeg("heatCor.jpeg", width=2000, height=1400)
+< heatmap.2(t(finalBPs), Colv=FALSE, Rowv=as.dendrogram(clust3), margins=c(5,20), dendrogram="row", trace="none", xlab="Bins", ylab="Samples", cex.main=2, cex.axis=1.5, cex.lab=1.5, cexCol=.001, col=colorRampPalette(c("white","steelblue1","steelblue4","orange","sienna3"))(15), breaks=seq(0,step,step/15))
+< dev.off()
+---
+> # UPDATE JL 6/2023: we don't use these clusterings and there is an issue
+> # with gplots:heatmap.2 that makes dendrogram calculation extremely slow.
+> # So rather than try to install a custom gplots library, just skip plotting.
+> cat("Skipping heatmap plots\n")

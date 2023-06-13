@@ -16,6 +16,16 @@ celltypes = set(manifest['celltype'])
 qualtypes = set(manifest['qualtype'])
 celltypes_to_compute = [ 'neuron', 'oligo' ]
 
+# Run mutation signature-based rescue on cells grouped as follows:
+#    1. All PTA-amplified neurons (nearly identical to Luquette et al 2022, except more neurons now).
+#    2. All PTA-amplified SOX10-sorted oligodendrocytes
+#    3. All MDA-amplified SOX10-sorted oligodendrocytes
+#    4. All MDA-amplified GFAP-sorted oligodendrocytes.
+# Note SCAN2 signature rescue is NOT DESIGNED for MDA amplified single cells.  After
+# doing steps (3) and (4) above, the rescued calls are ignored.  They are run through
+# the rescue pipeline just for the sake of uniform outputs.
+scan2_rescue_groups = [ 'pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap' ]
+
 mda_celltypes = [ 'mda_gfap', 'mda_sox10' ]
 mda_celltypes_by_age = [ 'mda_gfap_elderly', 'mda_sox10_elderly', 'mda_gfap_infant', 'mda_sox10_infant' ]
 
@@ -41,6 +51,11 @@ with open('metadata/scan2_objects.yaml') as yf:
 
 with open('metadata/bams.yaml') as yf:
     bams = yaml.load(yf, Loader=yaml.FullLoader)
+
+# `bams` is a dict mapping donor ID -> list(single cell bams, bulk bams, other bams), where
+# each of the elements in the above list are also dicts mapping sample ID -> bam path.
+# Here, flatten `bams` into just a list of file paths with no related metadata.
+allsamples = sum([ list(bams[k][bt].keys()) for k in bams.keys() for bt in bams[k].keys()  ], [])
 
 
 # The output directory and signal files are the only parameters that should
@@ -85,6 +100,7 @@ wildcard_constraints:
     mdatype='mda_all|mda_gfap|mda_sox10',
     nmf_spectype='ID|SBS',
     nmf_runtype='pta|mda|all',
+    rescue_group='|'.join(scan2_rescue_groups),
     #umap='atac|rna',
 
 
@@ -101,7 +117,7 @@ rule scan2_setup:
     input:
         expand("scan2/{donor}/scan2/scan.yaml", donor=bams.keys())
 
-def unpack_donors_and_samples(bams):
+def scan2_unpack_donors_and_samples(bams):
     ret = []
     for donor in bams.keys():
         ret = ret + expand("scan2/{donor}/scan2/sensitivity/{sample}/scan2_object.rda",
@@ -110,7 +126,14 @@ def unpack_donors_and_samples(bams):
 
 rule scan2_call:
     input:
-        unpack_donors_and_samples(bams)
+        scan2_unpack_donors_and_samples(bams)
+
+rule scan2_rescue:
+    input:
+        expand('scan2/rescue_{rescue_group}/rescued_muts.txt',
+            rescue_group=scan2_rescue_groups),
+        expand('scan2/rescue_{rescue_group}/sig_homogeneity_tests.txt',
+            rescue_group=scan2_rescue_groups)
 
 rule chrx:
     input:
@@ -123,6 +146,29 @@ rule nmf:
             nmf_runtype=[ 'pta', 'mda', 'all' ], nmf_spectype=[ 'SBS', 'ID' ], n=nmf_sig_ns),
         expand('nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/selection_criteria.pdf',
             nmf_runtype=[ 'pta', 'mda', 'all' ], nmf_spectype=[ 'SBS', 'ID' ])
+
+rule mapd:
+    input:
+        expand("mapd/{sample}.mapd.txt", sample=allsamples)
+
+# Same as above for SCAN2 output
+def ginkgo_unpack_donors_and_samples(bams):
+    ret = []
+    for donor in bams.keys():
+        ret = ret + expand("ginkgo/{donor}/{sample}_{plottype}.jpeg",
+                donor=donor,
+                sample=list(bams[donor]['single_cell'].keys()) + list(bams[donor]['bulk'].keys()),
+                plottype=[ 'CN', 'GC', 'SoS', 'counts', 'dist', 'hist', 'lorenz' ])
+    return(ret)
+
+rule ginkgo:
+    input:
+        # These are all plots
+        ginkgo_unpack_donors_and_samples(bams),
+        # These are the tables used to construct plots in case raw data is useful
+        data=expand('ginkgo/{donor}/{table}',
+            donor=bams.keys(),
+            table=[ 'data', 'CNV1', 'CNV2', 'SegBreaks', 'SegCopy', 'SegFixed', 'SegNorm', 'SegStats'])
 
 
 # Shortcuts to rebuild a single figure at a time
@@ -393,6 +439,8 @@ include: "snakefile.scan2_per_donor"
 include: "snakefile.sentieon_for_chrX"
 include: "snakefile.nmf"
 include: "snakefile.mapd"
+include: "snakefile.ginkgo"
+include: "snakefile.ginkgo_per_donor"
 include: "snakefile.alignability"
 include: "snakefile.aging_rates"
 include: "snakefile.mutsigs"

@@ -14,6 +14,7 @@
 
 module ginkgo_run_1278:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_1278 as ginkgo_run_1278 with:
     input:
@@ -48,6 +49,7 @@ ruleorder: ginkgo_run_1278 > ginkgo_run
 
 module ginkgo_run_1465:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_1465 as ginkgo_run_1465 with:
     input:
@@ -82,6 +84,7 @@ ruleorder: ginkgo_run_1465 > ginkgo_run
 
 module ginkgo_run_4638:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_4638 as ginkgo_run_4638 with:
     input:
@@ -116,6 +119,7 @@ ruleorder: ginkgo_run_4638 > ginkgo_run
 
 module ginkgo_run_4643:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_4643 as ginkgo_run_4643 with:
     input:
@@ -150,6 +154,7 @@ ruleorder: ginkgo_run_4643 > ginkgo_run
 
 module ginkgo_run_5087:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_5087 as ginkgo_run_5087 with:
     input:
@@ -184,6 +189,7 @@ ruleorder: ginkgo_run_5087 > ginkgo_run
 
 module ginkgo_run_5171:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_5171 as ginkgo_run_5171 with:
     input:
@@ -218,6 +224,7 @@ ruleorder: ginkgo_run_5171 > ginkgo_run
 
 module ginkgo_run_5219:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_5219 as ginkgo_run_5219 with:
     input:
@@ -252,6 +259,7 @@ ruleorder: ginkgo_run_5219 > ginkgo_run
 
 module ginkgo_run_5559:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_5559 as ginkgo_run_5559 with:
     input:
@@ -286,6 +294,7 @@ ruleorder: ginkgo_run_5559 > ginkgo_run
 
 module ginkgo_run_5657:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_5657 as ginkgo_run_5657 with:
     input:
@@ -320,6 +329,7 @@ ruleorder: ginkgo_run_5657 > ginkgo_run
 
 module ginkgo_run_5817:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_5817 as ginkgo_run_5817 with:
     input:
@@ -354,6 +364,7 @@ ruleorder: ginkgo_run_5817 > ginkgo_run
 
 module ginkgo_run_5823:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_5823 as ginkgo_run_5823 with:
     input:
@@ -388,6 +399,7 @@ ruleorder: ginkgo_run_5823 > ginkgo_run
 
 module ginkgo_run_5871:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_5871 as ginkgo_run_5871 with:
     input:
@@ -422,6 +434,7 @@ ruleorder: ginkgo_run_5871 > ginkgo_run
 
 module ginkgo_run_936:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_936 as ginkgo_run_936 with:
     input:
@@ -456,6 +469,7 @@ ruleorder: ginkgo_run_936 > ginkgo_run
 
 module ginkgo_run_CON1901106:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_CON1901106 as ginkgo_run_CON1901106 with:
     input:
@@ -490,6 +504,7 @@ ruleorder: ginkgo_run_CON1901106 > ginkgo_run
 
 module ginkgo_run_CON301159:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_CON301159 as ginkgo_run_CON301159 with:
     input:
@@ -524,6 +539,7 @@ ruleorder: ginkgo_run_CON301159 > ginkgo_run
 
 module ginkgo_run_UMB4976:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_UMB4976 as ginkgo_run_UMB4976 with:
     input:
@@ -558,6 +574,7 @@ ruleorder: ginkgo_run_UMB4976 > ginkgo_run
 
 module ginkgo_run_UMB5451:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_UMB5451 as ginkgo_run_UMB5451 with:
     input:
@@ -592,6 +609,7 @@ ruleorder: ginkgo_run_UMB5451 > ginkgo_run
 
 module ginkgo_run_UMB5572:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_UMB5572 as ginkgo_run_UMB5572 with:
     input:
@@ -626,6 +644,7 @@ ruleorder: ginkgo_run_UMB5572 > ginkgo_run
 
 module ginkgo_run_UMB5666:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_UMB5666 as ginkgo_run_UMB5666 with:
     input:
@@ -660,6 +679,7 @@ ruleorder: ginkgo_run_UMB5666 > ginkgo_run
 
 module ginkgo_run_UMB5943:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_UMB5943 as ginkgo_run_UMB5943 with:
     input:

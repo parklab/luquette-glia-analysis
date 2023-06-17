@@ -1,8 +1,8 @@
 # vim: syntax=python
 
-import pandas as pd
-
-meta = pd.read_csv('metadata/sample_metadata.csv')
+# shorter name for convenience
+meta = config['metadata']
+nmf_sig_ns = config['nmf_sig_ns']
 donors_by_samples = {
     'pta' : list(meta[meta["amp"]=="PTA"]['donor'] + '___' + meta[meta["amp"]=="PTA"]['sample']),
     'mda' : list(meta[meta["amp"]=="MDA"]['donor'] + '___' + meta[meta["amp"]=="MDA"]['sample']),

@@ -14,6 +14,7 @@
 
 module scan2_call_1278:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_1278 as scan2_call_mutations_1278 with:
     output:
@@ -23,6 +24,7 @@ use rule scan2_call_mutations from scan2_call_1278 as scan2_call_mutations_1278 
 
 module scan2_call_1465:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_1465 as scan2_call_mutations_1465 with:
     output:
@@ -32,6 +34,7 @@ use rule scan2_call_mutations from scan2_call_1465 as scan2_call_mutations_1465 
 
 module scan2_call_4638:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_4638 as scan2_call_mutations_4638 with:
     output:
@@ -41,6 +44,7 @@ use rule scan2_call_mutations from scan2_call_4638 as scan2_call_mutations_4638 
 
 module scan2_call_4643:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_4643 as scan2_call_mutations_4643 with:
     output:
@@ -50,6 +54,7 @@ use rule scan2_call_mutations from scan2_call_4643 as scan2_call_mutations_4643 
 
 module scan2_call_5087:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_5087 as scan2_call_mutations_5087 with:
     output:
@@ -59,6 +64,7 @@ use rule scan2_call_mutations from scan2_call_5087 as scan2_call_mutations_5087 
 
 module scan2_call_5171:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_5171 as scan2_call_mutations_5171 with:
     output:
@@ -68,6 +74,7 @@ use rule scan2_call_mutations from scan2_call_5171 as scan2_call_mutations_5171 
 
 module scan2_call_5219:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_5219 as scan2_call_mutations_5219 with:
     output:
@@ -77,6 +84,7 @@ use rule scan2_call_mutations from scan2_call_5219 as scan2_call_mutations_5219 
 
 module scan2_call_5559:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_5559 as scan2_call_mutations_5559 with:
     output:
@@ -86,6 +94,7 @@ use rule scan2_call_mutations from scan2_call_5559 as scan2_call_mutations_5559 
 
 module scan2_call_5657:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_5657 as scan2_call_mutations_5657 with:
     output:
@@ -95,6 +104,7 @@ use rule scan2_call_mutations from scan2_call_5657 as scan2_call_mutations_5657 
 
 module scan2_call_5817:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_5817 as scan2_call_mutations_5817 with:
     output:
@@ -104,6 +114,7 @@ use rule scan2_call_mutations from scan2_call_5817 as scan2_call_mutations_5817 
 
 module scan2_call_5823:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_5823 as scan2_call_mutations_5823 with:
     output:
@@ -113,6 +124,7 @@ use rule scan2_call_mutations from scan2_call_5823 as scan2_call_mutations_5823 
 
 module scan2_call_5871:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_5871 as scan2_call_mutations_5871 with:
     output:
@@ -122,6 +134,7 @@ use rule scan2_call_mutations from scan2_call_5871 as scan2_call_mutations_5871 
 
 module scan2_call_936:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_936 as scan2_call_mutations_936 with:
     output:
@@ -131,6 +144,7 @@ use rule scan2_call_mutations from scan2_call_936 as scan2_call_mutations_936 wi
 
 module scan2_call_CON1901106:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_CON1901106 as scan2_call_mutations_CON1901106 with:
     output:
@@ -140,6 +154,7 @@ use rule scan2_call_mutations from scan2_call_CON1901106 as scan2_call_mutations
 
 module scan2_call_CON301159:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_CON301159 as scan2_call_mutations_CON301159 with:
     output:
@@ -149,6 +164,7 @@ use rule scan2_call_mutations from scan2_call_CON301159 as scan2_call_mutations_
 
 module scan2_call_UMB4976:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_UMB4976 as scan2_call_mutations_UMB4976 with:
     output:
@@ -158,6 +174,7 @@ use rule scan2_call_mutations from scan2_call_UMB4976 as scan2_call_mutations_UM
 
 module scan2_call_UMB5451:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_UMB5451 as scan2_call_mutations_UMB5451 with:
     output:
@@ -167,6 +184,7 @@ use rule scan2_call_mutations from scan2_call_UMB5451 as scan2_call_mutations_UM
 
 module scan2_call_UMB5572:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_UMB5572 as scan2_call_mutations_UMB5572 with:
     output:
@@ -176,6 +194,7 @@ use rule scan2_call_mutations from scan2_call_UMB5572 as scan2_call_mutations_UM
 
 module scan2_call_UMB5666:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_UMB5666 as scan2_call_mutations_UMB5666 with:
     output:
@@ -185,6 +204,7 @@ use rule scan2_call_mutations from scan2_call_UMB5666 as scan2_call_mutations_UM
 
 module scan2_call_UMB5943:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_UMB5943 as scan2_call_mutations_UMB5943 with:
     output:

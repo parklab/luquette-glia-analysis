@@ -6,7 +6,7 @@
 enrichment_dna_repair_hotspot_config = dict(
     **{ 'output_dir': 'enrichment/dna_repair_hotspots',
         'SIGNAL_MANIFEST': 'manifests/DNA_REPAIR_HOTSPOTS.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_dna_repair_hotspot:

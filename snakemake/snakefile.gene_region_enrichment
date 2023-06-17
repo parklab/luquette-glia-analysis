@@ -14,7 +14,7 @@
 enrichment_gencode_gene_regions_config = dict(
     **{ 'output_dir': 'enrichment/gencode',
         'SIGNAL_MANIFEST': 'manifests/GENCODE.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_gencode_gene_regions:
@@ -34,7 +34,7 @@ use rule * from enrichment_gencode_gene_regions as enrichment_gencode_gene_regio
 enrichment_gencode_simplified_gene_regions_config = dict(
     **{ 'output_dir': 'enrichment/gencode_simplified',
         'SIGNAL_MANIFEST': 'manifests/GENCODE_SIMPLIFIED.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_gencode_simplified_gene_regions:
@@ -52,7 +52,7 @@ use rule * from enrichment_gencode_simplified_gene_regions as enrichment_gencode
 enrichment_gtex_genes_config = dict(
     **{ 'output_dir': 'enrichment/gtex_genes',
         'SIGNAL_MANIFEST': 'manifests/GTEX_GENES.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_gtex_genes:

@@ -1,12 +1,10 @@
 # vim: syntax=python
 
-import yaml
-
-with open('metadata/bams.yaml') as yf:
-    bams = yaml.load(yf, Loader=yaml.FullLoader)
+bams = config['bams']
 
 wildcard_constraints:
     bulk='|_bulk'
+
 
 rule ginkgo_download_hg19_resources:
     input:

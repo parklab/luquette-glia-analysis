@@ -6,7 +6,7 @@
 enrichment_boca_peaks_config = dict(
     **{ 'output_dir': 'enrichment/boca2',
         'SIGNAL_MANIFEST': 'manifests/BOCA_PEAKS.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_boca_peaks:

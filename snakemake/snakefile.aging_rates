@@ -1,26 +1,11 @@
 # vim: syntax=python
 
-# only specify prevburdens for neurons, which refers to the 15 PTA
-# neurons from UMBXXXX donors that did not have matched oligos and
-# were thus not re-analyzed in this study.
-def mut_burden_analysis_input(wildcards):
-    d = { 'meta' : "input/{celltype}___meta___any.csv",
-          'objects' : scan2_objects[wildcards.celltype].values() }
-
-    if wildcards.celltype == 'neuron':
-        d['prevburdens'] = "scan2_paper_output/Collected_SCAN2_%s_burdens.csv" % ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV')
-    if wildcards.celltype == 'neuron_half1':
-        d['prevburdens'] = "scan2_paper_output/Collected_SCAN2_%s_burdens_half1.csv" % ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV')
-    if wildcards.celltype == 'neuron_half2':
-        d['prevburdens'] = "scan2_paper_output/Collected_SCAN2_%s_burdens_half2.csv" % ('sIndel' if wildcards.qualtype.startswith('indel_') else 'sSNV')
-    return(d)
-
-
 # Allows mutation burdens to be collected from SCAN2 objects OR
 # directly from tables (such as previous SCAN2 analyses).
 rule collect_mut_burdens:
     input:
-        unpack(mut_burden_analysis_input)
+        objects=lambda wildcards: config['aging_groups'][wildcards.celltype],
+        meta='metadata/sample_metadata.csv'
     output:
         csv="aging_rates/{celltype}___mutburden___{qualtype}.csv"
     params:
@@ -39,7 +24,7 @@ rule collect_mut_burdens:
 rule model_aging_rates:
     input:
         expand("aging_rates/{celltype}___mutburden___{{qualtype}}.csv",
-            celltype=celltypes_to_compute)
+            celltype=config['aging_groups_to_model'])
     output:
         svg="aging_rates/all___mutburden_models___{qualtype}.svg",
         pdf="aging_rates/all___mutburden_models___{qualtype}.pdf",

@@ -18,7 +18,7 @@
 enrichment_gtex_expression_mc02_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc02',
         'SIGNAL_MANIFEST': 'manifests/GTEX_EXPRESSION.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_gtex_expression_mc02:
@@ -58,7 +58,7 @@ use rule sigenrichment_plot from enrichment_gtex_expression_mc02 as enrichment_g
 enrichment_gtex_expression_mc04_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc04',
         'SIGNAL_MANIFEST': 'manifests/GTEX_EXPRESSION.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_gtex_expression_mc04:
@@ -97,7 +97,7 @@ use rule sigenrichment_plot from enrichment_gtex_expression_mc04 as enrichment_g
 enrichment_gtex_expression_mc06_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc06',
         'SIGNAL_MANIFEST': 'manifests/GTEX_EXPRESSION.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_gtex_expression_mc06:
@@ -136,7 +136,7 @@ use rule sigenrichment_plot from enrichment_gtex_expression_mc06 as enrichment_g
 enrichment_gtex_expression_mc08_config = dict(
     **{ 'output_dir': 'enrichment/gtex_expression_mc08',
         'SIGNAL_MANIFEST': 'manifests/GTEX_EXPRESSION.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_gtex_expression_mc08:

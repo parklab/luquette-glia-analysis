@@ -7,14 +7,52 @@ min_version("6.0")
 import yaml
 import pandas as pd
 
-chrs = [ x for x in range(1, 23) ]   # Chromosomes to analyze (autosomes)
-output_plot_and_table = [ 'svg', 'pdf', 'tsv' ]  # Common plot+table output
+# Important note on the `config' dictionary: consolidate all global variables so
+# they can be robustly passed to module calls.
+config['metadata'] = pd.read_csv('metadata/sample_metadata.csv')
+meta = config['metadata']  # Just for convenience within this Snakefile
+
+with open('metadata/bams.yaml') as yf:
+    bams = yaml.load(yf, Loader=yaml.FullLoader)
+config['bams'] = bams
+
+# `bams` is a dict mapping donor ID -> list(single cell bams, bulk bams, other bams), where
+# each of the elements in the above list are also dicts mapping sample ID -> bam path.
+# For convenience, flatten `bams` into just a list of file paths with no related metadata.
+config['all_samples'] = sum([ list(bams[k][bt].keys()) for k in bams.keys() for bt in bams[k].keys()  ], [])
+
+# Just single cell samples
+config['all_single_cells'] = sum([ list(bams[k]['single_cell'].keys()) for k in bams.keys() ], [])
+
+# Same as above, but instead of a flat list of sample names, flat list of BAM paths
+config['all_bams'] = sum([ list(bams[k][bt].values()) for k in bams.keys() for bt in bams[k].keys()  ], [])
+
+config['all_donors'] = list(bams.keys())
 
 # Read in the input manifest
 manifest = pd.read_csv('manifests/INPUT_MANIFEST', sep='\t',comment='#')
 celltypes = set(manifest['celltype'])
 qualtypes = set(manifest['qualtype'])
 celltypes_to_compute = [ 'neuron', 'oligo' ]
+
+# Coarse high-level groups that are constantly reused.
+generic_groups = [ 'pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap' ]
+
+# Convenience function to recognize a few constantly used grouping criteria. Expect
+# more to be added. Should probably recognize everything listed in `generic_groups`.
+def group_from_meta(group):
+    if group == 'pta_neuron':
+        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'neuron')]
+    elif group == 'pta_oligo':
+        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'oligo')]
+    elif group == 'mda_sox10':
+        subset = meta[(meta['amp'] == 'MDA') & (meta['selection'] == 'SOX10')]
+    elif group == 'mda_gfap':
+        subset = meta[(meta['amp'] == 'MDA') & (meta['selection'] == 'GFAP')]
+    else:
+        raise RuntimeError('unrecognized group "' + group + '"')
+
+    return(subset)
 
 # Run mutation signature-based rescue on cells grouped as follows:
 #    1. All PTA-amplified neurons (nearly identical to Luquette et al 2022, except more neurons now).
@@ -26,13 +64,36 @@ celltypes_to_compute = [ 'neuron', 'oligo' ]
 # the rescue pipeline just for the sake of uniform outputs.
 scan2_rescue_groups = [ 'pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap' ]
 
+def rescue_group_to_scan2_objects(rescue_group):
+    subset = group_from_meta(rescue_group)
+    return(dict(zip(
+            list('scan2/' + subset['donor'] + '/scan2/sensitivity/' + subset['sample'] + '/scan2_object.rda'),
+            list(subset['sample'])
+        )))
+
+config['scan2_rescue_groups'] = dict((g, rescue_group_to_scan2_objects(g)) for g in scan2_rescue_groups)
+config['scan2_rescue_groups_reverse'] = \
+    dict((sample, g) for g in scan2_rescue_groups for sample in rescue_group_to_scan2_objects(g).values())
+
+
+def aging_group_to_scan2_objects(aging_group):
+    subset = group_from_meta(aging_group)
+    return(list('scan2/tiny_objects/' + subset['sample'] + '.rda'))
+
+config['aging_groups'] = dict((g, aging_group_to_scan2_objects(g)) for g in generic_groups)
+
+# No MDA here. That requires signature B correction
+config['aging_groups_to_model'] = [ 'pta_neuron', 'pta_oligo' ]
+
+
 mda_celltypes = [ 'mda_gfap', 'mda_sox10' ]
+
 mda_celltypes_by_age = [ 'mda_gfap_elderly', 'mda_sox10_elderly', 'mda_gfap_infant', 'mda_sox10_infant' ]
 
 # PTA neurons/oligos were randomly divided into two groups within each
 # age class (infant, adolescent, adult, elderly) to provide some guidance
 # on how many single cells might be needed to derive a robust signal.
-celltypes_halves = [ 'neuron_half1', 'neuron_half2', 'oligo_half1', 'oligo_half2' ]
+#celltypes_halves = [ 'neuron_half1', 'neuron_half2', 'oligo_half1', 'oligo_half2' ]
 snv_qualtypes = [ 'A', 'AB' ]
 indel_qualtypes = [ 'indel_A', 'indel_AB' ]
 all_qualtypes = snv_qualtypes + indel_qualtypes
@@ -43,24 +104,13 @@ qsizes = [ 3, 5, 10, 50 ]
 qsizes_to_compute = [ 10, 50 ]
 
 # List of Ns to perform NMF on
-nmf_sig_ns = [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+config['nmf_sig_ns'] = [ 1, 2, 3, 4, 5, 6, 7, 8 ]
 
-
-with open('metadata/scan2_objects.yaml') as yf:
-    scan2_objects = yaml.load(yf, Loader=yaml.FullLoader)
-
-with open('metadata/bams.yaml') as yf:
-    bams = yaml.load(yf, Loader=yaml.FullLoader)
-
-# `bams` is a dict mapping donor ID -> list(single cell bams, bulk bams, other bams), where
-# each of the elements in the above list are also dicts mapping sample ID -> bam path.
-# Here, flatten `bams` into just a list of file paths with no related metadata.
-allsamples = sum([ list(bams[k][bt].keys()) for k in bams.keys() for bt in bams[k].keys()  ], [])
 
 
 # The output directory and signal files are the only parameters that should
 # change between analyses.
-enrichment_config = {
+config['enrichment_config'] = {
     # These parameters should not change between analyses
     'qbed_from_bigwig_script': 'snakemake/scripts/make_qbed_from_bigwig.sh',
     'quantiles': qsizes,
@@ -75,9 +125,9 @@ enrichment_config = {
         '1000':    'alignability/genome_tiles/genome_tiles_1000binsize.bed'
     },
     'masks': {
-        '1000000': 'alignability/genome_tiles/genome_mask_1000000binsize.bed',
-        '100000':  'alignability/genome_tiles/genome_mask_100000binsize.bed',
-        '10000':   'alignability/genome_tiles/genome_mask_10000binsize.bed',
+        #'1000000': 'alignability/genome_tiles/genome_mask_1000000binsize.bed',
+        #'100000':  'alignability/genome_tiles/genome_mask_100000binsize.bed',
+        #'10000':   'alignability/genome_tiles/genome_mask_10000binsize.bed',
         '1000':    'alignability/genome_tiles/genome_mask_1000binsize.bed'
     },
 }
@@ -90,7 +140,7 @@ wildcard_constraints:
         celltype=celltypes, sigclass=[ '', '_sbs1', '_sbs16', '_sbs32' ], qualtype=qualtypes)),
     chr='|'.join([ str(i) for i in range(1,23) ]),
     binsize='|'.join(binsizes),
-    celltype='|'.join(celltypes),
+    celltype='|'.join(generic_groups), #celltypes),
     qualtype='|'.join(qualtypes),
     cosmic='cosmic_full|cosmic_reduced',
     panel_letter='a|b|c|d|e|f|g|h|i|j|k|l',
@@ -135,6 +185,24 @@ rule scan2_rescue:
         expand('scan2/rescue_{rescue_group}/sig_homogeneity_tests.txt',
             rescue_group=scan2_rescue_groups)
 
+rule scan2_digest:
+    input:
+        expand('scan2/{rescue_group}_mutations.{filter_status}.txt',
+            rescue_group=scan2_rescue_groups,
+            filter_status=[ 'FILTERED', 'UNFILTERED' ])
+
+rule scan2_permtool:
+    input:
+        expand('scan2/permtool/{rescue_group}/perms_{muttype}_{passtype}.rda',
+            rescue_group=scan2_rescue_groups,
+            muttype=[ 'snv', 'indel' ],
+            passtype=[ 'pass', 'rescue' ])
+
+rule scan2_objects:
+    input:
+        expand('scan2/{size}_objects/{sample}.rda',
+            size=[ 'full', 'tiny' ], sample=config['all_single_cells'])
+
 rule chrx:
     input:
         expand("chrX/{donor}/mmq60.tab.{ext}",
@@ -143,13 +211,14 @@ rule chrx:
 rule nmf:
     input:
         expand('nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/signatures_{n}.pdf',
-            nmf_runtype=[ 'pta', 'mda', 'all' ], nmf_spectype=[ 'SBS', 'ID' ], n=nmf_sig_ns),
+            nmf_runtype=[ 'pta', 'mda', 'all' ], nmf_spectype=[ 'SBS', 'ID' ], n=config['nmf_sig_ns']),
         expand('nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/selection_criteria.pdf',
             nmf_runtype=[ 'pta', 'mda', 'all' ], nmf_spectype=[ 'SBS', 'ID' ])
 
 rule mapd:
     input:
-        expand("mapd/{sample}.mapd.txt", sample=allsamples)
+        expand("mapd/{sample}.mapd.txt", sample=config['all_samples'])
+
 
 # Same as above for SCAN2 output
 def ginkgo_unpack_donors_and_samples(bams):
@@ -171,6 +240,153 @@ rule ginkgo:
             table=[ 'data', 'CNV1', 'CNV2', 'SegBreaks', 'SegCopy', 'SegFixed', 'SegNorm', 'SegStats'])
 
 
+rule aging_rates:
+    input:
+        expand('aging_rates/{celltype}___mutburden___{qualtype}.csv',
+            celltype=[ 'all' ] + config['aging_groups_to_model'], # + celltypes_halves,
+            qualtype=[ 'A', 'indel_A' ]),  # only passA calls are used
+        expand('aging_rates/all___mutburden_models___{qualtype}.csv',
+            qualtype=[ 'A', 'indel_A' ])
+
+
+# For now this is just signature fitting. In both projects so far,
+# de novo analysis produced only one signature.
+rule mutsigs:
+    input:
+        expand("mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.{output}",
+            celltype=celltypes_to_compute, # + celltypes_halves,
+            qualtype=[ 'A', 'indel_A' ],
+            output=[ 'pdf', 'svg', 'csv' ]),
+        expand("mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{qualtype}.csv",
+            celltype=celltypes_to_compute, # + celltypes_halves,
+            qualtype=[ 'A', 'indel_A' ]),
+        expand("mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv",
+            qualtype=[ 'A', 'indel_A' ]),
+        expand("mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.{output}",
+            celltype=celltypes_to_compute, # + celltypes_halves,
+            qualtype=[ 'A', 'indel_A' ],
+            output=[ 'pdf', 'svg' ]),
+        expand("mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.{output}",
+            qualtype=[ 'A', 'indel_A' ],
+            output=[ 'pdf', 'svg', 'csv' ]),
+        # For MDA - excludes indels
+        expand("mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.{output}",
+            qualtype=[ 'A' ],
+            output=[ 'pdf', 'svg', 'csv' ]),
+        expand("mutsigs/raw_spectra/{mdatype}___raw_spectrum___{qualtype}.{output}",
+            mdatype=mda_celltypes_by_age,  # WANT by_age
+            qualtype=[ 'A' ],
+            output=[ 'pdf', 'svg', 'csv' ]),
+        expand("mutsigs/cosmic_aging/{mdatype}___barplots___{qualtype}.{output}",
+            mdatype=mda_celltypes, #_by_age,
+            qualtype=[ 'A' ],
+            output=[ 'pdf', 'svg' ]),
+        expand("mutsigs/cosmic_aging/{mdatype}___cosmic_models_vs_age___{qualtype}.{output}",
+            mdatype=mda_celltypes, #_by_age,
+            qualtype=[ 'A' ],
+            output=[ 'pdf', 'svg', 'csv' ])
+
+quantile_datasources = [ 'gtex_expression_mc' + x for x in [ '02', '08' ] ] + \
+                [ 'scrnaseq_expression_mc' + x for x in [ '02', '08' ] ] + \
+                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 
+                  'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain', # ]
+                  'scatacseq_foldchange', 'scrnaseq_expression_mc08_foldchange' ] # +
+
+    # could do many min coverage values, but since we're using 1kb bins it doesn't matter much
+                #[ 'scrnaseq_expression_mc' + x + "_foldchange" for x in [ '02', '08' ] ]
+
+
+bed_region_datasources = [ 'boca2', 'dna_repair_hotspots', 'gencode', 'gencode_simplified',
+                           'gtex_genes', 'nott', 'roadmap_chromhmm_brain', 'hic_tads' ]
+                
+
+# Enrichment analysis of total mutation burden
+rule enrichment:
+    input:
+        # All quantile-based enrichment analyses of total mutation burden
+        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            celltype=celltypes_to_compute, # + celltypes_halves,
+            qualtype=all_qualtypes,
+            nquantiles=qsizes_to_compute,
+            datasource=quantile_datasources,
+            output=[ 'svg', 'pdf', 'csv' ]),
+        # Enrichment analysis of specific regions
+        expand('enrichment/{datasource}/bed_regions/{celltype}___{qualtype}.{output}',
+            celltype=celltypes_to_compute, # + celltypes_halves,
+            qualtype=all_qualtypes,
+            datasource=bed_region_datasources,
+            output=[ 'svg', 'pdf', 'csv' ]),
+        # Just for MDA. Copy/paste because there are no indel classes for MDA (qualtypes=indel_A, etc).
+        # UPDATE 5/2/23: also removing pass=AB
+        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
+            celltype=[ 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ] + mda_celltypes_by_age,
+            qualtype=[ 'A' ],
+            nquantiles=qsizes_to_compute,
+            datasource=quantile_datasources,
+            output=[ 'svg', 'pdf', 'csv' ]),
+        expand('enrichment/{datasource}/bed_regions/{celltype}___{qualtype}.{output}',
+            celltype=[ 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ] + mda_celltypes_by_age,
+            qualtype=[ 'A' ],
+            datasource=bed_region_datasources,
+            output=[ 'svg', 'pdf', 'csv' ])
+
+
+rule spatial_enrichment:
+    input:
+        expand('enrichment/spatial_burden/{celltype}___{qualtype}___{binsize}binsize___{rolling}rolling.profile.csv',
+            celltype=[ 'oligo', 'neuron', 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ],
+            qualtype=[ 'A', 'AB' ],
+            binsize=[ '100000', '1000000' ],
+            rolling=[ '1', '10' ])
+
+
+# Enrichment analysis of signature-specific mutation burden
+# In theory would be done to all regions tested for total burden enrichment,
+# but because of signature fitting inaccuracy, regions must be large.
+rule signature_enrichment:
+    input:
+        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
+            datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
+                [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
+                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ],
+            celltype=celltypes_to_compute,
+            qualtype=[ 'A', 'indel_A' ],
+            nquantiles=[ 3, 5 ],
+            output=[ 'svg', 'pdf', 'csv' ]),
+
+
+include: "snakefile.data"
+include: "snakefile.scan2"
+include: "snakefile.scan2_per_donor"
+include: "snakefile.sentieon_for_chrX"
+include: "snakefile.nmf"
+include: "snakefile.mapd"
+include: "snakefile.ginkgo"
+include: "snakefile.ginkgo_per_donor"
+include: "snakefile.aging_rates"
+#include: "snakefile.alignability"
+#include: "snakefile.mutsigs"
+#include: "snakefile.fig1"
+#include: "snakefile.fig2"
+#include: "snakefile.fig3"
+#include: "snakefile.fig4"
+#include: "snakefile.fig5"
+#include: "snakefile.fig6"
+#include: "snakefile.suppfig2"
+#include: "snakefile.suppfig3"
+#include: "snakefile.supptables"
+#include: "snakefile.scatacseq"
+#include: "snakefile.gtex_enrichment"
+#include: "snakefile.scrnaseq_enrichment"
+#include: "snakefile.nott_enrichment"
+#include: "snakefile.boca_enrichment"
+#include: "snakefile.dnarepair_enrichment"
+#include: "snakefile.gene_region_enrichment"
+#include: "snakefile.spatial_enrichment"
+#include: "snakefile.cancer_genes"
+#include: "snakefile.other_enrichment"
+
+'''
 # Shortcuts to rebuild a single figure at a time
 rule fig1:
     input:
@@ -242,12 +458,6 @@ rule fig4:
         "fig4/panel_i_nott_enhprom.csv",
         "fig4/panel_i_nott_enhprom_mda_elderly.pdf",
         "fig4/panel_i_nott_enhprom_mda_elderly.csv",
-        #"fig4/panel_e_supplement_3quantiles.pdf",
-        #"fig4/panel_e_supplement_5quantiles.pdf",
-        #"fig4/panel_e_supplement_10quantiles.pdf",
-        #"fig4/panel_e_supplement_neuron_sbs16___A.10quantiles.pdf",
-        #"fig4/panel_e_supplement_oligo_sbs1___A.10quantiles.pdf",
-        #"fig4/panel_e_supplement_oligo_sbs32___A.10quantiles.pdf",
         #"fig4/suppl_nott_enhprom.pdf",
         #"fig4/suppl_nott_enhprom.csv",
         #"fig4/suppl_boca2_peaks.pdf",
@@ -256,8 +466,6 @@ rule fig4:
         #"fig4/suppl_dna_repair_hotspots.csv",
         #"fig4/suppl_hic_tads.pdf",
         #"fig4/suppl_hic_tads.csv",
-        #"fig4/rna_atac_foldchange.pdf",
-        #"fig4/rna_atac_foldchange.csv",
 
 rule suppfig3:
     input:
@@ -284,8 +492,6 @@ rule fig6:
     input:
         "fig6/panel_a.pdf",
         "fig6/panel_a.csv",
-        #"fig6/panel_a_mdapta_supp.pdf",
-        #"fig6/panel_a_mdapta_supp.csv",
         "fig6/panel_a_mda_gfap_elderly_supp.pdf",
         "fig6/panel_a_mda_gfap_elderly_supp.csv",
         "fig6/panel_a_mda_sox10_elderly_supp.pdf",
@@ -309,496 +515,7 @@ rule suppfig5:
         "suppfig5/cancer_gene_ors_mdapta_full.pdf"
 
 
-rule misc:
-    input:
-        expand("fig1/indel_size_analysis/indel_size.{output}",
-            output=[ 'pdf', 'svg']),
-        expand("fig1/snpeff_analysis/snpeff_analysis.{output}",
-            output=output_plot_and_table)
-
-
-rule aging_rates:
-    input:
-        expand('aging_rates/{celltype}___mutburden___{qualtype}.csv',
-            celltype=[ 'all' ] + celltypes_to_compute + celltypes_halves,
-            qualtype=[ 'A', 'indel_A' ]),  # only passA calls are used
-        expand('aging_rates/all___mutburden_models___{qualtype}.csv',
-            #celltype=celltypes_to_compute,
-            qualtype=[ 'A', 'indel_A' ])
-
-
-# For now this is just signature fitting. In both projects so far,
-# de novo analysis produced only one signature.
-rule mutsigs:
-    input:
-        expand("mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.{output}",
-            celltype=celltypes_to_compute + celltypes_halves,
-            qualtype=[ 'A', 'indel_A' ],
-            output=[ 'pdf', 'svg', 'csv' ]),
-        expand("mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{qualtype}.csv",
-            celltype=celltypes_to_compute + celltypes_halves,
-            qualtype=[ 'A', 'indel_A' ]),
-        expand("mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv",
-            qualtype=[ 'A', 'indel_A' ]),
-        expand("mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.{output}",
-            celltype=celltypes_to_compute + celltypes_halves,
-            qualtype=[ 'A', 'indel_A' ],
-            output=[ 'pdf', 'svg' ]),
-        expand("mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.{output}",
-            qualtype=[ 'A', 'indel_A' ],
-            output=[ 'pdf', 'svg', 'csv' ]),
-        # For MDA - excludes indels
-        expand("mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.{output}",
-            qualtype=[ 'A' ],
-            output=[ 'pdf', 'svg', 'csv' ]),
-        expand("mutsigs/raw_spectra/{mdatype}___raw_spectrum___{qualtype}.{output}",
-            mdatype=mda_celltypes_by_age,  # WANT by_age
-            qualtype=[ 'A' ],
-            output=[ 'pdf', 'svg', 'csv' ]),
-        expand("mutsigs/cosmic_aging/{mdatype}___barplots___{qualtype}.{output}",
-            mdatype=mda_celltypes, #_by_age,
-            qualtype=[ 'A' ],
-            output=[ 'pdf', 'svg' ]),
-        expand("mutsigs/cosmic_aging/{mdatype}___cosmic_models_vs_age___{qualtype}.{output}",
-            mdatype=mda_celltypes, #_by_age,
-            qualtype=[ 'A' ],
-            output=[ 'pdf', 'svg', 'csv' ])
-
-quantile_datasources = [ 'gtex_expression_mc' + x for x in [ '02', '08' ] ] + \
-                [ 'scrnaseq_expression_mc' + x for x in [ '02', '08' ] ] + \
-                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 
-                  'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain', # ]
-                  'scatacseq_foldchange', 'scrnaseq_expression_mc08_foldchange' ] # +
-
-    # could do many min coverage values, but since we're using 1kb bins it doesn't matter much
-                #[ 'scrnaseq_expression_mc' + x + "_foldchange" for x in [ '02', '08' ] ]
-
-
-bed_region_datasources = [ 'boca2', 'dna_repair_hotspots', 'gencode', 'gencode_simplified',
-                           'gtex_genes', 'nott', 'roadmap_chromhmm_brain', 'hic_tads' ]
-                
-
-# Enrichment analysis of total mutation burden
-rule enrichment:
-    input:
-        # All quantile-based enrichment analyses of total mutation burden
-        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=celltypes_to_compute + celltypes_halves,
-            qualtype=all_qualtypes,
-            nquantiles=qsizes_to_compute,
-            datasource=quantile_datasources,
-            output=[ 'svg', 'pdf', 'csv' ]),
-        # Enrichment analysis of specific regions
-        expand('enrichment/{datasource}/bed_regions/{celltype}___{qualtype}.{output}',
-            celltype=celltypes_to_compute + celltypes_halves,
-            qualtype=all_qualtypes,
-            datasource=bed_region_datasources,
-            output=[ 'svg', 'pdf', 'csv' ]),
-        # Just for MDA. Copy/paste because there are no indel classes for MDA (qualtypes=indel_A, etc).
-        # UPDATE 5/2/23: also removing pass=AB
-        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles.{output}',
-            celltype=[ 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ] + mda_celltypes_by_age,
-            qualtype=[ 'A' ],
-            nquantiles=qsizes_to_compute,
-            datasource=quantile_datasources,
-            output=[ 'svg', 'pdf', 'csv' ]),
-        expand('enrichment/{datasource}/bed_regions/{celltype}___{qualtype}.{output}',
-            celltype=[ 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ] + mda_celltypes_by_age,
-            qualtype=[ 'A' ],
-            datasource=bed_region_datasources,
-            output=[ 'svg', 'pdf', 'csv' ])
-
-
-rule spatial_enrichment:
-    input:
-        expand('enrichment/spatial_burden/{celltype}___{qualtype}___{binsize}binsize___{rolling}rolling.profile.csv',
-            celltype=[ 'oligo', 'neuron', 'oligo_mdapta', 'oligo_mda_2infants', 'oligo_mda_2elderly' ],
-            qualtype=[ 'A', 'AB' ],
-            binsize=[ '100000', '1000000' ],
-            rolling=[ '1', '10' ])
-
-
-# Enrichment analysis of signature-specific mutation burden
-# In theory would be done to all regions tested for total burden enrichment,
-# but because of signature fitting inaccuracy, regions must be large.
-rule signature_enrichment:
-    input:
-        expand('enrichment/{datasource}/quantile/{celltype}___{qualtype}.{nquantiles}quantiles_sigenrich.{output}',
-            datasource=[ 'gtex_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
-                [ 'scrnaseq_expression_mc' + x for x in [ '02', '04', '06', '08' ] ] +
-                [ 'nott', 'encode_replichip', 'repliseq', 'conservation', 'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ],
-            celltype=celltypes_to_compute,
-            qualtype=[ 'A', 'indel_A' ],
-            nquantiles=[ 3, 5 ],
-            output=[ 'svg', 'pdf', 'csv' ]),
-
-
-include: "snakefile.data"
-include: "snakefile.scan2"
-include: "snakefile.scan2_per_donor"
-include: "snakefile.sentieon_for_chrX"
-include: "snakefile.nmf"
-include: "snakefile.mapd"
-include: "snakefile.ginkgo"
-include: "snakefile.ginkgo_per_donor"
-include: "snakefile.alignability"
-include: "snakefile.aging_rates"
-include: "snakefile.mutsigs"
-include: "snakefile.fig1"
-include: "snakefile.fig2"
-include: "snakefile.fig3"
-include: "snakefile.fig4"
-include: "snakefile.fig5"
-include: "snakefile.fig6"
-include: "snakefile.suppfig2"
-include: "snakefile.suppfig3"
-include: "snakefile.supptables"
-include: "snakefile.scatacseq"
-include: "snakefile.gtex_enrichment"
-include: "snakefile.scrnaseq_enrichment"
-include: "snakefile.nott_enrichment"
-include: "snakefile.boca_enrichment"
-include: "snakefile.dnarepair_enrichment"
-include: "snakefile.gene_region_enrichment"
-include: "snakefile.spatial_enrichment"
-include: "snakefile.cancer_genes"
-
-
-
-########################################################################
-# HiC TADs (A and B-compartments)
-########################################################################
-enrichment_hic_tads_config = dict(
-    **{ 'output_dir': 'enrichment/hic_tads',
-        'SIGNAL_MANIFEST': 'manifests/HIC_TADS.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_hic_tads:
-    snakefile: "snakefile.bed_enrichment"
-    config: enrichment_hic_tads_config
-
-use rule * from enrichment_hic_tads as enrichment_hic_tads_*
-
-# contains ~30 tracks at ~250k resolution
-# needed ~30GB for neuron___A, so guessing maybe double for oligo_mdapta
-# needed ~56B for oligo_mda_2elderly
-# I have no idea why these memory usages are so high. indel analysis only
-# requires ~2GB, so the size of the BED file is unlikely to be the culprit.
-# for now, just brute force it
-use rule enrichment_bed_analysis from enrichment_hic_tads as enrichment_hic_tads_enrichment_bed_analysis with:
-    resources:
-        mem_mb=128000
-
-########################################################################
-# Roadmap epigenomics chromHMM  state models
-########################################################################
-enrichment_roadmap_chromhmm_config = dict(
-    **{ 'output_dir': 'enrichment/roadmap_chromhmm_brain',
-        'SIGNAL_MANIFEST': 'manifests/ROADMAP_CHROMHMM_BRAIN.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_roadmap_chromhmm:
-    snakefile: "snakefile.bed_enrichment"
-    config: enrichment_roadmap_chromhmm_config
-
-use rule * from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_*
-
-# Uses 200 bp tiles and has >200 tracks, so give it a generous amount of RAM
-# N.B. failed with 32G after 1 hour of loading BED files
-# Max usage was ~37G.
-# -- The above is no longer applicable when using only the 13 brain samples.
-# -- but leaving in here anyway in case we go back to the full catalog.
-use rule enrichment_bed_analysis from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_enrichment_bed_analysis with:
-    resources:
-        mem_mb=42000
-
-use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_enrichment_bed_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        xlab='eid',
-        xgroup='quantile',
-        ygroup='model',
-        highlight='eid=E073'
-
-
-########################################################################
-# Roadmap epigenomics histones
-########################################################################
-enrichment_roadmap_histone_signal_config = dict(
-    **{ 'output_dir': 'enrichment/roadmap_histone_signal_brain',
-        'SIGNAL_MANIFEST': 'manifests/ROADMAP_HISTONE_BIGWIG_BRAIN.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_roadmap_histone_signal:
-    snakefile: "snakefile.enrichment"
-    config: enrichment_roadmap_histone_signal_config
-
-use rule * from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_*
-
-use rule sigenrichment_qbed_analysis from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_sigenrichment_qbed_analysis with:
-    resources:
-        mem_mb=lambda wildcards: 96000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
-
-use rule enrichment_plot from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_enrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='mark'
-    output:
-        expand('enrichment/roadmap_histone_signal_brain/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/roadmap_histone_signal_brain/quantile/{mutclass}.{nquantiles}quantiles.log'
-
-
-use rule sigenrichment_plot from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_sigenrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='mark'
-    output:
-        expand('enrichment/roadmap_histone_signal_brain/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/roadmap_histone_signal_brain/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
-
-
-########################################################################
-# ENCODE replication timing measured by Repli-chip
-########################################################################
-enrichment_encode_replichip_config = dict(
-    **{ 'output_dir': 'enrichment/encode_replichip',
-        'SIGNAL_MANIFEST': 'manifests/ENCODE_REPLICHIP.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_encode_replichip:
-    snakefile: "snakefile.enrichment"
-    config: enrichment_encode_replichip_config
-
-use rule * from enrichment_encode_replichip as enrichment_encode_replichip_*
-
-use rule sigenrichment_qbed_analysis from enrichment_encode_replichip as enrichment_encode_replichip_sigenrichment_qbed_analysis with:
-    resources:
-        mem_mb=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
-
-use rule enrichment_plot from enrichment_encode_replichip as enrichment_encode_replichip_enrichment_plot with:
-    params:
-        ignore='BINSIZE=1000',
-        group='datasource'
-    output:
-        expand('enrichment/encode_replichip/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/encode_replichip/quantile/{mutclass}.{nquantiles}quantiles.log'
-
-use rule sigenrichment_plot from enrichment_encode_replichip as enrichment_encode_replichip_sigenrichment_plot with:
-    params:
-        ignore='BINSIZE=1000',
-        group='datasource'
-    output:
-        expand('enrichment/encode_replichip/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/encode_replichip/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
-
-
-########################################################################
-# Replication timing measured by Repliseq
-########################################################################
-enrichment_repliseq_config = dict(
-    **{ 'output_dir': 'enrichment/repliseq',
-        'SIGNAL_MANIFEST': 'manifests/REPLISEQ.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_repliseq:
-    snakefile: "snakefile.enrichment"
-    config: enrichment_repliseq_config
-
-use rule * from enrichment_repliseq as enrichment_repliseq_*
-
-use rule sigenrichment_qbed_analysis from enrichment_repliseq as enrichment_repliseq_sigenrichment_qbed_analysis with:
-    resources:
-        mem_mb=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
-
-use rule enrichment_plot from enrichment_repliseq as enrichment_repliseq_enrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='datasource'
-    output:
-        expand('enrichment/repliseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/repliseq/quantile/{mutclass}.{nquantiles}quantiles.log'
-
-use rule sigenrichment_plot from enrichment_repliseq as enrichment_repliseq_sigenrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='datasource'
-    output:
-        expand('enrichment/repliseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/repliseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
-
-
-########################################################################
-# Conservation tracks from UCSC
-########################################################################
-enrichment_conservation_config = dict(
-    **{ 'output_dir': 'enrichment/conservation',
-        'SIGNAL_MANIFEST': 'manifests/CONSERVATION.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_conservation:
-    snakefile: "snakefile.enrichment"
-    config: enrichment_conservation_config
-
-use rule * from enrichment_conservation as enrichment_conservation_*
-
-# Conservation tracks have bp resolution over the entire genome. This
-# causes bigWigAverageOverBed to consume unbelievably large amounts of
-# memory for large windows like 1MB.
-use rule make_qbed_from_bigwig from enrichment_conservation as enrichment_conservation_make_qbed_from_bigwig with:
-    resources:
-        mem_mb=65000
-
-use rule enrichment_plot from enrichment_conservation as enrichment_conservation_enrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='track'
-    output:
-        expand('enrichment/conservation/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles.log'
-
-use rule sigenrichment_plot from enrichment_conservation as enrichment_conservation_sigenrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='track'
-    output:
-        expand('enrichment/conservation/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
-
-
-########################################################################
-# Our scATAC-seq data
-########################################################################
-enrichment_scatacseq_config = dict(
-    **{ 'output_dir': 'enrichment/scatacseq',
-        'SIGNAL_MANIFEST': 'manifests/SCATACSEQ.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_scatacseq:
-    snakefile: "snakefile.enrichment"
-    config: enrichment_scatacseq_config
-
-use rule * from enrichment_scatacseq  as enrichment_scatacseq_*
-
-use rule make_qbed_from_bigwig from enrichment_scatacseq as enrichment_scatacseq_make_qbed_from_bigwig with:
-    resources:
-        mem_mb=15000
-
-use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='celltype',
-    output:
-        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles.log'
-
-use rule sigenrichment_plot from enrichment_scatacseq as enrichment_scatacseq_sigenrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='celltype',
-    output:
-        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
-
-
-########################################################################
-# Our scATAC-seq data but using foldchange signals
-#
-# This differs from typical qbed analysis because there is no base
-# bigwig signal files from which the qbeds are constructed. Instead,
-# qbeds are created from the non-foldchange scATAC-seq qbeds.
-########################################################################
-enrichment_scatacseq_foldchange_config = dict(
-    **{ 'output_dir': 'enrichment/scatacseq_foldchange',
-        # This manifest is a dummy containing only metadata, not files
-        'SIGNAL_MANIFEST': 'manifests/SCATACSEQ_FOLDCHANGE.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_scatacseq_foldchange:
-    snakefile: "snakefile.enrichment"
-    config: enrichment_scatacseq_foldchange_config
-
-# Only qbed analysis is relevant
-use rule enrichment_qbed_analysis from enrichment_scatacseq_foldchange as enrichment_scatacseq_foldchange_enrichment_qbed_analysis
-
-use rule enrichment_table from enrichment_scatacseq_foldchange as enrichment_scatacseq_foldchange_enrichment_table
-
-use rule enrichment_plot from enrichment_scatacseq_foldchange as enrichment_scatacseq_foldchange_enrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='celltype',
-    output:
-        expand('enrichment/scatacseq_foldchange/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/scatacseq_foldchange/quantile/{mutclass}.{nquantiles}quantiles.log'
-
-
-########################################################################
-# Cancer SNV density
-########################################################################
-enrichment_cancer_config = dict(
-    **{ 'output_dir': 'enrichment/cancer_snvdens',
-        'SIGNAL_MANIFEST': 'manifests/CANCER_SNVDENS.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_cancer:
-    snakefile: "snakefile.enrichment"
-    config: enrichment_cancer_config
-
-use rule * from enrichment_cancer as enrichment_cancer_*
-
-use rule enrichment_plot from enrichment_cancer as enrichment_cancer_enrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='signal_type'
-    output:
-        expand('enrichment/cancer_snvdens/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/cancer_snvdens/quantile/{mutclass}.{nquantiles}quantiles.log'
-
-use rule sigenrichment_plot from enrichment_cancer as enrichment_cancer_sigenrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='signal_type'
-    output:
-        expand('enrichment/cancer_snvdens/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/cancer_snvdens/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
-
-
-# This must be defined below all other rules to use the
-# rules.XXX.output directive.
+# This must be defined below all other rules to use the rules.XXX.output directive.
 rule all:
     input:
         "supptables/SuppTable1.csv",
@@ -813,10 +530,4 @@ rule all:
         rules.suppfig3.input,
         rules.suppfig5.input,
     default_target: True
-
-
-rule temp_all:
-    input:
-        rules.all.input,
-        rules.enrichment.input,
-        rules.spatial_enrichment.input
+'''

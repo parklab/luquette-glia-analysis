@@ -51,7 +51,7 @@ rule fit_cosmic:
         muts="tables/{celltype}___mut___{qualtype}.csv",
         mutburden="aging_rates/{celltype}___mutburden___{qualtype}.csv",
         cosmic="mutsigs/{cosmic}___{qualtype}.csv",
-        sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv"
+        sigb="external_data/Lodato2018_SignatureData_Aging.csv"
     output:
         mutmat="mutsigs/{cosmic}/{celltype}___mutmat___{qualtype}.csv",
         expomat="mutsigs/{cosmic}/{celltype}___expomat___{qualtype}.csv"

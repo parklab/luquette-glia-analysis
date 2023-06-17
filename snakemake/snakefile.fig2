@@ -69,7 +69,7 @@ rule fig2_shared_snv_analysis:
         object1=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-5_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-F11_scan2_object_rescue.rda'),
         object2=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-8_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-G10_scan2_object_rescue.rda'),
         cosmic="mutsigs/cosmic_reduced___A.csv",
-        sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv",
+        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
         aging_model="fig1/panel_b_aging_rates_A_model.csv",
         aging_model_sigs="fig2/panel_c_A.csv"
     output:
@@ -89,7 +89,7 @@ rule fig2_shared_snv_analysis:
 rule signature_fitting_related_oligo_pairs:
     input:
         cosmic="mutsigs/cosmic_reduced___A.csv",
-        sigb="scan2_paper_output/Lodato2018_SignatureData_Aging.csv",
+        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
         muts=expand('fig2/oligo_pair_{sample_id}_mutations.csv',
             sample_id=[ '5559', '5657' ])
     output:

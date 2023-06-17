@@ -31,6 +31,7 @@ for donor in $donors; do
 
 module scan2_call_$donor:
     snakefile: "snakefile.scan2"
+    config: config
 
 use rule scan2_call_mutations from scan2_call_${donor} as scan2_call_mutations_${donor} with:
     output:

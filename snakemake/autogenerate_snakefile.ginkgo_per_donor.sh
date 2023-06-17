@@ -31,6 +31,7 @@ for donor in $donors; do
 
 module ginkgo_run_$donor:
     snakefile: "snakefile.ginkgo"
+    config: config
 
 use rule ginkgo_run from ginkgo_run_${donor} as ginkgo_run_${donor} with:
     input:

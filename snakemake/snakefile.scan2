@@ -1,18 +1,7 @@
 # vim: syntax=python
 
-import yaml
-import pandas as pd
-
-with open('metadata/bams.yaml') as yf:
-    bams = yaml.load(yf, Loader=yaml.FullLoader)
-
-# `bams` is a dict mapping donor ID -> list(single cell bams, bulk bams, other bams), where
-# each of the elements in the above list are also dicts mapping sample ID -> bam path.
-# Here, flatten `bams` into just a list of file paths with no related metadata.
-allbams = sum([ list(bams[k][bt].values()) for k in bams.keys() for bt in bams[k].keys()  ], [])
-
-
-meta = pd.read_csv('metadata/sample_metadata.csv')
+bams = config['bams']
+all_bams = config['all_bams']
 
 
 # I don't know how to check the git commit ID of the installed R package (or
@@ -61,7 +50,7 @@ rule download_specific_scan2_version:
         # Real commit used is below. This contains one update to a script that
         # summarizes tables at the very end of the SCAN2 pipeline, so it isn't
         # worth rerunning all of SCAN2 to update this param.
-        #commit_id="79acc3482aef01afde0d59f06b7e44fcbe2118e6"
+        #commit_id="79ec476ce86422ea502373c0ab7b6c5ea2e0ed46"
     localrule: True
     threads: 1
     resources:
@@ -151,8 +140,8 @@ rule scan2_cross_sample_panel_setup:
         dbsnp='resources/dbsnp_147_b37_common_all_20160601.vcf',
         panel_metadata='metadata/panel_metadata_162cells_66ptaols_40mdaglia_56ptaneurons_21bulks_20brains.csv',
         gatk_regions='metadata/scan2_panel_regions_11537_windows_250kb.no_bad_chunk.txt',
-        bams=allbams,
-        bais=[ bam.replace('.bam', '.bai') for bam in allbams ]
+        bams=all_bams,
+        bais=[ bam.replace('.bam', '.bai') for bam in all_bams ]
     output:
         yaml="scan2/panel/makepanel/scan.yaml"
     params:
@@ -297,33 +286,12 @@ rule scan2_rda_to_vcf:
         "scripts/scan2_to_vcf.R"
 
 
-
-def rescue_group_to_scan2_objects(rescue_group):
-    if rescue_group == 'pta_neuron':
-        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'neuron')]
-    elif rescue_group == 'pta_oligo':
-        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'oligo')]
-    elif rescue_group == 'mda_sox10':
-        subset = meta[(meta['amp'] == 'MDA') & (meta['selection'] == 'SOX10')]
-    elif rescue_group == 'mda_gfap':
-        subset = meta[(meta['amp'] == 'MDA') & (meta['selection'] == 'GFAP')]
-    else:
-        raise RuntimeError('unrecognized rescue_group "' + rescue_group + '"')
-
-    # dict mapping: SCAN2 object path -> sample name
-    return(dict(
-        zip(list('scan2/' + subset['donor'] + '/scan2/sensitivity/' + subset['sample'] + '/scan2_object.rda'),
-            list(subset['sample'])
-        )
-    ))
-
-
 rule scan2_rescue_setup:
     input:
         scan2_bin="scan2/SCAN2_specific_commit/bin/scan2",
         scan2_snakefile="scan2/SCAN2_specific_commit/snakemake/Snakefile",
         scan2_scripts="scan2/SCAN2_specific_commit/scripts",
-        scan2_objects=lambda wildcards: rescue_group_to_scan2_objects(wildcards.rescue_group).keys()
+        scan2_objects=lambda wildcards: config['scan2_rescue_groups'][wildcards.rescue_group].keys()
     output:
         "scan2/rescue_{rescue_group}/scan.yaml"
     log:
@@ -332,7 +300,7 @@ rule scan2_rescue_setup:
         "scan2/rescue_{rescue_group}/setup.benchmark.txt"
     params:
         outdir="scan2/rescue_{rescue_group}",
-        obj_flags=lambda wildcards, input: [ '--scan2-object ' + rescue_group_to_scan2_objects(wildcards.rescue_group)[obj] + ' ' + obj for obj in input.scan2_objects ]
+        obj_flags=lambda wildcards, input: [ '--scan2-object ' + config['scan2_rescue_groups'][wildcards.rescue_group][obj] + ' ' + obj for obj in input.scan2_objects ]
     localrule: True
     threads: 1
     resources:
@@ -381,4 +349,141 @@ rule scan2_rescue_run:
         {input.scan2_bin} -d {params.outdir} --snakefile {input.scan2_snakefile} rescue \
             --rescue-n-cores {threads} \
             --joblimit {threads}
+        """
+
+
+rule scan2_digest_calls:
+    input:
+        scan2_dir='scan2/SCAN2_specific_commit',
+        muts="scan2/rescue_{rescue_group}/rescued_muts.txt",
+        metadata='metadata/sample_metadata.csv'
+    output:
+        unfiltered="scan2/{rescue_group}_mutations.UNFILTERED.txt",
+        filtered="scan2/{rescue_group}_mutations.FILTERED.txt",
+    log:
+        "scan2/{rescue_group}_mutations.log"
+    benchmark:
+        "scan2/{rescue_group}_mutations.benchmark.txt"
+    params:
+        column_name='donor',
+        filter_column='16'
+    localrule: True
+    threads: 1
+    resources:
+        mem_mb=500
+    shell:
+        """
+        {input.scan2_dir}/bin/digest_calls.R \
+            --muts {input.muts} \
+            --metadata {input.metadata} \
+            --individual-column {params.column_name} \
+            {output.unfiltered} &> {log}
+
+        awk -F, 'NR == 1 || ${params.filter_column} == "FALSE"' {output.unfiltered} > {output.filtered}
+        """
+
+
+rule scan2_permtool_setup:
+    input:
+        scan2_bin="scan2/SCAN2_specific_commit/bin/scan2",
+        scan2_snakefile="scan2/SCAN2_specific_commit/snakemake/Snakefile",
+        scan2_scripts="scan2/SCAN2_specific_commit/scripts",
+        genome_file="resources/hg19.genome",
+        muts="scan2/{rescue_group}_mutations.FILTERED.txt"
+    output:
+        "scan2/permtool/{rescue_group}/scan.yaml"
+    log:
+        "scan2/permtool/{rescue_group}/setup.log"
+    benchmark:
+        "scan2/permtool/{rescue_group}/setup.benchmark.txt"
+    params:
+        outdir="scan2/permtool/{rescue_group}",
+        n_permutations=10000,
+        # the SCAN2 directory is used by permtool for the joint depth matrix.
+        # this is used to calculate the callable subset of the genome over which
+        # to permute mutations.
+        sample_flags=lambda wildcards: [ '--permtool-sample ' + sample + ' scan2/' + list(config['metadata'][config['metadata']['sample']==sample]['donor'])[0] + '/scan2' for sample in config['scan2_rescue_groups'][wildcards.rescue_group].values() ]
+    localrule: True
+    threads: 1
+    resources:
+        mem_mb=1000
+    shell:
+        """
+        {input.scan2_bin} -d {params.outdir} --snakefile {input.scan2_snakefile} init
+        {input.scan2_bin} -d {params.outdir} --snakefile {input.scan2_snakefile} config \
+            --verbose \
+            --scripts $(realpath {input.scan2_scripts}) \
+            --analysis permtool \
+            --permtool-muts {input.muts} \
+            --permtool-bedtools-genome-file {input.genome_file} \
+            --permtool-n-permutations {params.n_permutations} \
+            --permtool-callable-bed-n-cores 10 \
+            --permtool-make-permutations-n-cores 10 \
+            {params.sample_flags}
+        {input.scan2_bin} -d {params.outdir} --snakefile {input.scan2_snakefile} validate
+        """
+
+rule scan2_permtool_run:
+    input:
+        scan2_bin="scan2/SCAN2_specific_commit/bin/scan2",
+        scan2_snakefile="scan2/SCAN2_specific_commit/snakemake/Snakefile",
+        scan2_scripts="scan2/SCAN2_specific_commit/scripts",
+        yaml="scan2/permtool/{rescue_group}/scan.yaml"
+    output:
+        expand("scan2/permtool/{{rescue_group}}/perms_{muttype}_{passtype}.rda",
+            muttype=[ 'snv', 'indel'], passtype=[ 'pass', 'rescue' ])
+    log:
+        "scan2/permtool/{rescue_group}/run.log"
+    benchmark:
+        "scan2/permtool/{rescue_group}/run.benchmark.txt"
+    params:
+        outdir="scan2/permtool/{rescue_group}",
+    threads: 1
+    resources:
+        mem_mb=4000
+    shell:
+        """
+        {input.scan2_bin} -d {params.outdir} --snakefile {input.scan2_snakefile} permtool \
+            --joblimit 500 \
+            --drmaa ' -p park -A park_contrib -c {{threads}} --mem={{resources.mem_mb}} -t 40:00:00 -o %logdir/slurm-%A.log' \
+            --snakemake-args ' --keep-going --max-status-checks-per-second 0.5 --max-jobs-per-second 2'
+        """
+
+rule scan2_link_full_object:
+    input:
+        scan2_full_obj=lambda wildcards: "scan2/rescue_" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "/objects/{sample}_scan2_object_rescue.rda"
+    output:
+        linked_obj="scan2/full_objects/{sample}.rda"
+    localrule: True
+    threads: 1
+    resources:
+        mem_mb=10
+    shell:
+        """
+        ln -s ../../{input.scan2_full_obj} {output.linked_obj}
+        """
+
+
+# Full SCAN2 objects are REALLY big--like ~10GB in size--and can therefore take an
+# extremely long time to load. Loading 100+ of them can be totally impractical.
+# Tiny objects have all summary data available, but truncated @gatk tables and
+# @spatial.sensitivity models.
+#
+# Tiny objects are ~20-30 MB in size.
+rule scan2_make_tiny_object:
+    input:
+        scan2_scripts="scan2/SCAN2_specific_commit/scripts",
+        scan2_obj="scan2/full_objects/{sample}.rda"
+    output:
+        rda="scan2/tiny_objects/{sample}.rda"
+    log:
+        "scan2/tiny_objects/{sample}.log"
+    benchmark:
+        "scan2/tiny_objects/{sample}.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=20000
+    shell:
+        """
+        {input.scan2_scripts}/make_tiny_object.R {input.scan2_obj} {output.rda} &> {log}
         """

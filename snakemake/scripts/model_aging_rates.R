@@ -43,11 +43,7 @@ if (file.exists(outmodelcsv))
 suppressMessages(library(data.table))
 suppressMessages(library(lme4))
 suppressMessages(library(lmerTest))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 
 burdens <- lapply(burden.csvs, function(in.csv) {

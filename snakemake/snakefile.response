@@ -1,0 +1,18 @@
+# vim: syntax=python
+
+rule respfig1_genes:
+    input:
+        # Any single cell sensitivity file can be used. The only information taken from
+        # this file is `size.mb`, which records the size of the enrichment region and is
+        # the same for all samples.
+        sens="enrichment/sensitivity/bed_regions/UMB4976_E1_sensitivity.txt",
+        enrich="enrichment/gtex_genes/bed_regions/{group}___AB.csv"
+    output:
+        main_pdf="respfig1/{group}_genes.pdf",
+        inset_pdf="respfig1/{group}_genes_inset.pdf"
+    log:
+        "respfig1/{group}_genes.log"
+    resources:
+        mem_mb=2000
+    script:
+        "scripts/respfig1_genes.R"

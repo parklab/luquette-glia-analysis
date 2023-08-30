@@ -19,7 +19,7 @@ rule make_sensitivity_bigwig:
 rule make_sensitivity_bed:
     input:
         bigwig="spatial_sensitivity/bigwig/{sample}.bigwig",
-        tile=lambda wildcards: enrichment_config['tiles'][wildcards.binsize]
+        tile=lambda wildcards: config['enrichment_config']['tiles'][wildcards.binsize]
     output:
         bed="spatial_sensitivity/bed/{sample}.{binsize}binsize.bed"
     resources:

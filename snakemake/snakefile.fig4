@@ -2,7 +2,7 @@
 
 rule umap_plots:
     input:
-        lambda wildcards: "input/any___scatacseq_umap___none.csv" if wildcards.panel_letter == 'c' else "input/any___scrnaseq_umap___none.csv"
+        lambda wildcards: "scatacseq/umap.csv" if wildcards.panel_letter == 'c' else "scrnaseq/snRNA_1465a_table.csv"
     output:
         expand("fig4/panel_{{panel_letter}}_umap_plot.{ext}",
             ext=[ 'svg', 'pdf', 'jpeg' ])
@@ -14,136 +14,167 @@ rule umap_plots:
         "scripts/plot_umap.R"
 
 
+# Little opaque here: MDA uses pass mutations (called type 'A' here, which is an
+# old term) only; SCAN2 is not designed to rescue mutations in MDA data. PTA
+# uses pass and rescue (type 'AB').
+rule consolidate_enrichment_analyses:
+    input:
+        snv_indel_pairs=lambda wildcards:
+            expand('enrichment/{datasource}/quantile/{{group}}___{qualtype}.10quantiles.csv',
+                datasource=[ 'scrnaseq_expression_mc02', 'scatacseq', 'repliseq', 'roadmap_histone_signal_brain' ],
+                qualtype=[ 'A', 'indel_A' ] if 'mda' in wildcards.group else [ 'AB', 'indel_AB' ])
+    output:
+        csv="fig4/{group}_consolidated_signals_10quantiles.csv"
+    log:
+        "fig4/{group}_consolidated_signals_10quantiles.log"
+    benchmark:
+        "fig4/{group}_consolidated_signals_10quantiles.benchmark.txt"
+    params:
+        tag="{group}"
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/consolidate_enrichment_tables.R"
+
+
 rule many_enrichment_analyses:
     input:
-        # would like to expand() this but also want to keep names of inputs
-        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/neuron{half}___AB.10quantiles.csv",
-        neuron_scatacseq="enrichment/scatacseq/quantile/neuron{half}___AB.10quantiles.csv",
-        neuron_repliseq="enrichment/repliseq/quantile/neuron{half}___AB.10quantiles.csv",
-        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/neuron{half}___AB.10quantiles.csv",
-        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/oligo{half}___AB.10quantiles.csv",
-        oligo_scatacseq="enrichment/scatacseq/quantile/oligo{half}___AB.10quantiles.csv",
-        oligo_repliseq="enrichment/repliseq/quantile/oligo{half}___AB.10quantiles.csv",
-        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/oligo{half}___AB.10quantiles.csv"
+        group1='fig4/{group1}_consolidated_signals_10quantiles.csv',
+        group2='fig4/{group2}_consolidated_signals_10quantiles.csv'
     output:
-        pdf="fig4/panels_cdefg_enrichment_analyses{half}.pdf",
-        svg="fig4/panels_cdefg_enrichment_analyses{half}.svg",
-        csv="fig4/panels_cdefg_enrichment_analyses{half}.csv"
+        pdf="fig4/panels_cdefg_enrichment_analyses_{group1}_vs_{group2}.pdf",
+        svg="fig4/panels_cdefg_enrichment_analyses_{group1}_vs_{group2}.svg",
+        csv="fig4/panels_cdefg_enrichment_analyses_{group1}_vs_{group2}.csv"
     log:
-        "fig4/panels_cdefg_enrichment_analyses{half}.log"
+        "fig4/panels_cdefg_enrichment_analyses_{group1}_vs_{group2}.log"
+    params:
+        group1_color=lambda wildcards: config['group_colors'][wildcards.group1],
+        group2_color=lambda wildcards: config['group_colors'][wildcards.group2]
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=1000,
+        localjob=1
     script:
         "scripts/fig4_panels_cdefg.R"
 
 
-rule many_enrichment_analyses_mda:
+rule consolidate_chromhmm:
     input:
-        # would like to expand() this but also want to keep names of inputs
-        neuron_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/mda_gfap_elderly___A.10quantiles.csv",
-        neuron_scatacseq="enrichment/scatacseq/quantile/mda_gfap_elderly___A.10quantiles.csv",
-        neuron_repliseq="enrichment/repliseq/quantile/mda_gfap_elderly___A.10quantiles.csv",
-        neuron_histone="enrichment/roadmap_histone_signal_brain/quantile/mda_gfap_elderly___A.10quantiles.csv",
-        oligo_scrnaseq="enrichment/scrnaseq_expression_mc08/quantile/mda_sox10_elderly___A.10quantiles.csv",
-        oligo_scatacseq="enrichment/scatacseq/quantile/mda_sox10_elderly___A.10quantiles.csv",
-        oligo_repliseq="enrichment/repliseq/quantile/mda_sox10_elderly___A.10quantiles.csv",
-        oligo_histone="enrichment/roadmap_histone_signal_brain/quantile/mda_sox10_elderly___A.10quantiles.csv"
+        enrich_objects=lambda wildcards: "enrichment/roadmap_chromhmm_brain/bed_regions/{group}___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + "/bedenrich/SUMMARY.rda"
     output:
-        pdf="fig4/panels_cdefg_enrichment_analyses_mda_elderly.pdf",
-        svg="fig4/panels_cdefg_enrichment_analyses_mda_elderly.svg",
-        csv="fig4/panels_cdefg_enrichment_analyses_mda_elderly.csv"
+        csv="fig4/panel_h_chromhmm_{group}___{muttype}.csv"
     log:
-        "fig4/panels_cdefg_enrichment_analyses_mda_elderly.log"
-    resources:
-        mem_mb=4000
-    script:
-        "scripts/fig4_panels_cdefg.R"
-
-
-rule chromhmm_states:
-    input:
-        neuron_snv="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
-        neuron_indel="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
-        oligo_snv="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
-        oligo_indel="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
-    output:
-        svg="fig4/panel_h_chromhmm.svg",
-        pdf="fig4/panel_h_chromhmm.pdf",
-        csv="fig4/panel_h_chromhmm.csv"
+        "fig4/panel_h_chromhmm_{group}___{muttype}.log"
     params:
-        signal_to_plot='eid=E073',
+        group_tag='{group}',
+        signal='eid=E073',
         # 3_TssFlnk, 10_,11_,12_ (bivalent states) are all tiny genomic regions, creating
         # huge error bars that make the rest of the plot difficult to read.
-        features="1_TssA,2_TssAFlnk,4_Tx,5_TxWk,6_EnhG,7_Enh,8_ZNF/Rpts,9_Het,13_ReprPC,14_ReprPCWk,15_Quies"
+        features="1_TssA,2_TssAFlnk,4_Tx,5_TxWk,6_EnhG,7_Enh,9_Het,13_ReprPC,14_ReprPCWk,15_Quies"
+    localrule: True
     resources:
-        mem_mb=1000
-    log:
-        "fig4/panel_h_chromhmm.log"
+        mem_mb=1000,
+        localjob=1
     script:
-        "scripts/barplot_enrich_new.R"
+        "scripts/consolidate_bed_enrichment_tables.R"
 
 
-rule chromhmm_states_mda:
+rule plot_chromhmm_states:
     input:
-        oligo_pta="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___A/bedenrich/SUMMARY.rda",
-        mda_gfap="enrichment/roadmap_chromhmm_brain/bed_regions/mda_gfap_elderly___A/bedenrich/SUMMARY.rda",
-        mda_sox10="enrichment/roadmap_chromhmm_brain/bed_regions/mda_sox10_elderly___A/bedenrich/SUMMARY.rda"
+        enrich_tables=expand("fig4/panel_h_chromhmm_{group}___{{muttype}}.csv",
+            group=[ 'pta_neuron', 'pta_oligo' ])
     output:
-        svg="fig4/panel_h_chromhmm_mda_elderly.svg",
-        pdf="fig4/panel_h_chromhmm_mda_elderly.pdf",
-        csv="fig4/panel_h_chromhmm_mda_elderly.csv"
+        svg="fig4/panel_h_chromhmm___{muttype}.svg",
+        pdf="fig4/panel_h_chromhmm___{muttype}.pdf"
+    log:
+        "fig4/panel_h_chromhmm___{muttype}.log"
     params:
-        signal_to_plot='eid=E073',
-        # 3_TssFlnk, 10_,11_,12_ (bivalent states) are all tiny genomic regions, creating
-        # huge error bars that make the rest of the plot difficult to read.
-        features="1_TssA,2_TssAFlnk,4_Tx,5_TxWk,6_EnhG,7_Enh,8_ZNF/Rpts,9_Het,13_ReprPC,14_ReprPCWk,15_Quies"
+        colors=','.join([ config['group_colors'][g] for g in [ 'pta_neuron', 'pta_oligo' ] ])
+    localrule: True
     resources:
-        mem_mb=1000
-    log:
-        "fig4/panel_h_chromhmm_mda_elderly.log"
+        mem_mb=1000,
+        localjob=1
     script:
-        "scripts/barplot_enrich_new_mda_comparison.R"
+        "scripts/barplot_enrich_new2.R"
 
 
-rule nott_enhancers_and_promoters:
+rule plot_chromhmm_states_all:
     input:
-        neuron_snv="enrichment/nott/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
-        neuron_indel="enrichment/nott/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
-        oligo_snv="enrichment/nott/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
-        oligo_indel="enrichment/nott/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+        enrich_tables=expand("fig4/panel_h_chromhmm_{group}___{{muttype}}.csv",
+            group=config['comparison_groups'])
     output:
-        svg="fig4/panel_i_nott_enhprom.svg",
-        pdf="fig4/panel_i_nott_enhprom.pdf",
-        csv="fig4/panel_i_nott_enhprom.csv"
+        svg="fig4/panel_h_chromhmm_all_comparisons___{muttype}.svg",
+        pdf="fig4/panel_h_chromhmm_all_comparisons___{muttype}.pdf"
+    log:
+        "fig4/panel_h_chromhmm_all_comparisons___{muttype}.log"
     params:
-        signal_to_plot='datasource=nott_enhprom',
+        colors=','.join([ config['group_colors'][g] for g in config['comparison_groups'] ])
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/barplot_enrich_new2.R"
+
+
+rule consolidate_nott_enhancers_and_promoters:
+    input:
+        enrich_objects=lambda wildcards: "enrichment/nott/bed_regions/{group}___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + "/bedenrich/SUMMARY.rda"
+    output:
+        csv="fig4/panel_i_nott_enhprom_{group}___{muttype}.csv"
+    log:
+        "fig4/panel_i_nott_enhprom_{group}___{muttype}.log"
+    params:
+        group_tag='{group}',
+        signal='datasource=nott_enhprom',
         features="astrocyte_enhancer,neuron_enhancer,oligo_enhancer,microglia_enhancer,astrocyte_promoter,neuron_promoter,oligo_promoter,microglia_promoter"
+    localrule: True
     resources:
-        mem_mb=1000
-    log:
-        "fig4/panel_i_nott_enhprom.log"
+        mem_mb=1000,
+        localjob=1
     script:
-        "scripts/barplot_enrich_new.R"
+        "scripts/consolidate_bed_enrichment_tables.R"
 
 
-rule nott_enhancers_and_promoters_mda:
+rule plot_nott_enhancers_and_promoters:
     input:
-        oligo_pta="enrichment/nott/bed_regions/oligo___A/bedenrich/SUMMARY.rda",
-        mda_gfap="enrichment/nott/bed_regions/mda_gfap_elderly___A/bedenrich/SUMMARY.rda",
-        mda_sox10="enrichment/nott/bed_regions/mda_sox10_elderly___A/bedenrich/SUMMARY.rda"
+        enrich_tables=expand("fig4/panel_i_nott_enhprom_{group}___{{muttype}}.csv",
+            group=[ 'pta_neuron', 'pta_oligo' ])
     output:
-        svg="fig4/panel_i_nott_enhprom_mda_elderly.svg",
-        pdf="fig4/panel_i_nott_enhprom_mda_elderly.pdf",
-        csv="fig4/panel_i_nott_enhprom_mda_elderly.csv"
-    params:
-        signal_to_plot='datasource=nott_enhprom',
-        features="astrocyte_enhancer,neuron_enhancer,oligo_enhancer,microglia_enhancer,astrocyte_promoter,neuron_promoter,oligo_promoter,microglia_promoter"
-    resources:
-        mem_mb=1000
+        svg="fig4/panel_i_nott_enhprom___{muttype}.svg",
+        pdf="fig4/panel_i_nott_enhprom___{muttype}.pdf",
     log:
-        "fig4/panel_i_nott_enhprom_mda_elderly.log"
+        "fig4/panel_i_nott_enhprom___{muttype}.log"
+    params:
+        colors=','.join([ config['group_colors'][g] for g in [ 'pta_neuron', 'pta_oligo' ] ])
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
     script:
-        "scripts/barplot_enrich_new_mda_comparison.R"
+        "scripts/barplot_enrich_new2.R"
+
+
+rule plot_nott_enhancers_and_promoters_all:
+    input:
+        enrich_tables=expand("fig4/panel_i_nott_enhprom_{group}___{{muttype}}.csv",
+            group=config['comparison_groups'])
+    output:
+        svg="fig4/panel_i_nott_enhprom_all_comparisons___{muttype}.svg",
+        pdf="fig4/panel_i_nott_enhprom_all_comparisons___{muttype}.pdf",
+    log:
+        "fig4/panel_i_nott_enhprom_all_comparisons___{muttype}.log"
+    params:
+        colors=','.join([ config['group_colors'][g] for g in config['comparison_groups'] ])
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/barplot_enrich_new2.R"
+
 
 
 ####################################################################################
@@ -211,21 +242,3 @@ rule fig4_suppl_hic_tads:
         "fig4/suppl_hic_tads_barplot_new.log"
     script:
         "scripts/barplot_enrich_new.R"
-
-
-rule fig4_foldchange:
-    input:
-        neuron_atac="enrichment/scatacseq_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda",
-        oligo_atac="enrichment/scatacseq_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda",
-        neuron_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/neuron___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda",
-        oligo_rna="enrichment/scrnaseq_expression_mc08_foldchange/quantile/oligo___AB/qbedenrich/tiled_1000binsize_10quantiles.SUMMARY.rda"
-    output:
-        pdf='fig4/rna_atac_foldchange.pdf',
-        svg='fig4/rna_atac_foldchange.svg',
-        csv='fig4/rna_atac_foldchange.csv'
-    log:
-        'fig4/rna_atac_foldchange.log'
-    resources:
-        mem_mb=4000
-    script:
-        "scripts/fig4_rna_atac_foldchange.R"

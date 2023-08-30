@@ -10,7 +10,12 @@ if ('snakemake' %in% ls()) {
 
     # tags come from params
     commandArgs <- function(...) unlist(c(
-        snakemake@params[1:2], snakemake@input[1:5], snakemake@output[1]
+        snakemake@params['group'],
+        snakemake@params['qualtype'],
+        snakemake@input['mutmat'],
+        snakemake@input['metadata'],
+        snakemake@input['cosmic'],
+        snakemake@output['csv']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
@@ -18,15 +23,15 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 6) {
-    cat('celltype and muttype are just text IDs that will be added as 2 columns\n')
+    cat('group.tag and muttype are just text IDs that will be added as 2 columns\n')
     cat('in the output table. e.g., celltype=Neuron, muttype=SNV.\n')
-    stop("usage: score_cosmic_signature.R celltype muttype mutmat.csv mutburden.csv cosmic.csv out.csv")
+    stop("usage: score_cosmic_signatures.R group.tag muttype mutmat.csv metadata.csv cosmic.csv out.csv")
 }
 
-tag.celltype <- args[1]
+tag.group <- args[1]
 tag.muttype <- args[2]
 mutmat.csv <- args[3]
-mutburden.csv <- args[4]
+meta.csv <- args[4]
 cosmic.csv <- args[5]
 outcsv <- args[6]
 
@@ -41,12 +46,18 @@ cosmic <- cosmic[,-1]  # Get rid of the MutType column (e.g., ACA:C>A)
 
 M <- fread(mutmat.csv)
 
-muttab <- fread(mutburden.csv)
+#muttab <- fread(mutburden.csv)
+meta <- fread(meta.csv)
 
 # Remove outliers from M and muttab
-muttab <- muttab[outlier == FALSE]
-samples.to.keep <- muttab$sample
+# Attempting to keep outliers now
+#muttab <- muttab[outlier == FALSE]
+#samples.to.keep <- muttab$sample
+# Need to pare down meta so that meta$age corresponds to samples
+meta <- meta[sample %in% colnames(M)]
+samples.to.keep <- meta$sample
 M <- M[,..samples.to.keep]
+str(M)
 
 ###############################################################################
 # Evaluate signatures by reduction of fit residual
@@ -92,7 +103,7 @@ resid.nosigs <- mean(colSums(M^2))
 # sigtable is ordered by the stepwise criteria. that's because
 # out of the criteria we compute, only stepwise depends on order.
 # start building out the table of metrics for each COSMIC signature
-sigtable <- data.table(CellType=tag.celltype,
+sigtable <- data.table(Group=tag.group,
     MutType=tag.muttype,
     SigName=colnames(cosmic[,..terms]),
     StepwiseMeanResidual=resids,
@@ -149,7 +160,7 @@ model.age <- function(burden, age) {
       AgeSignif=-log10(coef(summary(m))[2,4]))
 }
 
-mod <- t(apply(bysample.full, 1, model.age, age=muttab$age))
+mod <- t(apply(bysample.full, 1, model.age, age=meta$age))
 
 sigtable <- cbind(sigtable, mod[sigtable$SigName,])
 sigtable$AgeSignifAdj <- -log10(p.adjust(10^-sigtable$AgeSignif))

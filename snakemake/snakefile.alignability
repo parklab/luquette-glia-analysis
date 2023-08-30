@@ -1,13 +1,4 @@
 # vim: syntax=python
-#
-
-
-import yaml
-
-# dict: donor ID -> joint matrix file (.tab.gz)
-with open('metadata/scan2_joint_depth_matrixes.yaml', 'r') as yf:
-    scan2_depth_matrixes = yaml.load(yf, Loader=yaml.FullLoader)
-
 
 # Convenience: for some analyses that use bedtools, extract only the
 # intervals that should be removed.
@@ -28,10 +19,11 @@ rule tile_to_mask:
 # the genome with poorly aligned regions removed.
 rule tile_genome:
     input:
-        rdas=expand("alignability/base_tile_size_tables/chr{chr}.rda", chr=chrs),
-        metadata="metadata/metadata_82cells_combined.csv"  # for sample IDs of PTA single cells
+        rdas=expand("alignability/base_tile_size_tables/chr{chr}.rda",
+            chr=config['chrs_to_analyze']),
+        metadata="metadata/sample_metadata.csv"
     output:
-        "alignability/genome_tiles/genome_tiles_{binsize}binsize.bed"
+        bed="alignability/genome_tiles/genome_tiles_{binsize}binsize.bed"
     log:
         "alignability/genome_tiles/genome_tiles_{binsize}binsize.log"
     params:
@@ -46,9 +38,9 @@ rule tile_genome:
 rule tile_genome_200bp_scatter:
     input:
         rdas="alignability/base_tile_size_tables/chr{chr}.rda",
-        metadata="metadata/metadata_82cells_combined.csv"  # for sample IDs of PTA single cells
+        metadata="metadata/sample_metadata.csv"
     output:
-        "alignability/genome_tiles/genome_tiles_200binsize.chr{chr}.bed"
+        bed="alignability/genome_tiles/genome_tiles_200binsize.chr{chr}.bed"
     log:
         "alignability/genome_tiles/genome_tiles_200binsize.chr{chr}.log"
     params:
@@ -63,7 +55,8 @@ rule tile_genome_200bp_scatter:
 ruleorder: tile_genome_200bp_gather > tile_genome
 rule tile_genome_200bp_gather:
     input:
-        expand("alignability/genome_tiles/genome_tiles_200binsize.chr{chr}.bed", chr=chrs)
+        expand("alignability/genome_tiles/genome_tiles_200binsize.chr{chr}.bed",
+            chr=config['chrs_to_analyze'])
     output:
         "alignability/genome_tiles/genome_tiles_200binsize.bed"
     resources:
@@ -76,8 +69,8 @@ rule tile_genome_200bp_gather:
 
 rule digest_chrom:
     input:
-        matfiles=scan2_depth_matrixes.values(),
-        matfileidxs=[ tab + '.tbi' for tab in scan2_depth_matrixes.values() ],
+        matfiles=config['scan2_depth_matrices'].values(),
+        matfileidxs=[ matfile + ".tbi" for matfile in config['scan2_depth_matrices'].values() ]
     output:
         rda="alignability/base_tile_size_tables/chr{chr}.rda"
     benchmark:
@@ -89,26 +82,62 @@ rule digest_chrom:
     params:
         chrom="{chr}",
         base_tile_size=100,   # in basepairs
+        # depth matrices are processed in chunks to limit memory usage
         tiles_per_chunk=10000 # = 1MB chunks
     threads: 20
     script:
         "scripts/digest_chrom_depth.R"
 
 
+rule bulk_accessible:
+    input:
+        rda="alignability/base_tile_size_tables/chr{chrom}.rda",
+        metadata="metadata/sample_metadata.csv"
+    output:
+        txt="alignability/bulk_accessible/chr{chrom}.txt"
+    log:
+        "alignability/bulk_accessible/chr{chrom}.log"
+    params:
+        min_reads_per_bulk=5
+    threads: 1
+    resources:
+        mem_mb=5000
+    script:
+        "scripts/get_bulk_alignable_bps.R"
+
+
+rule gather_bulk_accessible:
+    input:
+        txts=expand("alignability/bulk_accessible/chr{chrom}.txt",
+            chrom=config['chrs_to_analyze'])
+    output:
+        txt="alignability/bulk_accessible/all_chrs.txt"
+    log:
+        "alignability/bulk_accessible/all_chrs.log"
+    threads: 1
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/combine_uniform_tables.R"
+
+
+'''
 # this script expects an input file format that is no longer generated
 # XXX: some of the variables (like 'gs') are created in plot_bin_classes.R
-#rule plot_digest:
-    #input:
-        #"alignability/base_tile_size_tables/chr{chr}.rda"  # this is not correct
-    #output:
-        #"alignability/data_plots/chr{chr}.{resolution}.svg",
-        #"alignability/data_plots/chr{chr}.{resolution}.pdf"
-    #resources:
-        #mem_mb=8000
-    #params:
-        #"{resolution}"
-    #script:
-        #"scripts/plot_chrom_depth.R"
+rule plot_digest:
+    input:
+        "alignability/base_tile_size_tables/chr{chr}.rda"  # this is not correct
+    output:
+        "alignability/data_plots/chr{chr}.{resolution}.svg",
+        "alignability/data_plots/chr{chr}.{resolution}.pdf"
+    resources:
+        mem_mb=8000
+    params:
+        "{resolution}"
+    script:
+        "scripts/plot_chrom_depth.R"
 
 
 rule plot_bin_classes:
@@ -125,3 +154,4 @@ rule plot_bin_classes:
         "alignability/plots/chromosome_bin_classes.log"
     script:
         "scripts/plot_bin_classes.R"
+'''

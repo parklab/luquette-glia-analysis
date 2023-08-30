@@ -31,7 +31,7 @@ suppressMessages(library(scan2))
 
 scores <- rbindlist(lapply(score.csvs, fread))
 
-scores[, SigIncluded := (AgeSignifAdj >= 2 & PercentContribution >= 1) | PercentStepwiseMeanResidualReduction > 50]
+scores[, SigIncluded := (AgeSignifAdj >= 4 & PercentContribution >= 1) | PercentStepwiseMeanResidualReduction > 25]
 
 fwrite(scores, file=out.csv)
 

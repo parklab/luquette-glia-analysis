@@ -6,7 +6,7 @@
 enrichment_hic_tads_config = dict(
     **{ 'output_dir': 'enrichment/hic_tads',
         'SIGNAL_MANIFEST': 'manifests/HIC_TADS.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_hic_tads:
@@ -25,13 +25,14 @@ use rule enrichment_bed_analysis from enrichment_hic_tads as enrichment_hic_tads
     resources:
         mem_mb=128000
 
+
 ########################################################################
 # Roadmap epigenomics chromHMM  state models
 ########################################################################
 enrichment_roadmap_chromhmm_config = dict(
     **{ 'output_dir': 'enrichment/roadmap_chromhmm_brain',
         'SIGNAL_MANIFEST': 'manifests/ROADMAP_CHROMHMM_BRAIN.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_roadmap_chromhmm:
@@ -44,10 +45,10 @@ use rule * from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_*
 # N.B. failed with 32G after 1 hour of loading BED files
 # Max usage was ~37G.
 # -- The above is no longer applicable when using only the 13 brain samples.
-# -- but leaving in here anyway in case we go back to the full catalog.
+# -- leaving here commented out in case we go back to the full catalog.
 use rule enrichment_bed_analysis from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_enrichment_bed_analysis with:
     resources:
-        mem_mb=42000
+        mem_mb=15000 # 42000
 
 use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_roadmap_chromhmm_enrichment_bed_plot with:
     params:
@@ -64,7 +65,7 @@ use rule enrichment_bed_plot from enrichment_roadmap_chromhmm as enrichment_road
 enrichment_roadmap_histone_signal_config = dict(
     **{ 'output_dir': 'enrichment/roadmap_histone_signal_brain',
         'SIGNAL_MANIFEST': 'manifests/ROADMAP_HISTONE_BIGWIG_BRAIN.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_roadmap_histone_signal:
@@ -75,7 +76,10 @@ use rule * from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_
 
 use rule sigenrichment_qbed_analysis from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_sigenrichment_qbed_analysis with:
     resources:
-        mem_mb=lambda wildcards: 96000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+        # Same as ChromHMM: now we use only 13 brain samples, so mem requirements are much lower.
+        # Leaving this here in case we ever try the full set of Roadmap epigenomes.
+        #mem_mb=lambda wildcards: 96000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+        mem_mb=15000
 
 use rule enrichment_plot from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_enrichment_plot with:
     params:
@@ -93,19 +97,20 @@ use rule sigenrichment_plot from enrichment_roadmap_histone_signal as enrichment
         ignore='enrichment_grid_R_ignore_none',
         group='mark'
     output:
-        expand('enrichment/roadmap_histone_signal_brain/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+        expand('enrichment/roadmap_histone_signal_brain/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich_{{mutsig_selection_method}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/roadmap_histone_signal_brain/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+        'enrichment/roadmap_histone_signal_brain/quantile/{mutclass}.{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.log'
 
 
 ########################################################################
 # ENCODE replication timing measured by Repli-chip
+# XXX: Repli-chip has been superseded by RepliSeq in our analysis.
 ########################################################################
 enrichment_encode_replichip_config = dict(
     **{ 'output_dir': 'enrichment/encode_replichip',
         'SIGNAL_MANIFEST': 'manifests/ENCODE_REPLICHIP.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_encode_replichip:
@@ -116,7 +121,8 @@ use rule * from enrichment_encode_replichip as enrichment_encode_replichip_*
 
 use rule sigenrichment_qbed_analysis from enrichment_encode_replichip as enrichment_encode_replichip_sigenrichment_qbed_analysis with:
     resources:
-        mem_mb=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+        #mem_mb=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+        mem_mb=15000
 
 use rule enrichment_plot from enrichment_encode_replichip as enrichment_encode_replichip_enrichment_plot with:
     params:
@@ -133,10 +139,10 @@ use rule sigenrichment_plot from enrichment_encode_replichip as enrichment_encod
         ignore='BINSIZE=1000',
         group='datasource'
     output:
-        expand('enrichment/encode_replichip/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+        expand('enrichment/encode_replichip/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich_{{mutsig_selection_method}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/encode_replichip/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+        'enrichment/encode_replichip/quantile/{mutclass}.{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.log'
 
 
 ########################################################################
@@ -145,7 +151,7 @@ use rule sigenrichment_plot from enrichment_encode_replichip as enrichment_encod
 enrichment_repliseq_config = dict(
     **{ 'output_dir': 'enrichment/repliseq',
         'SIGNAL_MANIFEST': 'manifests/REPLISEQ.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_repliseq:
@@ -156,7 +162,10 @@ use rule * from enrichment_repliseq as enrichment_repliseq_*
 
 use rule sigenrichment_qbed_analysis from enrichment_repliseq as enrichment_repliseq_sigenrichment_qbed_analysis with:
     resources:
-        mem_mb=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+        # This was likely copied over from Repli-chip, for which there are many-fold more
+        # tracks than RepliSeq.
+        #mem_mb=lambda wildcards: 70000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 30000
+        mem_mb=15000
 
 use rule enrichment_plot from enrichment_repliseq as enrichment_repliseq_enrichment_plot with:
     params:
@@ -173,10 +182,10 @@ use rule sigenrichment_plot from enrichment_repliseq as enrichment_repliseq_sige
         ignore='enrichment_grid_R_ignore_none',
         group='datasource'
     output:
-        expand('enrichment/repliseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+        expand('enrichment/repliseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich_{{mutsig_selection_method}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/repliseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+        'enrichment/repliseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.log'
 
 
 ########################################################################
@@ -185,7 +194,7 @@ use rule sigenrichment_plot from enrichment_repliseq as enrichment_repliseq_sige
 enrichment_conservation_config = dict(
     **{ 'output_dir': 'enrichment/conservation',
         'SIGNAL_MANIFEST': 'manifests/CONSERVATION.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_conservation:
@@ -216,10 +225,10 @@ use rule sigenrichment_plot from enrichment_conservation as enrichment_conservat
         ignore='enrichment_grid_R_ignore_none',
         group='track'
     output:
-        expand('enrichment/conservation/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+        expand('enrichment/conservation/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich_{{mutsig_selection_method}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+        'enrichment/conservation/quantile/{mutclass}.{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.log'
 
 
 ########################################################################
@@ -228,7 +237,8 @@ use rule sigenrichment_plot from enrichment_conservation as enrichment_conservat
 enrichment_scatacseq_config = dict(
     **{ 'output_dir': 'enrichment/scatacseq',
         'SIGNAL_MANIFEST': 'manifests/SCATACSEQ.MANIFEST' },
-    **enrichment_config
+    # This covariate is comparedto cancer mutation density, so need the extra bin sizes
+    **config['cancer_enrichment_config']
 )
 
 module enrichment_scatacseq:
@@ -256,53 +266,23 @@ use rule sigenrichment_plot from enrichment_scatacseq as enrichment_scatacseq_si
         ignore='enrichment_grid_R_ignore_none',
         group='celltype',
     output:
-        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich_{{mutsig_selection_method}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
-
-
-########################################################################
-# Our scATAC-seq data but using foldchange signals
-#
-# This differs from typical qbed analysis because there is no base
-# bigwig signal files from which the qbeds are constructed. Instead,
-# qbeds are created from the non-foldchange scATAC-seq qbeds.
-########################################################################
-enrichment_scatacseq_foldchange_config = dict(
-    **{ 'output_dir': 'enrichment/scatacseq_foldchange',
-        # This manifest is a dummy containing only metadata, not files
-        'SIGNAL_MANIFEST': 'manifests/SCATACSEQ_FOLDCHANGE.MANIFEST' },
-    **enrichment_config
-)
-
-module enrichment_scatacseq_foldchange:
-    snakefile: "snakefile.enrichment"
-    config: enrichment_scatacseq_foldchange_config
-
-# Only qbed analysis is relevant
-use rule enrichment_qbed_analysis from enrichment_scatacseq_foldchange as enrichment_scatacseq_foldchange_enrichment_qbed_analysis
-
-use rule enrichment_table from enrichment_scatacseq_foldchange as enrichment_scatacseq_foldchange_enrichment_table
-
-use rule enrichment_plot from enrichment_scatacseq_foldchange as enrichment_scatacseq_foldchange_enrichment_plot with:
-    params:
-        ignore='enrichment_grid_R_ignore_none',
-        group='celltype',
-    output:
-        expand('enrichment/scatacseq_foldchange/quantile/{{mutclass}}.{{nquantiles}}quantiles.{output}',
-            output=[ 'svg', 'pdf', 'csv' ])
-    log:
-        'enrichment/scatacseq_foldchange/quantile/{mutclass}.{nquantiles}quantiles.log'
+        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.log'
 
 
 ########################################################################
 # Cancer SNV density
 ########################################################################
+
+# For SNV density we need a much larger binsize to see a correlation.
+# Here we use 1MB bins (which were used in, e.g., the cell of origin papers)
+# rather than 1kb bins.
 enrichment_cancer_config = dict(
     **{ 'output_dir': 'enrichment/cancer_snvdens',
         'SIGNAL_MANIFEST': 'manifests/CANCER_SNVDENS.MANIFEST' },
-    **enrichment_config
+    **config['cancer_enrichment_config']
 )
 
 module enrichment_cancer:
@@ -326,7 +306,7 @@ use rule sigenrichment_plot from enrichment_cancer as enrichment_cancer_sigenric
         ignore='enrichment_grid_R_ignore_none',
         group='signal_type'
     output:
-        expand('enrichment/cancer_snvdens/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+        expand('enrichment/cancer_snvdens/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich_{{mutsig_selection_method}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/cancer_snvdens/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+        'enrichment/cancer_snvdens/quantile/{mutclass}.{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.log'

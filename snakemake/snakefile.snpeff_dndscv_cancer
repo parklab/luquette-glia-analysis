@@ -2,11 +2,11 @@
 
 rule pcawg_snpeff:
     input:
-        "data/pcawg/tumor_vcfs/{tumor}.vcf"
+        "data/pcawg/cancer_vcfs/{tumor}.vcf"
     output:
-        "cancer_genes/snpeff_vcfs/{tumor}.snpeff.vcf"
+        "snpeff/cancer_vcfs/{tumor}.snpeff.vcf"
     log:
-        "cancer_genes/snpeff_vcfs/{tumor}.snpeff.log"
+        "snpeff/cancer_vcfs/{tumor}.snpeff.log"
     resources:
         mem_mb=8000
     shell:
@@ -15,33 +15,33 @@ rule pcawg_snpeff:
         """
 
 
-# Same as above, but input format is different. Also add some extra VCF
-# tags to the normal cell VCFs.
-ruleorder: pcawg_snpeff_singlecell > pcawg_snpeff
-rule pcawg_snpeff_singlecell:
+# Same as above, but input format is different. We also add some
+# extra VCF tags to the normal cell VCFs.
+ruleorder: singlecell_snpeff > pcawg_snpeff
+rule singlecell_snpeff:
     input:
-        "vcfs/{celltype}___mut___{qualtype}.vcf"
+        "vcfs/{group}___FILTERED___{qualtype}.vcf"
     output:
-        tmp=temp("cancer_genes/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf.tmp"),
-        vcf="cancer_genes/snpeff_vcfs/{celltype}___{qualtype}.snpeff.vcf"
+        tmp=temp("snpeff/{group}___FILTERED___{qualtype}.vcf.tmp"),
+        vcf="snpeff/{group}___FILTERED___{qualtype}.vcf"
     log:
-        "cancer_genes/snpeff_vcfs/{celltype}___{qualtype}.snpeff.log"
+        "snpeff/{group}___FILTERED___{qualtype}.snpeff.log"
     params:
-        celltype='{celltype}'
+        group='{group}'
     resources:
         mem_mb=8000
     shell:
         """
-        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.celltype};Origin=.;Sample=."; print $0 }}' {input} > {output.tmp} \
+        awk 'BEGIN {{ OFS="\t"; }} {{ $8 = "TType={params.group};Origin=.;Sample=."; print $0 }}' {input} > {output.tmp} \
             | snakemake/scripts/run_snpeff_pcawg.sh {output.tmp} {output.vcf} > {log} 2>&1
         """
 
 
-rule pcawg_parse_snpeff:
+rule parse_pcawg_snpeff:
     input:
-        "cancer_genes/snpeff_vcfs/{tumor_or_celltype}.snpeff.vcf"
+        "snpeff/cancer_vcfs/{tumor}.snpeff.vcf"
     output:
-        "cancer_genes/gene_mutations/{tumor_or_celltype}.txt"
+        "cancer_genes/gene_mutations/{tumor}.txt"
     resources:
         mem_mb=8000
     shell:
@@ -50,39 +50,95 @@ rule pcawg_parse_snpeff:
         """
 
 
-rule pcawg_gene_mutation_odds_ratios:
+# Same as above but input file names structure doesn't conform to tumor file names.
+ruleorder: parse_singlecell_snpeff > parse_pcawg_snpeff
+rule parse_singlecell_snpeff:
     input:
-        neuron="cancer_genes/gene_mutations/{celltype1}___AB.txt",
-        oligo="cancer_genes/gene_mutations/{celltype2}___AB.txt",
-        tumor="cancer_genes/gene_mutations/{tumor}.txt" #,
-        # omitting the bed file falls back to SnpEff, meaning no gene filtration
-        #genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
+        "snpeff/{group}___FILTERED___{qualtype}.vcf"
     output:
-        rda="cancer_genes/odds_ratios/{celltype1}___vs___{celltype2}/{tumor}.rda"
-    log:
-        "cancer_genes/odds_ratios/{celltype1}___vs___{celltype2}/{tumor}.log"
+        "cancer_genes/gene_mutations/{group}___{qualtype}.txt"
     resources:
         mem_mb=8000
+    shell:
+        """
+        snakemake/scripts/parse_pcawg_snpeff.sh {input} > {output}
+        """
+
+
+rule scatter_pcawg_gene_mutation_odds_ratios:
+    input:
+        neuron="cancer_genes/gene_mutations/{group1}___AB.txt",
+        oligo="cancer_genes/gene_mutations/{group2}___AB.txt",
+        tumor="cancer_genes/gene_mutations/{tumor}.txt" #,
+        # omitting the bed file falls back to SnpEff, meaning no gene filtration
+        # The SnpEff run script is configured to exclude upstream/downstream/integenic regions.
+        #genes_bed='data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed',
+    output:
+        rda="cancer_genes/odds_ratios/{group1}___vs___{group2}/{tumor}.rda"
+    log:
+        "cancer_genes/odds_ratios/{group1}___vs___{group2}/{tumor}.log"
+    benchmark:
+        "cancer_genes/odds_ratios/{group1}___vs___{group2}/{tumor}.benchmark.txt"
+    resources:
+        mem_mb=20000
     shell:
         """
         snakemake/scripts/pcawg_gene_odds_ratio.R \
             {input.tumor} {input.neuron} {input.oligo} {output.rda} > {log} 2>&1
         """
-            #{input.tumor} {input.neuron} {input.oligo} {input.genes_bed} {output.rda} > {log} 2>&1
 
 
+rule gather_pcawg_gene_mutation_odds_ratios:
+    input:
+        cancer_ors=expand('cancer_genes/odds_ratios/{{group1}}___vs___{{group2}}/{tumor}.rda',
+            tumor=config['pcawg_tumors'])
+    output:
+        csv="cancer_genes/odds_ratios/{group1}___vs___{group2}.csv"
+    log:
+        "cancer_genes/odds_ratios/{group1}___vs___{group2}.log"
+    localrule: True
+    threads: 1
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/pcawg_gene_collect_odds_ratios.R"
+
+
+rule cancer_density_correlation:
+    input:
+        muts="tables/{group}___FILTERED_mut___A.csv",
+        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
+        # quantile is ignored. raw scores used.
+        qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
+            tumor=config['pcawg_tumors'])
+    output:
+        csv="enrichment/cancer_snvdens/correlation/{group}___A.csv"
+    log:
+        "enrichment/cancer_snvdens/correlation/{group}___A.log"
+    benchmark:
+        "enrichment/cancer_snvdens/correlation/{group}___A.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=4000
+    script:
+        "scripts/qbed_correlation.R"
+
+
+# This text file slightly differs from VCF in format: the columns are
+# named as expected by dndscv
 rule run_dndscv_cancer:
     input:
         muts="data/cancer_snvdens/snvs/{tumor}.txt"
     output:
-        rda="cancer_genes/dndscv/{tumor}.rda",
-        csv="cancer_genes/dndscv/{tumor}.csv"
+        rda="dndscv/{tumor}.rda",
+        csv="dndscv/{tumor}.csv"
     params:
         # add the cancer_ prefix so we know what files came from tumors without
         # parsing the names directly
         sampletag="cancer_{tumor}"
     log:
-        "cancer_genes/dndscv/{tumor}.log"
+        "dndscv/{tumor}.log"
     resources:
         mem_mb=16000
     script:
@@ -94,14 +150,14 @@ rule run_dndscv_cancer:
 ruleorder: run_dndscv > run_dndscv_cancer
 rule run_dndscv:
     input:
-        muts="tables/{celltype}___mut___{qualtype}.csv"
+        muts="tables/{qualtype}/{group}.csv"
     output:
-        rda="cancer_genes/dndscv/{celltype}___{qualtype}.rda",
-        csv="cancer_genes/dndscv/{celltype}___{qualtype}.csv"
+        rda="dndscv/{group}___{qualtype}.rda",
+        csv="dndscv/{group}___{qualtype}.csv"
     params:
-        sampletag="{celltype}_{qualtype}"
+        sampletag="{group}_{qualtype}"
     log:
-        "cancer_genes/dndscv/{celltype}___{qualtype}.log"
+        "cancer_genes/dndscv/{group}___{qualtype}.log"
     resources:
         mem_mb=8000
     script:
@@ -116,19 +172,19 @@ else:
 
 rule make_dndscv_table:
     input:
-        csvs=expand('cancer_genes/dndscv/{celltype}___{qualtype}.csv',
-                      celltype = [ 'neuron', 'oligo', 'mda_gfap_elderly', 'mda_sox10_elderly', 'oligo_mdapta' ],
-                      qualtype = [ 'A', 'AB' ]) +
-             expand('cancer_genes/dndscv/{tumor}.csv', tumor=pcawg_tumors)
+        csvs=expand('dndscv/{group}___{qualtype}.csv',
+                      group=[ 'pta_neuron', 'pta_oligo', 'mda_gfap', 'mda_sox10' ], #, 'mda_gfap_elderly', 'mda_sox10_elderly', 'oligo_mdapta' ],
+                      qualtype=[ 'A', 'AB' ]) +
+             expand('dndscv/{tumor}.csv', tumor=pcawg_tumors)
     output:
-        csv='cancer_genes/dndscv/dndscv_table.csv'
+        csv='dndscv/dndscv_table.csv'
     params:
-        sampletags=expand('{celltype}_{qualtype}',
-                      celltype = [ 'neuron', 'oligo', 'mda_gfap_elderly', 'mda_sox10_elderly', 'oligo_mdapta' ],
+        sampletags=expand('{group}_{qualtype}',
+                      group=[ 'pta_neuron', 'pta_oligo', 'mda_gfap', 'mda_sox10' ], #, 'mda_gfap_elderly', 'mda_sox10_elderly', 'oligo_mdapta' ],
                       qualtype = [ 'A', 'AB' ]) +
                    expand('cancer_{tumor}', tumor=pcawg_tumors)
     log:
-        'cancer_genes/dndscv/dndscv_table.log'
+        'dndscv/dndscv_table.log'
     resources:
         mem_mb=16000
     script:

@@ -3,89 +3,13 @@
 # and downloading external datasets.
 
 
-# manifest is a pandas data table of all input files + metadata
-# # for now, we assume the concatenation of all metadata produces
-# # a unique ID for each file.
-def make_local_mapping(manifest, namesep="___"):
-    manifest_size = len(manifest.index)
-    local_name = manifest['celltype'] + namesep + manifest['filetype'] + namesep + manifest['qualtype'] + '.' + manifest['fileext']
-    out_to_in = dict(zip(local_name, manifest['filepath']))
-    dict_size = len(out_to_in)
-    # make sure each line in maniest has one line in the dict -
-    # equivalent to making sure the metadata concatenation is unique
-    if manifest_size != dict_size:
-        raise RuntimeError('metadata in input manifest does not uniquely identify files')
-    
-    return(out_to_in)
-
-
-input_copy_mapping = make_local_mapping(manifest)
-rule copy_inputs:
-    input:
-        lambda wildcards: input_copy_mapping[wildcards.celltype + "___" + wildcards.filetype + "___" + wildcards.qualtype + "." + wildcards.fileext]
-    resources:
-        mem_mb=1000
-    output:
-        "input/{celltype}___{filetype}___{qualtype}.{fileext}"
-    shell:
-        """
-        cp -n {input} {output}
-        """
-
-
-# Create passA, passAB, etc. RData files from CSV files.
-# Results used to be provided in RDA format. Now it's somewhat counterproductive
-# to do this but it isn't worth reworking the entire pipeline.
-rule mut_csv_to_rda:
-    input:
-        "scan2_output/{celltype}_snv_indel_pass_rescue.FILTERED.txt"
-    output:
-        "input/{celltype}___mut___{qualtype}.rda"
-    params:
-        muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel') else 'snv',
-        rescue=lambda wildcards: '| rescue == TRUE' if wildcards.qualtype.endswith("AB") else ''
-    resources:
-        mem_mb=1000
-    shell:
-        """
-        Rscript -e 'library(data.table); muts <- fread("{input}"); muts <- muts[muttype == "{params.muttype}" & (pass == TRUE {params.rescue})]; save(muts, file="{output}")'
-        """
-
-
-rule tables_rda_to_csv:
-    input:
-        "input/{celltype}___{filetype}___{qualtype}.rda",
-    output:
-        "tables/{celltype}___{filetype}___{qualtype}.csv",
-    resources:
-        mem_mb=4000
-    log:
-        "tables/{celltype}___{filetype}___{qualtype}.log"
-    script:
-        "scripts/rda_to_csv.R"
-
-
-rule rda_to_vcf:
-    input:
-        rda="input/{celltype}___mut___{qualtype}.rda"
-    output:
-        vcf="vcfs/{celltype}___mut___{qualtype}.vcf"
-    params:
-        samplename='dummy'
-    resources:
-        mem_mb=4000
-    log:
-        "vcfs/{celltype}___mut___{qualtype}.rda_to_vcf.log"
-    script:
-        "scripts/rda_to_vcf.R"
-
-
 rule download_roadmap_narrowpeak:
     input:
     output:
         "data/roadmap/histone_marks/narrowPeak/{eid}-{mark}.narrowPeak"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        roadmap_download=1
     shell:
         """
         wget -O {output} \
@@ -98,7 +22,8 @@ rule download_roadmap_bigwig:
     output:
         "data/roadmap/histone_marks/bigwig/{eid}-{mark}.fc.signal.bigwig"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        roadmap_download=1
     shell:
         """
         wget -O {output} \
@@ -111,7 +36,8 @@ rule download_encode_replichip_bigwig:
     output:
         "data/encode/replichip/bigwig/{enc_id}.bigwig"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        encode_download=1
     shell:
         """
         wget -O {output} \
@@ -121,8 +47,8 @@ rule download_encode_replichip_bigwig:
 
 rule make_gtex_signal_bigwig:
     input:
-        gtf="input/any___gtex_gene_model___none.gtf",
-        gct="input/any___gtex_expression_tpm___none.gct"
+        gtf="data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf",
+        gct="data/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct"
     output:
         bigwig="data/gtex/bigwig/{tissue}.bigwig"
     log:
@@ -137,8 +63,8 @@ rule make_gtex_signal_bigwig:
 
 rule map_scrnaseq_to_gtex_gene_model:
     input:
-        scrnaseq='input/any___scrnaseq_mean_expression___none.csv',
-        gct='input/any___gtex_expression_tpm___none.gct'
+        scrnaseq='scrnaseq/combined_mean_expr.csv',
+        gct="data/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct"
     output:
         gct="data/scrnaseq/expression/scrnaseq_mean_expression_matrix.gct"
     log:
@@ -171,13 +97,11 @@ def get_scrnaseq_matrix_file(wildcards):
     else:
         gct="data/scrnaseq/expression/scrnaseq_mean_expression_matrix.gct"
 
-    return({ "gtf": "input/any___gtex_gene_model___none.gtf", "gct": gct })
+    return({ "gtf": "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf", "gct": gct })
 
 
 rule make_scrnaseq_signal_bigwig:
     input:
-        #gtf="input/any___gtex_gene_model___none.gtf",
-        #gct="data/scrnaseq/expression/scrnaseq_mean_expression_matrix.gct"
         unpack(get_scrnaseq_matrix_file)
     output:
         bigwig="data/scrnaseq/expression/bigwig/{tissue}.bigwig"
@@ -185,25 +109,6 @@ rule make_scrnaseq_signal_bigwig:
         "data/scrnaseq/expression/bigwig/{tissue}.log"
     params:
         tissue="{tissue}"
-    resources:
-        mem_mb=16000
-    script:
-        "scripts/convert_gtex_expression_to_bigwig.R"
-
-
-
-# Exactly the same as above rule, just using a different input gct
-# Probably a better way to do this.
-rule make_scrnaseq_by_celltype_signal_bigwig:
-    input:
-        gtf="input/any___gtex_gene_model___none.gtf",
-        gct="data/scrnaseq/expression/scrnaseq_mean_expression_by_celltype_matrix.gct"
-    output:
-        bigwig="data/scrnaseq/expression/bigwig/{celltype}.bigwig"
-    log:
-        "data/scrnaseq/expression/bigwig/{celltype}.log"
-    params:
-        tissue="{celltype}"
     resources:
         mem_mb=16000
     script:
@@ -226,7 +131,8 @@ rule download_roadmap_dnamethyl:
     log:
         "data/roadmap/dnamethyl/{methyltype}/bigwig/{enc_id}_{methyltype}.log"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        roadmap_download=1
     shell:
         """
         wget -O {output} \
@@ -248,7 +154,8 @@ rule download_roadmap_chromhmm15:
         tmp1=temp("data/roadmap/chromhmm/15state/bed/{eid}.bed.gz"),
         tmp2=temp("data/roadmap/chromhmm/15state/bed/{eid}.bed"),
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        roadmap_download=1
     shell:
         """
         wget -O {output.tmp1} \
@@ -266,7 +173,8 @@ rule download_roadmap_chromhmm18:
         tmp1=temp("data/roadmap/chromhmm/18state/bed/{eid}.bed.gz"),
         tmp2=temp("data/roadmap/chromhmm/18state/bed/{eid}.bed"),
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        roadmap_download=1
     shell:
         """
         wget -O {output.tmp1} \
@@ -281,7 +189,8 @@ rule download_roadmap_histone_peaks:
     output:
         "data/roadmap/histone_marks/narrowPeak/{eid}-{mark}.narrowPeak"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        roadmap_download=1
     shell:
         """
         wget -O {output} \
@@ -289,24 +198,23 @@ rule download_roadmap_histone_peaks:
         """
 
 
-rule download_icgc_muts:
+rule download_pcawg_muts:
     input:
     output:
-        "data/icgc/final_consensus_passonly.snv_mnv_indel.icgc.public.maf"
+        "data/pcawg/final_consensus_passonly.snv_mnv_indel.icgc.public.maf.gz"
     resources:
         mem_mb=1000
     shell:
         """
-        wget -O {output}.gz \
+        wget -O {output} \
             "https://dcc.icgc.org/api/v1/download?fn=/PCAWG/consensus_snv_indel/final_consensus_passonly.snv_mnv_indel.icgc.public.maf.gz"
-        gunzip -c {output}.gz > {output}
         """
 
 
 rule split_cancer_muts_by_type:
     input:
-        tcga="input/any___cancer_tcga___none.maf",
-        icgc="input/any___cancer_icgc___none.maf"
+        tcga="data/pcawg/cancer_tcga.maf",
+        icgc="data/pcawg/cancer_icgc.maf"
     output:
         "data/cancer_snvdens/snvs/{tumor}.txt"
     params:
@@ -353,7 +261,6 @@ rule download_gencode_genes:
         """
 
 
-
 rule make_gtex_gene_model:
     input:
         "data/gencode/gencode.v26lift37.annotation.gtf"
@@ -362,7 +269,7 @@ rule make_gtex_gene_model:
         gtf="data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.gtf",
         gtf_genes="data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf"
     resources:
-        mem_mb=1000
+        mem_mb=4000
     shell:
         """
         wget -O {output.script} \
@@ -370,7 +277,6 @@ rule make_gtex_gene_model:
         python {output.script} {input} {output.gtf}
         awk '$0 ~ /^#/ || $3 == "gene"' {output.gtf} > {output.gtf_genes}
         """
-
 
 
 rule download_nott_bigwigs:
@@ -472,13 +378,13 @@ rule download_ucsc_conservation:
         phastcons="data/ucsc/conservation/hg19.100way.phastCons.bw",
         phylop="data/ucsc/conservation/hg19.100way.phyloP100way.bw"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        ucsc_download=1
     shell:
         """
         wget -O {output.phylop} "http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phyloP100way/hg19.100way.phyloP100way.bw"
         wget -O {output.phastcons} "https://hgdownload.cse.ucsc.edu/goldenPath/hg19/phastCons100way/hg19.100way.phastCons.bw"
         """
-
 
 
 rule download_repliseq:
@@ -488,7 +394,8 @@ rule download_repliseq:
     params:
         file="{file}"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        ucsc_download=1
     shell:
         """
         wget -O {output} \
@@ -496,84 +403,39 @@ rule download_repliseq:
         """
 
 
-import pandas as pd
-
-scatacseq_meta = pd.read_csv('manifests/SCATACSEQ.MANIFEST')
-
-# Not trivial to generalize because the whole set of background bigwigs
-# needs to be known.
-rule make_foldchange_qbed_scatacseq:
-    input:
-        target="enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{scatacseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed",
-        background=expand("enrichment/scatacseq/quantile/qbed/scatacseq___librarymerged___merged___{scatacseq_celltype}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
-            scatacseq_celltype=sorted(set(scatacseq_meta['celltype'])))
-    output:
-        qbed="enrichment/scatacseq_foldchange/quantile/qbed/scatacseq_foldchange___librarymerged___merged___{scatacseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed"
-    log:
-        "enrichment/scatacseq_foldchange/quantile/qbed/scatacseq_foldchange___librarymerged___merged___{scatacseq_celltype}.{binsize}binsize_{nquantiles}quantiles.log"
-    resources:
-        mem_mb=8000
-    script:
-        "scripts/make_foldchange_qbed.R"
-
-
-
-scrnaseq_meta = pd.read_csv('manifests/SCRNASEQ_EXPRESSION_FOLDCHANGE.MANIFEST')
-
-# Not trivial to generalize because the whole set of background bigwigs
-# needs to be known.
-
-
-rule make_foldchange_qbed_scrnaseq:
-    input:
-        target="enrichment/scrnaseq_expression_mc08/quantile/qbed/scrnaseq___expression___combined___combined___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed",
-        background=expand("enrichment/scrnaseq_expression_mc08/quantile/qbed/scrnaseq___expression___combined___combined___{scrnaseq_celltype}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
-            scrnaseq_celltype=sorted(set(scrnaseq_meta['celltype'])))
-    output:
-        qbed="enrichment/scrnaseq_expression_mc08_foldchange/quantile/qbed/scrnaseq_foldchange___expression___combined___combined___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.qbed"
-    log:
-        "enrichment/scrnaseq_expression_mc08_foldchange/quantile/qbed/scrnaseq_foldchange___expression___combined___combined___{scrnaseq_celltype}.{binsize}binsize_{nquantiles}quantiles.log"
-    resources:
-        mem_mb=8000
-    script:
-        "scripts/make_foldchange_qbed.R"
-
-
-
 # Both copy the MAF file and remove carriage returns because maf2vcf.pl
 # can't handle them.
-ruleorder: pcawg_copy_icgc_maf > copy_inputs
-rule pcawg_copy_icgc_maf:
+rule pcawg_copy_pcawg_maf:
     input:
-        input_copy_mapping["any___cancer_icgc___none.maf"]
+        "data/pcawg/final_consensus_passonly.snv_mnv_indel.icgc.public.maf.gz"
     output:
-        "input/any___cancer_icgc___none.maf"
+        "data/pcawg/cancer_icgc.maf"
     resources:
         mem_mb=1000
     shell:
         """
-        cat {input} | tr -d '\r' > {output}
+        gunzip -c {input} | tr -d '\r' > {output}
         """
 
-ruleorder: pcawg_copy_tcga_maf > copy_inputs
+
 rule pcawg_copy_tcga_maf:
     input:
-        input_copy_mapping["any___cancer_tcga___none.maf"]
+        "data/pcawg/final_consensus_passonly.snv_mnv_indel.tcga.controlled.maf.gz"
     output:
-        "input/any___cancer_tcga___none.maf"
+        "data/pcawg/cancer_tcga.maf"
     resources:
         mem_mb=1000
     shell:
         """
-        cat {input} | tr -d '\r' > {output}
+        gunzip -c {input} | tr -d '\r' > {output}
         """
 
 
 rule pcawg_get_donor_ids:
     input:
-        "input/any___{project}___none.maf",
+        "data/pcawg/cancer_{cancer_project}.maf",
     output:
-        "data/pcawg/any___{project}___donor_ids.txt"
+        "data/pcawg/cancer_{cancer_project}___donor_ids.txt"
     resources:
         mem_mb=1000
     shell:
@@ -596,17 +458,9 @@ rule pcawg_make_metadata:
         "snakemake/scripts/make_pcawg_metadata.R {input.ss} {input.icgc} {input.tcga} {output}"
 
 
-# Allow script to run (and presumably create this file) by specifying
-# --config make_pcawg_metadata=1 --until metadata/pcawg_metadata.csv
-if 'make_pcawg_metadata' not in config.keys():
-    pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
-    # make a donor_id -> {tcga|icgc} mapping
-    proj_map = dict(zip(list(pcawg_meta['icgc_donor_id']), list(pcawg_meta['project'])))
-    pcawg_tumors = sorted(set(pcawg_meta['tumor']))
-
 rule pcawg_extract_sample_vcf:
     input:
-        lambda wildcards: "input/any___cancer_" + proj_map[wildcards.donor] + '___none.maf'
+        lambda wildcards: "data/pcawg/cancer_" + config['pcawg_proj_map'][wildcards.donor] + '.maf'
     output:
         maf=temp("data/pcawg/sample_vcfs/{donor}.maf"),
         pairs=temp("data/pcawg/sample_vcfs/{donor}.pairs.tsv"),
@@ -631,9 +485,9 @@ rule pcawg_extract_sample_vcf:
 
 rule pcawg_make_tumor_vcf:
     input:
-        vcfs=lambda wildcards: list(pcawg_meta.loc[(pcawg_meta.tumor == wildcards.tumor) & (pcawg_meta.maf_processing_error == False), 'file'])
+        vcfs=lambda wildcards: list(config['pcawg_metadata'].loc[(config['pcawg_metadata'].tumor == wildcards.tumor) & (config['pcawg_metadata'].maf_processing_error == False), 'file'])
     output:
-        "data/pcawg/tumor_vcfs/{tumor}.vcf"
+        "data/pcawg/cancer_vcfs/{tumor}.vcf"
     resources:
         # needs the entire VCF in RAM for sort
         mem_mb=8000
@@ -641,7 +495,7 @@ rule pcawg_make_tumor_vcf:
         tumor="{tumor}"
     shell:
         """
-        snakemake/scripts/make_pcawg_tumor_vcf.sh {params.tumor} {input} > {output}
+        snakemake/scripts/make_pcawg_cancer_vcf.sh {params.tumor} {input} > {output}
         """
 
 
@@ -661,8 +515,10 @@ rule simplify_gencode_gene_regions:
         "data/gencode/gene_regions.bed"
     output:
         "data/gencode/gene_regions_simplified.bed"
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     shell:
         """
         sed -e 's/upstream$/intergenic/g' \
@@ -674,8 +530,6 @@ rule simplify_gencode_gene_regions:
         """
 
 
-
-
 rule make_gencode_gene_bed:
     input:
         "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf"
@@ -683,8 +537,10 @@ rule make_gencode_gene_bed:
         "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.bed"
     log:
         "data/gtex/make_gencode_gene_bed.log"
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     shell:
         """
         awk 'BEGIN {{ OFS="\t"; }} {{ if ($1 ~ /chr[0-9]+/) {{ match($0, /gene_name [^;]*/);  print $1, $4, $5, substr($0, RSTART, RLENGTH); }} }}' {input} \
@@ -700,8 +556,10 @@ rule make_gencode_gene_bed_protein_coding:
         "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.protein_coding.bed"
     log:
         "data/gtex/make_gencode_gene_bed.protein_coding.log"
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     shell:
         """
         awk 'BEGIN {{ OFS="\t"; }} {{ if ($1 ~ /chr[0-9]+/ && $0 ~ /gene_type "protein_coding";/) {{ match($0, /gene_name [^;]*/);  print $1, $4, $5, substr($0, RSTART, RLENGTH); }} }}' {input} \
@@ -710,6 +568,7 @@ rule make_gencode_gene_bed_protein_coding:
         """
 
 
+'''
 ruleorder: subset_by_mutsig > copy_inputs
 rule subset_by_mutsig:
     input:
@@ -724,7 +583,7 @@ rule subset_by_mutsig:
         mem_mb=12000
     script:
         "scripts/subset_by_mutsig.R"
-
+'''
 
 
 rule machado2022_sbsblood_wget:
@@ -733,8 +592,10 @@ rule machado2022_sbsblood_wget:
         "data/machado2022_sbsblood/Machado2022_SupplementaryTables_All.xlsx"
     log:
         "data/machado2022_sbsblood/wget.log"
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=250,
+        localjob=1
     shell:
         """
         wget -O {output} \
@@ -754,8 +615,10 @@ rule machado2022_sbsblood_convert:
         "data/machado2022_sbsblood/convert.log"
     params:
         sheet_number=8
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     script:
         "scripts/get_machado2022_sbsblood.R"
 
@@ -766,14 +629,15 @@ rule leesix2018_hspc_spectrum_get:
         "data/leesix2018_hspc/All_mutations_SBS_indel.txt"
     log:
         "data/leesix2018_hspc/wget.log"
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=250,
+        localjob=1
     shell:
         """
         wget -O {output} \
             'https://data.mendeley.com/public-files/datasets/yzjw2stk7f/files/46faf00b-02de-44e7-a5ea-bf84e14e875e/file_downloaded'
         """
-
 
 
 rule leesix2018_hspc_spectrum_convert:
@@ -785,11 +649,12 @@ rule leesix2018_hspc_spectrum_convert:
         svg="data/leesix2018_hspc/HSPC_spectrum.svg",
     log:
         "data/leesix2018_hspc/convert.log"
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     script:
         "scripts/get_leesix2018_hspc.R"
-
 
 
 rule copyover_boca2_peaks:

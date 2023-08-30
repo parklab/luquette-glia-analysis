@@ -1,0 +1,96 @@
+# vim: syntax=python
+ 
+# Depth of sequencing
+#    mean depth boxplot
+#           mean.coverage(results)['single.cell']
+# MAPD
+#    quantification of evenness
+#
+# Fraction of genome covered
+#    CDF curve
+#           0:(nrow(results@depth.profile$dptab)-1), cumsum(rowSums(results@depth.profile$dptab))/sum(results@depth.profile$dptab)
+#
+#
+# General info on numbers of calls:
+#   a) per cell?
+#   b) per individual?
+#   b) by age?
+#   c) by age group?
+#       -> gets toward how various age groups dominate findings?
+#
+#
+# Sensitivity+false positive rate per cell
+# -------- SNV ---------- | --------- Indel ----------
+#    a) demonstrate actual sensitivity
+#       XXX: this is not a good sensitivity estimate. it's the middle 50% depth
+#            so that extrapolation to total burden is accurate.
+#       INSTEAD: use the raw fraction of germline hSNPs called
+#    b) "scaling factor" for burden estimation
+#       - is it better to say that there is no single scaling factor?
+#       - scaling factor is: results@mutburden$snv$callable.sens[2]
+#             B/Gbp = (muts called) / (callable.sens) / (callable.bp*2) * 1e9,
+#         where all values above are for the middle 50% of depth
+#    c) sens, FDR model from PTA paper
+#       - model is:
+#             FDR = F / (F + xS), where
+#         * S is measured sensitivity
+#         * x is mutation burden (callable?)
+#         * F is pass or rescue FP measurement from synthetic X diploids
+#               F_pass = 0.004587832
+#               S_pass = 0.2535238   (might not use this, observed sens is 38.03% neurons)
+#               F_resc = 0.01313788
+#               S_resc = 0.4730635   (same as above, optimistic estimate is 50.35%)
+#               ---------- Indels ----------
+#               F_pass = 0 (0.0009384202 when all 63 spikeins used)
+#                  -> note in rebuttal that this is consistent with near-0 indel calls from infant PTA
+#               F_resc = 0.0007298824 (0.002606723 all 63 spikeins)
+#       - note to me: /home/ljl11/ndata1/pta/figures/suppfig_sccaller_monovar
+#    d) possible: worst-case FDR model "y-intercept is uniform FP rate"
+#
+#
+# Effect of rescue (in this case, just sens+FP estimates. reviewer probably also wants effect on enrichment)
+#    a) sens, FDR model from PTA paper with rescue
+#
+#
+# MAYBE: plots of technical quality covariate vs. burden or #muts called
+#    a) MAPD
+#    b) depth
+#    c) scaling factor for burden (=sens)
+#
+# Table containing all of the above
+
+rule collect_scan2_metrics:
+    input:
+        full_object="scan2/full_objects/{sample}.rda",
+        mapd="mapd/{sample}.mapd.txt"
+    output:
+        metrics="metrics/{sample}.metrics.txt",
+        dp_cdf="metrics/{sample}.depth.txt"
+    log:
+        dp_cdf="metrics/{sample}.log"
+    resources:
+        mem_mb=12000
+    script:
+        "scripts/collect_metrics.R"
+
+
+rule suppfigX:
+    input:
+        metadata='metadata/sample_metadata.csv',
+        bulk_accessible='alignability/bulk_accessible/all_chrs.txt',
+        metrics=expand('metrics/{sample}.metrics.txt', sample=config['all_single_cells'])
+    output:
+        csv="suppfigX/metrics.csv",
+        pdf="suppfigX/all_panels.pdf",
+        svg="suppfigX/all_panels.svg"
+    log:
+        "suppfigX/log.txt"
+    params:
+        # Number of FPs per analyzable MB. From Luquette et al. 2022 synthetic datasets.
+        # Applies to fully rescued calls.
+        fpr_snv=0.01313788,
+        fpr_indel=0.0007298824
+    resources:
+        mem_mb=4000
+    script:
+        "scripts/suppfigX_all_panels.R"

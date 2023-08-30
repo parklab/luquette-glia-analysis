@@ -148,11 +148,8 @@ textpane <- function(txt, legend.position='center') {
     legend(legend.position, legend=txt, bty='n', cex=1.4)
 }
 
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(mutenrich))
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 # get height (in lines) of longest class name (will be in x-axis label)
 em <- strheight('M', unit='inches')  # height of a capital M in inches

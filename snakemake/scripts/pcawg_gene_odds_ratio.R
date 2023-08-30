@@ -131,7 +131,9 @@ if (length(types) != 1)
 
 top.max <- 10000
 top.min  <- 1
-tops <- seq(from=top.max,by=-10,to=top.min)
+#tops <- seq(from=top.max,by=-10,to=top.min)
+# Now that each cancer is analyzed separately, can do all genes
+tops <- seq(from=top.max,by=-1,to=top.min)
 
 # there's only one type per run now
 typelists <- lapply(types,function(type) {

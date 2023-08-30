@@ -36,21 +36,22 @@ if (file.exists(outcsv))
     stop(paste('output file', outcsv, 'already exists, please delete it first'))
 
 suppressMessages(library(data.table))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 levels <- c('HIGH', 'MODERATE', 'LOW', 'MODIFIER')
 
+# The INFO tag in these VCFs starts with 3 tags: TType={pta_neuron|pta_oligo|...};Origin={something};Sample={something};ANN=...
+#
+# The element starting with ANN=... is the SnpEff string.
+get.snpeff.string <- function(s)
+    paste(sapply(strsplit(s, ';', fixed=TRUE), function(x) x[-(1:3)]), sep=';')
 get.severity.string <- function(s)
     sapply(strsplit(s, '\\|'), function(x) x[3])
 get.severity <- function(filename) {
-    #x <- fread(filename, comment='#')
     x <- read.table(filename, comment='#', sep='\t', stringsAsFactors=FALSE)
-    y <- get.severity.string(x[,8])
-    sapply(levels, function(lv) sum(y == lv))
+    y <- get.snpeff.string(x[,8])
+    z <- get.severity.string(y)
+    sapply(levels, function(lv) sum(z == lv, na.rm=TRUE))
 }
 
 res <- rbind(

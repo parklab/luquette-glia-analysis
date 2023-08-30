@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eo pipefail
+
 if [ $# -lt 2 ]; then
     echo "usage: $0 tumor_type vcf1 [ vcf2 ... vcfN ]"
     exit 1

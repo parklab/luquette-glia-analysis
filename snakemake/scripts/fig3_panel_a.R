@@ -35,11 +35,7 @@ if (file.exists(outcsv))
 
 suppressMessages(library(scan2))
 suppressMessages(library(data.table))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 
 figwidth=7

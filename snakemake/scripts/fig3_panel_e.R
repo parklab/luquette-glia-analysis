@@ -50,10 +50,7 @@ for (f in c(out.pdf, out.svg)) {
 
 suppressMessages(library(data.table))
 suppressMessages(library(mutenrich))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 library(data.table)
 

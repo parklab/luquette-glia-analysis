@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eo pipefail
+
 if [ $# -ne 4 ]; then
     echo "usage: donor_id input_maf output_maf output_dir"
     echo "you must have vcf2maf.pl in your path (conda activate scan2)"

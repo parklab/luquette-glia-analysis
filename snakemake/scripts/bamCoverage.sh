@@ -4,6 +4,8 @@
 #SBATCH -t 12:00:00
 #SBATCH --mem=12G
 
+set -eo pipefail
+
 if [ $# -ne 2 ]; then
     echo "usage: $0 in.bam out.bw"
     exit 1

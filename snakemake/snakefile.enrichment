@@ -37,12 +37,10 @@ def read_manifest(filename):
     metadata = list(m_nofiles.columns)
     classes = m_nofiles.agg('___'.join, axis=1)
     manifest['__class__'] = classes
-    #tmp = pd.concat([ "'" + m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] + "'" \
     tmp = pd.concat([ m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] \
         for i in range(0, m_nofiles.shape[1]) ], axis=1)
     metatags = list(tmp.agg(' '.join, axis=1))
     manifest['__metatags__'] = metatags
-    #print(manifest)
     return(manifest, files, metadata, list(classes), metatags)
 
 
@@ -69,20 +67,22 @@ rule enrichment_plot:
         # metadata column.
         group='datasource',
         #highlight=''  # can use e.g., group=Brain to select lines to highlight
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/plot_enrichment_grid.R"
 
 
 rule sigenrichment_plot:
     input:
-        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted.csv'
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted_{mutsig_selection_method}.csv'
     output:
-        expand(outroot + '/{{mutclass}}/{{nquantiles}}quantiles_sigenrich.{ext}',
+        expand(outroot + '/{{mutclass}}/{{nquantiles}}quantiles_sigenrich_{{mutsig_selection_method}}.{ext}',
             ext=[ 'svg', 'pdf', 'csv2' ])
     log:
-        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich.log'
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.log'
     params:
         # neurons don't have SBS32, so the estimates have extremely high
         # variance. this leads to y-axes that are so big the other signatures
@@ -90,8 +90,10 @@ rule sigenrichment_plot:
         ignore=lambda wildcards: "sigclass=SBS32" if wildcards.mutclass.startswith('neuron') else 'enrichment_grid_R_ignore_none',
         group='datasource,sigclass',
         #highlight=''  # can use e.g., group=Brain to select lines to highlight
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/plot_enrichment_grid.R"
 
@@ -100,27 +102,31 @@ rule sigenrichment_plot:
 # the format quantile|||signature class.
 rule adapt_sigenrichment_table:
     input:
-        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich.csv'
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.csv'
     output:
-        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted.csv'
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted_{mutsig_selection_method}.csv'
     log:
-        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted.log'
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted_{mutsig_selection_method}.log'
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     script:
         "scripts/adapt_sigenrich_table.R"
     
 
 rule sigenrichment_table:
     input:
-        expand(outroot + "/{{mutclass}}/sigenrich/tiled_{binsize}binsize_{{nquantiles}}quantiles.SUMMARY.rda",
+        expand(outroot + "/{{mutclass}}/sigenrich_{{mutsig_selection_method}}/tiled_{binsize}binsize_{{nquantiles}}quantiles.SUMMARY.rda",
             binsize=config['tiles'].keys())
     output:
-        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich.csv'
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.csv'
     log:
-        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich.log'
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.log'
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/make_enrichment_table.R"
 
@@ -134,50 +140,45 @@ rule enrichment_table:
         outroot + '/{mutclass}/{nquantiles}quantiles.csv'
     log:
         outroot + '/{mutclass}/{nquantiles}quantiles.log'
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/make_enrichment_table.R"
 
-# mutclass is {celltype}___{qualtype}; e.g., neuron___AB
-# map this to an associated file: input/{celltype}___FILETYPE___{qualtype}.rda
-# FILETYPE (so far) is either: mut or perm
-def mutclass_to_file(mutclass, filetype):
-    celltype, qualtype = mutclass.split('___')
-    return("input/" + celltype + "___" + filetype + "___" + qualtype + ".rda")
 
 rule sigenrichment_qbed_analysis:
     input:
-        # enable indel sigenrich for Nat. 2022 paper on ID4
-        # COSMIC reduction is always performed on the non-rescue calls (="A" or "indel_A"),
-        # because rescue can introduce signature biases.
-        cosmic=lambda wildcards: 'mutsigs/cosmic_reduced___' + ('indel_A' if wildcards.mutclass.split('___')[1].split('_')[0] == 'indel' else 'A') + '.csv',
-        mut=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'mut'),
-        perm=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'perm'),
+        cosmic=lambda wildcards: config['mutclass_to_cosmic'][wildcards.mutclass][wildcards.mutsig_selection_method],
+        mut=lambda wildcards: config['mutclass_to_mutfile'][wildcards.mutclass],
+        perm=lambda wildcards: config['mutclass_to_permfile'][wildcards.mutclass],
         qbeds=expand(outroot + "/qbed/{signalclass}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
             signalclass=signal_classes)
     output:
-        full=outroot + "/{mutclass}/sigenrich/tiled_{binsize}binsize_{nquantiles}quantiles.FULL.rda",
-        summary=outroot + "/{mutclass}/sigenrich/tiled_{binsize}binsize_{nquantiles}quantiles.SUMMARY.rda",
+        full=outroot + "/{mutclass}/sigenrich_{mutsig_selection_method}/tiled_{binsize}binsize_{nquantiles}quantiles.FULL.rda",
+        summary=outroot + "/{mutclass}/sigenrich_{mutsig_selection_method}/tiled_{binsize}binsize_{nquantiles}quantiles.SUMMARY.rda",
     params:
         # bootstraps on sigenrich is not yet supported
         nbootstraps=0,
         colname_for_sig="mutsig"
     resources:
-        # XXX: update me: so far, these RAM values work with my data.
-        mem_mb=lambda wildcards: 40000 if wildcards.binsize == '1000' or wildcards.nquantiles == '50' else 20000
+        # The most important scaling factor is the size of the input mutations
+        # and permutations. In this dataset, pta_oligo (~37,000 mutations) requires
+        # ~10GB of RAM in total.
+        mem_mb=lambda wildcards: 15000
     log:
-        summary=outroot + "/{mutclass}/sigenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log"
+        summary=outroot + "/{mutclass}/sigenrich_{mutsig_selection_method}/tiled_{binsize}binsize_{nquantiles}quantiles.log"
     benchmark:
-        outroot + "/{mutclass}/sigenrich/tiled_{binsize}binsize_{nquantiles}quantiles.benchmark.txt"
+        outroot + "/{mutclass}/sigenrich_{mutsig_selection_method}/tiled_{binsize}binsize_{nquantiles}quantiles.benchmark.txt"
     script:
         "scripts/sigenrich.R"
 
 
 rule enrichment_qbed_analysis:
     input:
-        mut=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'mut'),
-        perm=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'perm'),
+        mut=lambda wildcards: config['mutclass_to_mutfile'][wildcards.mutclass],
+        perm=lambda wildcards: config['mutclass_to_permfile'][wildcards.mutclass],
         qbeds=expand(outroot + "/qbed/{signalclass}.{{binsize}}binsize_{{nquantiles}}quantiles.qbed",
             signalclass=signal_classes)
     output:
@@ -186,8 +187,10 @@ rule enrichment_qbed_analysis:
     params:
         nbootstraps=10000
     resources:
-        # XXX: update me: so far, these RAM values work with my data.
-        mem_mb=lambda wildcards: 48000 if wildcards.binsize == '1000' else 15000
+        # The most important scaling factor is the size of the input mutations
+        # and permutations. In this dataset, pta_oligo (~37,000 mutations) requires
+        # ~10GB of RAM in total.
+        mem_mb=lambda wildcards: 15000
     log:
         summary=outroot + "/{mutclass}/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.log"
     benchmark:
@@ -222,9 +225,6 @@ def make_qbed_from_bigwig_params(min_coverage, extratags=[]):
     })
 
 
-# dummy1 and dummy2 are not used, they're only here to require that they
-# be created before running this workflow.
-# XXX: actually, I don't think this is necessary anymore
 rule make_qbed_from_bigwig:
     input:
         tiles=lambda wildcards: config['tiles'].values(),

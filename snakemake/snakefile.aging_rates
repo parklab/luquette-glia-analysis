@@ -4,35 +4,59 @@
 # directly from tables (such as previous SCAN2 analyses).
 rule collect_mut_burdens:
     input:
-        objects=lambda wildcards: config['aging_groups'][wildcards.celltype],
+        objects=lambda wildcards: config['aging_groups'][wildcards.generic_group],
         meta='metadata/sample_metadata.csv'
     output:
-        csv="aging_rates/{celltype}___mutburden___{qualtype}.csv"
+        csv="aging_rates/{generic_group}___mutburden___{qualtype}.csv"
     params:
         muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel_') else 'snv',
     resources:
-        mem_mb=1000
+        mem_mb=8000
     log:
-        "aging_rates/{celltype}___mutburden___{qualtype}.log"
+        "aging_rates/{generic_group}___mutburden___{qualtype}.log"
     script:
         "scripts/make_mutburden_tables.R"
 
 
-# Fit a linear model to each celltype
-# Also fits a joint linear model across all celltypes_to_compute to statistically
+# Fit a linear model to each cell group
+# Also fits a joint linear model across all aging_groups_to_model to statistically
 # test for difference in rates between celltypes.
 rule model_aging_rates:
     input:
-        expand("aging_rates/{celltype}___mutburden___{{qualtype}}.csv",
-            celltype=config['aging_groups_to_model'])
+        lambda wildcards:
+            [ "aging_rates/" + g + "___mutburden" + ('_mda_corrected' if 'mda' in g and 'indel' not in wildcards.qualtype else '') + "___" + wildcards.qualtype + ".csv"
+                for g in config['aging_groups_to_model'][wildcards.age_group] ]
     output:
-        svg="aging_rates/all___mutburden_models___{qualtype}.svg",
-        pdf="aging_rates/all___mutburden_models___{qualtype}.pdf",
-        models="aging_rates/all___mutburden_models___{qualtype}.csv",
-        burdens="aging_rates/all___mutburden___{qualtype}.csv"
+        svg="aging_rates/{age_group}___mutburden_models___{qualtype}.svg",
+        pdf="aging_rates/{age_group}___mutburden_models___{qualtype}.pdf",
+        models="aging_rates/{age_group}___mutburden_models___{qualtype}.csv",
+        burdens="aging_rates/{age_group}___mutburden_combined___{qualtype}.csv"
+    log:
+        "aging_rates/{age_group}___mutburden_models___{qualtype}.log"
+    params:
+        group_names=lambda wildcards: config['aging_groups_to_model'][wildcards.age_group],
+        colors=lambda wildcards: [ config['group_colors'][g] for g in config['aging_groups_to_model'][wildcards.age_group] ]
     resources:
         mem_mb=4000
-    log:
-        "aging_rates/all___mutburden_models___{qualtype}.log"
     script:
         "scripts/model_aging_rates.R"
+
+
+# Only SNV correction is supported at the moment. Indel calling in MDA
+# was never supported, though there were signs that it could be mostly
+# solved by removing single bp indels in long homopolymers.
+rule correct_mutburdens_mda:
+    input:
+        mutburden="aging_rates/{generic_group}___mutburden___A.csv",
+        expomat="mutsigs/ad_hoc_signature_selection/cosmic_reduced/{generic_group}___expomat___A.csv"
+    output:
+        csv="aging_rates/{generic_group}___mutburden_mda_corrected___A.csv"
+    log:
+        "aging_rates/{generic_group}___mutburden_mda_corrected___A.log"
+    threads: 1
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/correct_mutburden_mda.R"

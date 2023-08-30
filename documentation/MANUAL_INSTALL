@@ -1,0 +1,7 @@
+Install basicPlotteR from Github:
+
+$ R
+
+R> library(devtools)
+R> devtools::install_github("JosephCrispell/basicPlotteR")
+R> library(basicPlotteR) # just to test. Should print nothing.

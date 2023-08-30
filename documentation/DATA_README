@@ -1,0 +1,24 @@
+There are a few files that cannot be downloaded automatically, either for
+privacy reasons (ICGC) or technical issues (some supplementary tables of
+published articles).
+
+The user must download these manually and place them in certain expected
+locations.
+
+1. ICGC.  Samples included in ICGC from TCGA are protected. See documentation/CANCER_README.
+
+2. [AUTOMATED] Supplementary Table 5 from Nott et al., Science.  The table is located here:
+        https://www.science.org/doi/suppl/10.1126/science.aay0793/suppl_file/aay0793-nott-table-s5.xlsx
+   and must be placed in
+        data/nott/SupplementaryTable5.xlsx
+
+   This table is now distributed with this pipeline in external_data/aay0793-nott-table-s5.xlsx
+   and will be copied into the correct location automatically.
+
+3. single cell ATAC-seq data: annotated UMAP coordinate table and raw fragments file:
+        scatacseq/fragments.tsv
+        scatacseq/umap.csv
+
+4. single cell RNA-seq data: annotated UMAP table and mean expression matrix:
+        scrnaseq/snRNA_1465a_table.csv  [UPDATE: THIS WILL CHANGE WHEN 4638/4643 ARE INTEGRATED]
+        scrnaseq/combined_mean_expr.csv

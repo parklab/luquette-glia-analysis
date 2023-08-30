@@ -129,12 +129,8 @@ textpane <- function(txt) {
     legend('center', legend=txt, bty='n', cex=1.4)
 }
 
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 # get height (in lines) of longest class name (will be in x-axis label)
 em <- strheight('M', unit='inches')  # height of a capital M in inches
@@ -145,7 +141,7 @@ figheight <- nbins*1.5 + 1.5/2 + 4*em
 
 
 # is.na: NA quantiles are the excluded and outside regions
-ylim <- range(d$enr[!is.na(as.integer(d$quantile))], na.rm=TRUE)
+ylim <- range(d[!is.na(as.integer(quantile)) & is.finite(as.integer(enr))]$enr, na.rm=TRUE)
 cat('uniform y-axis limit:', ylim, '\n')
 xlim <- range(as.integer(d$quantile), na.rm=TRUE)
 cat('uniform x-axis limit:', xlim, '\n')

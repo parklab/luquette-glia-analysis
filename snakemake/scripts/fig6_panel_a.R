@@ -8,106 +8,92 @@ if ('snakemake' %in% ls()) {
     sink(con, type='output')
     sink(con, type='message')
 
-    commandArgs <- function(...) unlist(c(
-        snakemake@input['neuron_muts'],
-        snakemake@input['oligo_muts'],
-        snakemake@input['tiles'],
-        snakemake@output['pdf'],
-        snakemake@output['svg'],
-        snakemake@output['csv'],
-        snakemake@input['cancer_qbeds']
-    ))
+    commandArgs <- function(...) {
+        ret <- unlist(c(
+            snakemake@output['pdf'],
+            snakemake@output['svg'],
+            snakemake@output['csv'],
+            paste0(snakemake@params['tag1'], '=', snakemake@input['cors1'])))
+        if ('tag2' %in% names(snakemake@params))
+            ret <- c(ret, paste0(snakemake@params['tag2'], '=', snakemake@input['cors2']))
+        ret
+    }
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 7) {
-    cat('PASS A mutations should be used here because permutations are NOT used to control for signature bias of rescue\n')
-    stop('usage: fig4_panel_a.R neuron_muts.csv oligo_muts.csv genome_tiles.bed out.pdf out.svg out.csv cancer_snvdens_1.qbed [ cancer_snvdens2.qbed ... cancer_snvdensN.qbed ]')
+if (length(args) != 4 & length(args) != 5) {
+    stop('usage: fig6_panel_a.R out.pdf out.svg out.csv tag1=qbed_cors1.csv [ tag2=qbed_cors2.csv ]')
 }
 
 
-neuron.muts <- args[1]
-oligo.muts <- args[2]
-tile.file <- args[3]
-out.pdf <- args[4]
-out.svg <- args[5]
-out.csv <- args[6]
-cancer.fs <- args[-(1:6)]
+out.pdf <- args[1]
+out.svg <- args[2]
+out.csv <- args[3]
+cors1.file <- args[4]
+
+do.two <- FALSE
+if (length(args) == 5) {
+    do.two <- TRUE
+    cors2.file <- args[5]
+}
 
 for (f in c(out.pdf, out.svg, out.csv)) {
     if (file.exists(f))
         stop(paste('output file', f, 'already exists, please delete it first'))
 }
 
-suppressMessages(library(GenomicRanges))
 suppressMessages(library(data.table))
-suppressMessages(library(mutenrich))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
-nmut <- get(load(neuron.muts))
-omut <- get(load(oligo.muts))
+cors1.tag <- strsplit(cors1.file, '=')[[1]][1]
+cors1.file <- strsplit(cors1.file, '=')[[1]][2]
+print(cors1.tag)
+print(cors1.file)
+npv <- fread(cors1.file)[order(Correlation)]
+npv$Cancer <- sapply(npv$Signal, function(signal) mutenrich::read.bed.metadata(string=signal, is.qbed=TRUE)[['tumor']])
+npv$Signal <- NULL
+npv[, group := cors1.tag]
 
-count.muts <- function(tiles, x)
-    countOverlaps(tiles, gr(x, add.chr.prefix=TRUE))
+all.pv <- npv
+if (do.two) {
+    cors2.tag <- strsplit(cors2.file, '=')[[1]][1]
+    cors2.file <- strsplit(cors2.file, '=')[[1]][2]
+    print(cors2.tag)
+    print(cors2.file)
+    opv <- fread(cors2.file)[order(Correlation)]
+    opv$Cancer <- sapply(opv$Signal, function(signal) mutenrich::read.bed.metadata(string=signal, is.qbed=TRUE)[['tumor']])
+    opv$Signal <- NULL
+    opv[, group := cors2.tag]
 
-gr2 <- function (bed, seqinfo = NULL, add.chr.prefix = FALSE) {
-    ret <- GenomicRanges::GRanges(seqnames = bed[[1]],
-        ranges = IRanges::IRanges(start = bed[[2]], bed[[3]]))
-    ret$keep <- bed[,5] != 0
-    ret$mean.dp <- bed[[6]]
-    ret
+    all.pv <- rbind(all.pv, opv)
 }
 
-tiles <- gr2(fread(tile.file))
+fwrite(all.pv, file=out.csv)
 
-nct <- count.muts(tiles, nmut)
-oct <- count.muts(tiles, omut)
-
-cancer.mat <- sapply(cancer.fs, function(f) fread(f, skip=1)[[5]])
-colnames(cancer.mat) <- unname(sapply(cancer.fs, function(f) mutenrich::read.bed.metadata(f, is.qbed=TRUE)['tumor']))
-
-
-# Get correlation, R^2, p-values for cor=0 t-tests
-opv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
-    col <- cancer.mat[,colidx]
-    df <- data.frame(cancer=col[tiles$keep], normal=oct[tiles$keep])
-    m <- summary(lm(cancer ~ normal, data=df))
-    data.frame(Muts="Oligo",Cancer=colnames(cancer.mat)[colidx],
-        Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
-}))
-opv <- opv[order(opv$Correlation, decreasing=FALSE),]
-npv <- do.call(rbind, lapply(1:ncol(cancer.mat), function(colidx) {
-    col <- cancer.mat[,colidx]
-    df <- data.frame(cancer=col[tiles$keep], normal=nct[tiles$keep])
-    m <- summary(lm(cancer ~ normal, data=df))
-    data.frame(Muts="Neuron",Cancer=colnames(cancer.mat)[colidx],
-        Correlation=cor(df$cancer, df$normal), R.squared=m$r.squared, P.value=coef(m)['normal',4])
-}))
-npv <- npv[order(npv$Correlation, decreasing=FALSE),]
-
-fwrite(rbind(opv, npv), file=out.csv)
-
-colors <- setNames(rep('grey',37), colnames(cancer.mat))
+colors <- setNames(rep('grey',37), npv$Cancer)
 colors[c('CNS-GBM', 'CNS-Medullo', 'CNS-Oligo', 'CNS-PiloAstro')] <-
     c('orange','black','red','purple')
 
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
-    devs[[i]](width=6.5, height=2, pointsize=5, file=outs[i])
-    layout(t(1:2))
+    if (do.two) {
+        devs[[i]](width=6.5, height=2, pointsize=5, file=outs[i])
+        layout(t(1:2))
+    } else {
+        # decrease width
+        devs[[i]](width=3.25, height=2, pointsize=5, file=outs[i])
+    }
+        
     par(mar=c(8,4,3,1))
-    barplot(opv$Correlation, col=colors[opv$Cancer], border=F, las=3, ylim=c(-0.03,0.3),
-        cex.names=0.8, names.arg=opv$Cancer,
-        main='Oligo passA SNVs\nno bad bins, 1 MB bins')
-    barplot(npv$Correlation, col=colors[npv$Cancer], border=F, las=3, ylim=c(-0.03,0.3),
-        cex.names=0.8, names.arg=npv$Cancer,
-        main='Neuron passA SNVs\nno bad bins, 1 MB bins')
+    if (do.two) {
+        barplot(opv$Correlation, col=colors[opv$Cancer], border=F, las=3, ylim=c(-0.03,0.40),
+            cex.names=0.8, names.arg=opv$Cancer, ylab='Correlation')
+    }
+    barplot(npv$Correlation, col=colors[npv$Cancer], border=F, las=3, ylim=c(-0.03,0.40),
+        cex.names=0.8, names.arg=npv$Cancer, ylab='Correlation')
     dev.off()
 }
 

@@ -13,23 +13,34 @@ if ('snakemake' %in% ls()) {
         snakemake@output['pdf'],
         snakemake@output['burdens'],
         snakemake@output['models'],
-        snakemake@input
+        paste(snakemake@params[['colors']], collapse=','),
+        paste(unlist(snakemake@params['group_names']), snakemake@input, sep='=')
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
 }
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 5) {
-    cat("IMPORTANT: burden_fileX.csv must contain a `type` column that specifies the cell type of each sample.")
-    stop("usage: model_aging_rates.r out.svg out.pdf out.combined_burdens.csv out.models.csv burden_file1.csv [ burden_file2.csv ... burden_fileN.csv ]")
+if (length(args) < 6) {
+    cat('`colors` is a comma separated string of R recognized color strings IN THE SAME ORDER AS THE burden_files.\n')
+    cat("`colors=table` to use the colors already present in the burden files.\n")
+    stop("usage: model_aging_rates.r out.svg out.pdf out.combined_burdens.csv out.models.csv colors group1_name=burden_file1.csv [ group2_name=burden_file2.csv ... groupN_name=burden_fileN.csv ]")
 }
 
 outsvg <- args[1]
 outpdf <- args[2]
 outcsv <- args[3]
 outmodelcsv <- args[4]
-burden.csvs <- args[-(1:4)]
+color.string <- args[5]
+burden.csvs <- args[-(1:5)]
+
+if (color.string != "table") {
+    colors <- unlist(strsplit(color.string, split=',')[[1]])
+    print(colors)
+} else {
+    colors <- color.string
+    print("colors=table, not overriding table colors")
+}
 
 if (file.exists(outsvg))
     stop(paste('output file', outsvg, 'already exists, please delete it first'))
@@ -40,37 +51,47 @@ if (file.exists(outcsv))
 if (file.exists(outmodelcsv))
     stop(paste('output file', outmodelcsv, 'already exists, please delete it first'))
 
+group.names <- sapply(strsplit(burden.csvs, '='), head, 1)
+burden.csvs <- sapply(strsplit(burden.csvs, '='), function(x) paste(x[-1], collapse='='))
+
 suppressMessages(library(data.table))
 suppressMessages(library(lme4))
 suppressMessages(library(lmerTest))
 suppressMessages(library(svglite))
 
 
-burdens <- lapply(burden.csvs, function(in.csv) {
+burdens <- setNames(lapply(1:length(burden.csvs), function(i) {
+    in.csv <- burden.csvs[i]
     burden <- fread(in.csv)
-    if (!('type' %in% colnames(burden))) {
-        stop(paste0('burden_file (', in.csv, ') must contain a `type` column'))
+    burden[, group := group.names[i]]
+    if (colors != "table") {
+        cat(paste0('group=', group.names[i], ': overiding table color=', burden$color[1], ' with color=', colors[i], '\n'))
+        burden[, color := colors[i]]
     }
-    colnames(burden)[colnames(burden) == 'type'] <- 'celltype'
-    if (length(unique(burden$celltype)) > 1) {
-        stop(paste0('all lines in burden_file (', in.csv, ') must contain the same `type` value'))
+    if (!('uncorrected.genome.burden' %in% colnames(burden))) {
+        cat(paste0('group=', group.names[i], ': adding copyover uncorrected.genome.burden column to table'))
+        burden[, uncorrected.genome.burden := genome.burden]
     }
     burden
-})
-names(burdens) <- sapply(burdens, function(b) b$celltype[1])
+}), group.names)
 print(burdens)
+
+# harmonize column names/order before rbindlist
+# unique maintains order
+all.col.names <- unique(unlist(lapply(burdens, colnames)))
+burdens <- lapply(burdens, function(b) setcolorder(b, all.col.names))
 
 combined.burdens <- rbindlist(burdens)
 print(combined.burdens)
 
-burdens <- c(burdens, `All cell types`=list(combined.burdens))
+burdens <- c(burdens, `All groups`=list(combined.burdens))
 print(burdens)
 models <- lapply(burdens, function(dt) {
-    if (length(unique(dt$celltype)) == 1) {
-        model <- lmer(genome.burden ~ age + (1|donor), data=dt)
+    if (length(unique(dt$group)) == 1) {
+        model <- lmer(genome.burden ~ age + (1|donor), data=dt[outlier == "NORMAL"])
     } else {
         # for the combined model
-        model <- lmer(genome.burden ~ age*celltype + (1|donor), data=dt)
+        model <- lmer(genome.burden ~ age*group + (1|donor), data=dt[outlier == "NORMAL"])
     }
     ci <- confint(model)
     colnames(ci) <- paste0('95% CI ', c('lower', 'upper'))
@@ -88,14 +109,14 @@ for (i in 1:2) {
     # any donor can be used
     # [-length(models)] - don't use the combined model
     maxpred <- sapply(models[-length(models)], function(m)
-        predict(m$model, data.frame(age=max(combined.burdens[outlier==FALSE]$age), donor=m$model@frame$donor[1]))
+        predict(m$model, data.frame(age=max(combined.burdens$age), donor=m$model@frame$donor[1]))
     )
     # make ylim big enough to contain all data points and lines
     ylim <- c(0, max(combined.burdens$genome.burden, maxpred, na.rm=TRUE))
     plot(combined.burdens$plotage,
         combined.burdens$genome.burden,
-        col=combined.burdens$color, pch=17, ylim=ylim,
-        ylab='Autosomal mutation burden', xlab='Age')
+        col=combined.burdens$color, pch=ifelse(combined.burdens$outlier == 'NORMAL', 17, 4),
+        ylim=ylim, ylab='Autosomal mutation burden', xlab='Age')
     abline(h=0, col='grey')
     # These curve() calls don't plot below 0.
     for (i in 1:(length(models)-1)) {
@@ -120,7 +141,7 @@ for (i in 1:length(models)) {
 all.models <- rbindlist(lapply(1:length(models), function(i) {
     m <- models[[i]]
     coefs <- coef(summary(m$model))
-    data.table(CellType=names(models)[i],
+    data.table(Group=names(models)[i],
         Formula=deparse(formula(m$model)),
         Variable=rownames(coefs),
         cbind(coefs, m$ci[rownames(coefs),]))

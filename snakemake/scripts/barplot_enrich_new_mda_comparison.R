@@ -48,13 +48,9 @@ if (file.exists(outcsv))
 
 suppressMessages(library(GenomicRanges))
 suppressMessages(library(data.table))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(mutenrich))
 
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 load(pta.file)
 pta <- es

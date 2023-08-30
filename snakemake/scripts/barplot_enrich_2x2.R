@@ -37,13 +37,9 @@ if (file.exists(outcsv))
 
 suppressMessages(library(GenomicRanges))
 suppressMessages(library(data.table))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(mutenrich))
 
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 ne <- read.e(nefile)
 nei <- read.e(neifile)
@@ -82,13 +78,13 @@ dlist <- list(`Neuron SNVs`=ne, `Oligo SNVs`=ge, `Neuron indels`=nei, `Oligo ind
 
 # row1: snvs
 ylim <- range(c(get.ylim(ne, shift=1, scale=100, use.boot=T), get.ylim(ge, shift=1, scale=100, use.boot=T)))
-barplot.enrich(dlist[[1]], main=names(dlist)[1], barcol='black', ylim=ylim, family='Arial')
-barplot.enrich(dlist[[2]], main=names(dlist)[2], barcol='red', ylim=ylim, family='Arial')
+barplot.enrich(dlist[[1]], main=names(dlist)[1], barcol='black', ylim=ylim) #, family='Arial')
+barplot.enrich(dlist[[2]], main=names(dlist)[2], barcol='red', ylim=ylim) #, family='Arial')
 
 # row2: indels
 ylim <- range(c(get.ylim(nei, shift=1, scale=100, use.boot=T), get.ylim(gei, shift=1, scale=100, use.boot=T)))
-barplot.enrich(dlist[[3]], main=names(dlist)[3], barcol='black', ylim=ylim, family='Arial')
-barplot.enrich(dlist[[4]], main=names(dlist)[4], barcol='red', ylim=ylim, family='Arial')
+barplot.enrich(dlist[[3]], main=names(dlist)[3], barcol='black', ylim=ylim) #, family='Arial')
+barplot.enrich(dlist[[4]], main=names(dlist)[4], barcol='red', ylim=ylim) #, family='Arial')
 
 dev.off()
 }

@@ -1,0 +1,109 @@
+#!/usr/bin/env Rscript
+
+# detect script being run by snakemake
+# if so, make a mock commandArgs function
+if ('snakemake' %in% ls()) {
+    logfile <- snakemake@log[[1]]
+    con <- file(logfile, 'w')
+    sink(con, type='output')
+    sink(con, type='message')
+
+    commandArgs <- function(...) unlist(c(
+        snakemake@input['scan2_full_object'],
+        snakemake@input['tiles'],
+        snakemake@output['summary'],
+        snakemake@input['qbeds']
+    ))
+    cat('Got command line arguments from snakemake:\n')
+    print(commandArgs())
+}
+
+
+args <- commandArgs(trailingOnly=T)
+
+if (length(args) < 4)
+    stop("usage: enrichment_sensitivity_qbed.R scan2_full_object tiles summary_output qbed1 [ qbed2 ... qbed N ]")
+
+in.rda <- args[1]
+tiles.file <- args[2]
+out.summary <- args[3]
+bed.files <- args[-(1:3)]
+
+#for (f in c(out.full, out.summary)) {
+for (f in c(out.summary)) {
+    if (file.exists(f))
+        stop(sprintf("output file %s already exists, please delete it first", f))
+}
+
+suppressMessages(library(scan2))
+suppressMessages(library(mutenrich))
+
+cat("loading SCAN2 object (must be a FULL object):", in.rda, "\n")
+load(in.rda) # loads 'results'
+
+# tiles use 'chr' prefixes
+tiles <- fread(tiles.file)
+colnames(tiles) <- c('chr', 'start', 'end', 'id', 'keep', 'score')
+tiles[, chr := sub('chr', '', chr)]
+
+d.summary <- data.table()
+
+for (i in 1:length(bed.files)) {
+    bed.file <- bed.files[i]
+    cat("processing QBED", i, "/", length(bed.files), bed.file, "\n")
+    bed <- read.bed(bedfile=bed.file, genome=results@genome.seqinfo, is.qbed=TRUE)
+    metaline <- read.bed.metadata(bed.file, is.qbed=TRUE, return.line=TRUE)
+
+    # only keep chromosomes in the tile set
+    bed <- bed[seqnames(bed) %in% sub('chr', '', tiles$chr)]
+
+    # For QBEDs, the tiles should match the QBED
+    if (any(seqnames(bed) != tiles$chr))
+        stop('BED chromosomes do not match tile chromosomes')
+    if (any(start(bed) != tiles$start))
+        stop('BED starts do not match tile starts')
+    if (any(end(bed) != tiles$end))
+        stop('BED ends do not match tile ends')
+
+    # Now that we're sure the QBED is aligned to the tiles, drop the tiles
+    # that were excluded due to poor depth across all PTA cells and/or bulks
+    bed <- bed[tiles$keep > 0,]
+    
+    s <- countOverlaps(bed, gr(results@gatk[muttype == 'snv' & training.site == TRUE]))
+    sp <- countOverlaps(bed, gr(results@gatk[muttype == 'snv' & training.site == TRUE & training.pass == TRUE]))
+    
+    i <- countOverlaps(bed, gr(results@gatk[muttype == 'indel' & training.site == TRUE]))
+    ip <- countOverlaps(bed, gr(results@gatk[muttype == 'indel' & training.site == TRUE & training.pass == TRUE]))
+    
+    d.full <- rbind(data.table(
+            chr=as.character(seqnames(bed)),
+            start=start(bed),
+            end=end(bed),
+            muttype='snv',
+            width=width(bed),
+            quantile=factor(bed$quantile, levels=c(1:100,'excluded', 'outside'), ordered=TRUE),
+            total=s,
+            pass=sp),
+        data.table(
+            chr=as.character(seqnames(bed)),
+            start=start(bed),
+            end=end(bed),
+            muttype='indel',
+            width=width(bed),
+            quantile=factor(bed$quantile, levels=c(1:100,'excluded', 'outside'), ordered=TRUE),
+            total=i,
+            pass=ip)
+    )
+    
+    this.summary <- d.full[,.(meta=metaline, sample=results@single.cell, size.mb=sum(width)/1e6, pass=sum(pass), total=sum(total), sens=sum(pass)/sum(total)),by=.(muttype,quantile)][order(muttype,quantile)]
+
+    d.summary <- rbind(d.summary, this.summary)
+}
+    
+# No longer writing out the full file now that we're doing multiple QBEDs per run
+#fwrite(d.full, file=out.full)
+fwrite(d.summary, file=out.summary)
+
+if ('snakemake' %in% ls()) {
+    sink()
+}

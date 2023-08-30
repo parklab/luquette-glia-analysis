@@ -2,8 +2,8 @@
 
 rule fig2_raw_snv_spectrum:
     input:
-        neuron="mutsigs/raw_spectra/neuron___raw_spectrum___A.csv",
-        oligo="mutsigs/raw_spectra/oligo___raw_spectrum___A.csv",
+        neuron="mutsigs/raw_spectra/pta_neuron___raw_spectrum___A.csv",
+        oligo="mutsigs/raw_spectra/pta_oligo___raw_spectrum___A.csv",
         leesix='data/leesix2018_hspc/HSPC_spectrum.csv',
         machado='data/machado2022_sbsblood/SBSblood.csv'
     output:
@@ -11,26 +11,48 @@ rule fig2_raw_snv_spectrum:
         pdf="fig2/panel_a.pdf",
         csv="fig2/panel_a.csv"
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
+    localrule: True
     log:
         "fig2/panel_a.log"
     script:
         "scripts/fig2_panel_a.R"
 
 
+rule raw_spectrum_snv:
+    input:
+        csv="mutsigs/raw_spectra/{group}___raw_spectrum___A.csv",
+        pdf="mutsigs/raw_spectra/{group}___raw_spectrum___A.pdf"
+    output:
+        csv="fig2/panel_a_raw_spectrum_{group}_A.csv",
+        pdf="fig2/panel_a_raw_spectrum_{group}_A.pdf"
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    shell:
+        """
+        cp {input.csv} {output.csv}
+        cp {input.pdf} {output.pdf}
+        """
+
+
 rule cosmic_snv_barplots:
     input:
-        svg="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.svg",
-        pdf="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.pdf",
-        csv="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.csv"
+        svg="mutsigs/ad_hoc_signature_selection/cosmic_aging/{group}___barplots___{qualtype}.svg",
+        pdf="mutsigs/ad_hoc_signature_selection/cosmic_aging/{group}___barplots___{qualtype}.pdf",
+        csv="mutsigs/ad_hoc_signature_selection/cosmic_aging/{group}___barplots___{qualtype}.csv"
     output:
-        svg="fig2/panel_b___{celltype}___{qualtype}.svg",
-        pdf="fig2/panel_b___{celltype}___{qualtype}.pdf",
-        csv="fig2/panel_b___{celltype}___{qualtype}.csv"
+        svg="fig2/panel_b___{group}___{qualtype}.svg",
+        pdf="fig2/panel_b___{group}___{qualtype}.pdf",
+        csv="fig2/panel_b___{group}___{qualtype}.csv"
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
+    localrule: True
     log:
-        "fig2/panel_b___{celltype}___{qualtype}.log"
+        "fig2/panel_b___{group}___{qualtype}.log"
     shell:
         """
         cp -n {input.svg} {output.svg}
@@ -41,17 +63,19 @@ rule cosmic_snv_barplots:
 
 rule cosmic_snv_vs_age_plots:
     input:
-        svg='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.svg',
-        pdf='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.pdf',
-        csv='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.csv'
+        svg='mutsigs/ad_hoc_signature_selection/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.svg',
+        pdf='mutsigs/ad_hoc_signature_selection/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.pdf',
+        csv='mutsigs/ad_hoc_signature_selection/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.csv'
     output:
-        svg="fig2/panel_c_{qualtype}.svg",
-        pdf="fig2/panel_c_{qualtype}.pdf",
-        csv="fig2/panel_c_{qualtype}.csv"
+        svg="fig2/panel_c_{cosmic_vs_age_group}_{qualtype}.svg",
+        pdf="fig2/panel_c_{cosmic_vs_age_group}_{qualtype}.pdf",
+        csv="fig2/panel_c_{cosmic_vs_age_group}_{qualtype}.csv"
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     log:
-        "fig2/panel_c_{qualtype}.log"
+        "fig2/panel_c_{cosmic_vs_age_group}_{qualtype}.log"
     shell:
         """
         cp -n {input.svg} {output.svg}
@@ -60,68 +84,47 @@ rule cosmic_snv_vs_age_plots:
         """
 
 
-# panel d - shared oligo mutations
-# these two pairs were discovered manually
-# 5657 - GliaLC-4-F11, GliaLC-4-G10 (MDA)
-# 5559 - 5559-Oligo-5, 5559-Oligo-8
-rule fig2_shared_snv_analysis:
+rule cosmic_snv_barplots_sigprofilerextractor:
     input:
-        object1=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-5_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-F11_scan2_object_rescue.rda'),
-        object2=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-8_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-G10_scan2_object_rescue.rda'),
-        cosmic="mutsigs/cosmic_reduced___A.csv",
-        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
-        aging_model="fig1/panel_b_aging_rates_A_model.csv",
-        aging_model_sigs="fig2/panel_c_A.csv"
+        svg="mutsigs/sigprofilerextractor/cosmic_aging/{group}___barplots___{qualtype}.svg",
+        pdf="mutsigs/sigprofilerextractor/cosmic_aging/{group}___barplots___{qualtype}.pdf",
+        csv="mutsigs/sigprofilerextractor/cosmic_aging/{group}___barplots___{qualtype}.csv"
     output:
-        muts="fig2/oligo_pair_{sample_id}_mutations.csv",
-        fits="fig2/oligo_pair_{sample_id}_mrca.csv"
-    log:
-        "fig2/oligo_pair_{sample_id}.log"
-    params:
-        amptype=lambda wildcards: 'pta' if wildcards.sample_id == '5559' else 'mda'
+        svg="fig2_sigprofilerextractor/panel_b___{group}___{qualtype}.svg",
+        pdf="fig2_sigprofilerextractor/panel_b___{group}___{qualtype}.pdf",
+        csv="fig2_sigprofilerextractor/panel_b___{group}___{qualtype}.csv"
     resources:
-        # The SCAN2 objects are big
-        mem_mb=8000
-    script:
-        "scripts/fit_mrca.R"
+        mem_mb=4000,
+        localjob=1
+    localrule: True
+    log:
+        "fig2_sigprofilerextractor/panel_b___{group}___{qualtype}.log"
+    shell:
+        """
+        cp -n {input.svg} {output.svg}
+        cp -n {input.pdf} {output.pdf}
+        cp -n {input.csv} {output.csv}
+        """
 
 
-rule signature_fitting_related_oligo_pairs:
+rule cosmic_snv_vs_age_plots_sigprofilerextractor:
     input:
-        cosmic="mutsigs/cosmic_reduced___A.csv",
-        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
-        muts=expand('fig2/oligo_pair_{sample_id}_mutations.csv',
-            sample_id=[ '5559', '5657' ])
+        svg='mutsigs/sigprofilerextractor/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.svg',
+        pdf='mutsigs/sigprofilerextractor/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.pdf',
+        csv='mutsigs/sigprofilerextractor/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.csv'
     output:
-        pdf='fig2/panel_d.pdf',
-        svg='fig2/panel_d.svg',
-        suppl_pdf='fig2/panel_d_supplement.pdf',
-        suppl_svg='fig2/panel_d_supplement.svg',
-        spectra_csv='fig2/panel_d_spectra.csv',
-        expo_pdf='fig2/panel_d_exposures_barplot.pdf',
-        expo_svg='fig2/panel_d_exposures_barplot.svg',
-        expo_csv='fig2/panel_d_exposures_barplot.csv'
-    log:
-        'fig2/panel_d.log'
+        svg="fig2_sigprofilerextractor/panel_c_{cosmic_vs_age_group}_{qualtype}.svg",
+        pdf="fig2_sigprofilerextractor/panel_c_{cosmic_vs_age_group}_{qualtype}.pdf",
+        csv="fig2_sigprofilerextractor/panel_c_{cosmic_vs_age_group}_{qualtype}.csv"
+    localrule: True
     resources:
-        mem_mb=4000
-    script:
-        "scripts/fig2_panel_d.R"
-
-
-rule infant_oligo_spectra:
-    input:
-        neuron_muts='tables/neuron___mut___A.csv',
-        oligo_muts='tables/oligo___mut___A.csv',
-        cosmic="mutsigs/cosmic_reduced___A.csv",
-    output:
-        pdf='fig2/panel_e_infant.pdf',
-        svg='fig2/panel_e_infant.svg',
-        spectra_csv='fig2/panel_e_spectra_infant.csv',
-        expo_csv='fig2/panel_e_exposures_infant.csv'
+        mem_mb=4000,
+        localjob=1
     log:
-        'fig2/panel_e_infant.log'
-    resources:
-        mem_mb=4000
-    script:
-        "scripts/fig2_panel_e_infant.R"
+        "fig2_sigprofilerextractor/panel_c_{cosmic_vs_age_group}_{qualtype}.log"
+    shell:
+        """
+        cp -n {input.svg} {output.svg}
+        cp -n {input.pdf} {output.pdf}
+        cp -n {input.csv} {output.csv}
+        """

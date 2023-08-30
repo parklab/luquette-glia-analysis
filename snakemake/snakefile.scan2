@@ -18,14 +18,16 @@ rule download_specific_scan2_rpkg_version:
     log:
     params:
         commit_id="aafa87ddb4151ab06f41e6479185d638023c5e31"
-        # Real commit used is below. This contains one update to a script that
-        # summarizes tables at the very end of the SCAN2 pipeline, so it isn't
-        # worth rerunning all of SCAN2 to update this param.
-        #commit_id="f2dbaca22582d8c67559405e58eec9d55d62b471"
+        # Real commit used is below. Contains several minor changes to the r-scan2
+        # library that are necessary for scripts in this project, but do not affect
+        # the SCAN2 mutation calling pipeline. Since the mutation caller is unaffected,
+        # it wouldn't make sense to rerun all calling to use the latest commit.
+        # commit_id="a3d90e715628d34b03862947f43981cc2e62cab"
     localrule: True
     threads: 1
     resources:
-        mem_mb=250
+        mem_mb=250,
+        localjob=1
     shell:
         """
         git clone https://github.com/parklab/r-scan2.git {output.dir}
@@ -54,7 +56,8 @@ rule download_specific_scan2_version:
     localrule: True
     threads: 1
     resources:
-        mem_mb=250
+        mem_mb=250,
+        localjob=1
     shell:
         # rm: Snakemake creates empty directories to contain scan2 and Snakefile.
         # git-clone will not clone a repository into a non-empty directory.
@@ -149,7 +152,8 @@ rule scan2_cross_sample_panel_setup:
     localrule: True
     threads: 1
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     shell:
         # realpath: SCAN2 does not realpath directories by default. Need to supply the
         # full path because SCAN2 does change the working directory.
@@ -219,7 +223,8 @@ rule scan2_call_mutations_setup:
     localrule: True
     threads: 1
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     shell:
         # realpath: SCAN2 does not realpath directories by default. Need to supply the
         # full path because SCAN2 does change the working directory.
@@ -272,11 +277,11 @@ rule scan2_call_mutations:
 
 rule scan2_rda_to_vcf:
     input:
-        rda="scan2/{donor}/scan2/sensitivity/{sample}/scan2_object.rda"
+        rda=lambda wildcards: "scan2/" + config['sample_to_donor_map'][wildcards.sample] + "/scan2/sensitivity/{sample}/scan2_object.rda"
     output:
-        vcf="vcfs/{qualtype}/{donor}___{sample}.vcf"
+        vcf="vcfs/{qualtype}/{sample}.vcf"
     log:
-        "vcfs/{qualtype}/{donor}___{sample}.log"
+        "vcfs/{qualtype}/{sample}.log"
     params:
         qualtype="{qualtype}"
     resources:
@@ -307,7 +312,8 @@ rule scan2_rescue_setup:
         # The (much) larger SCAN2 objects with spatial sensitivity models are ~9GB each.
         # An extra 3GB is needed for a very unfortunate required copy of the object@gatk
         # data.table.
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     shell:
         """
         {input.scan2_bin} -d {params.outdir} --snakefile {input.scan2_snakefile} init
@@ -370,7 +376,8 @@ rule scan2_digest_calls:
     localrule: True
     threads: 1
     resources:
-        mem_mb=500
+        mem_mb=500,
+        localjob=1
     shell:
         """
         {input.scan2_dir}/bin/digest_calls.R \
@@ -381,6 +388,83 @@ rule scan2_digest_calls:
 
         awk -F, 'NR == 1 || ${params.filter_column} == "FALSE"' {output.unfiltered} > {output.filtered}
         """
+
+
+rule scan2_table_to_csv:
+    input:
+        csv="scan2/{rescue_group}_mutations.{filter}.txt"
+    output:
+        csv="tables/{rescue_group}___{filter}_mut___{qualtype}.csv"
+    log:
+        "tables/{rescue_group}___{filter}_mut___{qualtype}.log"
+    params:
+        qualtype='{qualtype}',
+        filter='{filter}',
+        samples=config['all_samples']  # Don't filter by sample
+    threads: 1
+    resources:
+        mem_mb=1000
+    script:
+        "scripts/scan2_table_to_csv.R"
+
+
+rule scan2_combine_all_tables:
+    input:
+        txts=expand('scan2/{rescue_group}_mutations.{{filter}}.txt',
+            rescue_group=config['scan2_rescue_groups'].keys())
+    output:
+        csv="tables/all___{filter}_mut___any.csv"
+    log:
+        "tables/all___{filter}_mut___any.log"
+    threads: 1
+    localrule: True
+    resources:
+        mem_mb=250,
+        localjob=1
+    shell:
+        """
+        (head -1 {input[0]} ; \
+         tail --quiet -n +2 {input} \
+            | sort -t, -k2 -k3 -n) \
+            > {output.csv}
+        """
+
+
+rule make_synthetic_group_table:
+    input:
+        csv="tables/all___{filter}_mut___any.csv"
+    output:
+        csv="tables/{synthetic_group}___{filter}_mut___{qualtype}.csv"
+    log:
+        "tables/{synthetic_group}___{filter}_mut___{qualtype}.log"
+    params:
+        qualtype='{qualtype}',
+        filter='{filter}',
+        samples=lambda wildcards: config['synthetic_groups'][wildcards.synthetic_group]
+    threads: 1
+    resources:
+        mem_mb=1000
+    script:
+        "scripts/scan2_table_to_csv.R"
+
+
+# Some tools, e.g. SnpEff, may need VCF input
+rule scan2_table_to_vcf:
+    input:
+        csv="tables/{rescue_or_synthetic_group}___{filter}_mut___{qualtype}.csv"
+    output:
+        vcf="vcfs/{rescue_or_synthetic_group}___{filter}___{qualtype}.vcf"
+    log:
+        "vcfs/{rescue_or_synthetic_group}___{filter}___{qualtype}.log"
+    params:
+        qualtype='{qualtype}',
+        filter='{filter}',
+        samples=config['all_samples']  # Don't filter by sample
+    threads: 1
+    resources:
+        mem_mb=1000
+    script:
+        "scripts/scan2_table_to_vcf.R"
 
 
 rule scan2_permtool_setup:
@@ -406,7 +490,8 @@ rule scan2_permtool_setup:
     localrule: True
     threads: 1
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     shell:
         """
         {input.scan2_bin} -d {params.outdir} --snakefile {input.scan2_snakefile} init
@@ -422,6 +507,7 @@ rule scan2_permtool_setup:
             {params.sample_flags}
         {input.scan2_bin} -d {params.outdir} --snakefile {input.scan2_snakefile} validate
         """
+
 
 rule scan2_permtool_run:
     input:
@@ -449,6 +535,48 @@ rule scan2_permtool_run:
             --snakemake-args ' --keep-going --max-status-checks-per-second 0.5 --max-jobs-per-second 2'
         """
 
+
+# To save compute resources, only run SCAN2 permtool on the exhaustive, mutually
+# exclusive rescue groups. To create more permutation groups for, e.g., batch1 vs.
+# batch2 analysis or bootstrapping/subsampling analyses, the per-sample output of
+# previous permtool runs from the exhaustive, mutually exclusive runs are reused.
+# These additional permutation groups are called "synthetic groups", and the
+# definition in Snakefile:wildcard_constraints will define exactly which groups
+# are recognized as synthetic.
+#
+# IMPORTANT: spending the CPU time to rerun permtools for additional permutation
+# groups should provide the SAME OUTPUT as reusing the old permutations because
+# the set of somatic mutation calls does not change and scan2 permtool also would
+# use the same sequence of random seeds.
+rule scan2_permtool_synthetic:
+    input:
+        combine_script="scan2/SCAN2_specific_commit/scripts/combine_permutations.R",
+        rdas=lambda wildcards: 
+            [ "scan2/permtool/" + config['scan2_rescue_groups_reverse'][sample] + "/perms_by_sample/" + sample + "/{muttype}_{passtype}.rda"
+            for sample in config['synthetic_groups'][wildcards.synthetic_group] ]
+    output:
+        perms="scan2/permtool/{synthetic_group}/perms_{muttype}_{passtype}.rda",
+        seeds="scan2/permtool/{synthetic_group}/seedinfo_{muttype}_{passtype}.rda"
+    log:
+        "scan2/permtool/{synthetic_group}/perms_{muttype}_{passtype}.log",
+    benchmark:
+        "scan2/permtool/{synthetic_group}/perms_{muttype}_{passtype}.benchmark.txt",
+    params:
+        genome='hs37d5'
+    threads: 1
+    resources:
+        mem_mb=48000
+    shell:
+        """
+        {input.combine_script} \
+            {params.genome} \
+            {output.perms} \
+            {output.seeds} \
+            {threads} \
+            {input.rdas} >& {log}
+        """
+
+
 rule scan2_link_full_object:
     input:
         scan2_full_obj=lambda wildcards: "scan2/rescue_" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "/objects/{sample}_scan2_object_rescue.rda"
@@ -457,7 +585,8 @@ rule scan2_link_full_object:
     localrule: True
     threads: 1
     resources:
-        mem_mb=10
+        mem_mb=10,
+        localjob=1
     shell:
         """
         ln -s ../../{input.scan2_full_obj} {output.linked_obj}

@@ -1,67 +1,107 @@
 # vim: syntax=python
 
-rule raw_spectrum:
+rule raw_spectra:
     input:
-        csv="tables/{celltype}___mut___{qualtype}.csv",
+        csv="tables/{group}___FILTERED_mut___{qualtype}.csv",
     output:
-        svg="mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.svg",
-        pdf="mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.pdf",
-        csv="mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.csv"
+        svg="mutsigs/raw_spectra/{group}___raw_spectrum___{qualtype}.svg",
+        pdf="mutsigs/raw_spectra/{group}___raw_spectrum___{qualtype}.pdf",
+        csv="mutsigs/raw_spectra/{group}___raw_spectrum___{qualtype}.csv"
     params:
         sigtype=lambda wildcards: 'id83' if wildcards.qualtype.startswith('indel') else 'sbs96',
-        plot_title='{celltype}'
+        plot_title='{group}'
     resources:
         mem_mb=4000
     log:
-        csv="mutsigs/raw_spectra/{celltype}___raw_spectrum___{qualtype}.log",
+        csv="mutsigs/raw_spectra/{group}___raw_spectrum___{qualtype}.log",
     script:
-        "scripts/plot_raw_spectrum.R"
+        "scripts/plot_raw_spectra.R"
 
 
 # The only difference between SNV and indel COSMIC databases is that
 # we add the PTA universal artifact signature to COSMIC SNV.
 rule make_cosmic_indel_table:
     input:
-        cosmic="input/any___cosmic___indel_A.csv",
+        cosmic="resources/COSMIC_ID_signatures.csv"
     output:
-        "mutsigs/cosmic_full___indel_A.csv"
-    resources:
-        mem_mb=4000
+        csv="mutsigs/ad_hoc_signature_selection/cosmic_full___indel_A.csv"
     log:
-        "mutsigs/cosmic_full___indel_A.log"
+        "mutsigs/ad_hoc_signature_selection/cosmic_full___indel_A.log"
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
     script:
-        "scripts/make_cosmic_indel_table.R"
+        "scripts/rename_cosmic_indel_channels.R"
+
+
+rule make_cosmic_indel_table_sigprofilerextractor:
+    input:
+        cosmic="mutsigs/sigprofilerextractor/pta/ID83/ID83/Suggested_Solution/COSMIC_ID83_Decomposed_Solution/Signatures/COSMIC_ID83_Signatures.txt"
+    output:
+        csv="mutsigs/sigprofilerextractor/cosmic_reduced___indel_A.csv"
+    log:
+        "mutsigs/sigprofilerextractor/cosmic_reduced___indel_A.log"
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/rename_cosmic_indel_channels.R"
 
 
 rule make_cosmic_snv_table:
     input:
-        cosmic="input/any___cosmic___A.csv",
+        cosmic="resources/COSMIC_SBS_signatures.csv"
     output:
-        "mutsigs/cosmic_full___A.csv"
-    resources:
-        mem_mb=4000
+        csv="mutsigs/ad_hoc_signature_selection/cosmic_full___A.csv"
     log:
-        "mutsigs/cosmic_full___A.log"
+        "mutsigs/ad_hoc_signature_selection/cosmic_full___A.log"
+    params:
+        add_pta='TRUE'
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
     script:
-        "scripts/make_cosmic_snv_table.R"
+        "scripts/normalize_cosmic_snv_table_and_add_pta_artifact.R"
+
+
+# Unlike the above version, this is already the finalized reduced COSMIC signature set
+rule make_cosmic_snv_table_sigprofilerextractor:
+    input:
+        cosmic="mutsigs/sigprofilerextractor/pta/SBS96/SBS96/Suggested_Solution/COSMIC_SBS96_Decomposed_Solution/Signatures/COSMIC_SBS96_Signatures.txt"
+    output:
+        csv="mutsigs/sigprofilerextractor/cosmic_reduced___A.csv"
+    log:
+        "mutsigs/sigprofilerextractor/cosmic_reduced___A.log"
+    params:
+        add_pta='FALSE'
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/normalize_cosmic_snv_table_and_add_pta_artifact.R"
 
 
 rule fit_cosmic:
     input:
-        muts="tables/{celltype}___mut___{qualtype}.csv",
-        mutburden="aging_rates/{celltype}___mutburden___{qualtype}.csv",
-        cosmic="mutsigs/{cosmic}___{qualtype}.csv",
-        sigb="external_data/Lodato2018_SignatureData_Aging.csv"
+        muts="tables/{mutsig_group}___FILTERED_mut___{qualtype}.csv",
+        mutburden="aging_rates/{mutsig_group}___mutburden___{qualtype}.csv",
+        cosmic="mutsigs/{mutsig_selection_method}/{cosmic}___{qualtype}.csv",
+        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
+        scan2_id83_correction="resources/SCAN2_PTA_ID83_correction_factors.csv"
     output:
-        mutmat="mutsigs/{cosmic}/{celltype}___mutmat___{qualtype}.csv",
-        expomat="mutsigs/{cosmic}/{celltype}___expomat___{qualtype}.csv"
+        mutmat="mutsigs/{mutsig_selection_method}/{cosmic}/{mutsig_group}___mutmat___{qualtype}.csv",
+        expomat="mutsigs/{mutsig_selection_method}/{cosmic}/{mutsig_group}___expomat___{qualtype}.csv"
     params:
         muttype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV',
-        amptype=lambda wildcards: 'MDA' if "mda" in wildcards.celltype else 'PTA'
+        amptype=lambda wildcards: 'MDA' if "mda" in wildcards.mutsig_group else 'PTA'
     resources:
         mem_mb=4000
     log:
-        "mutsigs/{cosmic}/{celltype}___cosmic_fit___{qualtype}.log"
+        "mutsigs/{mutsig_selection_method}/{cosmic}/{mutsig_group}___cosmic_fit___{qualtype}.log"
     script:
         "scripts/fit_cosmic.R"
 
@@ -70,17 +110,19 @@ rule fit_cosmic:
 # are likely present in the mutations.
 rule score_cosmic_sigs:
     input:
-        "mutsigs/cosmic_full/{celltype}___mutmat___{qualtype}.csv",
-        "aging_rates/{celltype}___mutburden___{qualtype}.csv",
-        "mutsigs/cosmic_full___{qualtype}.csv"
+        mutmat="mutsigs/ad_hoc_signature_selection/cosmic_full/{mutsig_group}___mutmat___{qualtype}.csv",
+        metadata="aging_rates/{mutsig_group}___mutburden___{qualtype}.csv",
+        cosmic="mutsigs/ad_hoc_signature_selection/cosmic_full___{qualtype}.csv"
     output:
-        "mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{qualtype}.csv"
+        csv="mutsigs/ad_hoc_signature_selection/cosmic_signature_inclusion/{mutsig_group}___signature_scores___{qualtype}.csv"
     log:
-        "mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{qualtype}.log"
+        "mutsigs/ad_hoc_signature_selection/cosmic_signature_inclusion/{mutsig_group}___signature_scores___{qualtype}.log"
+    benchmark:
+        "mutsigs/ad_hoc_signature_selection/cosmic_signature_inclusion/{mutsig_group}___signature_scores___{qualtype}.benchmark.txt"
     resources:
         mem_mb=8000
     params:
-        celltype=lambda wildcards: 'Neuron' if wildcards.celltype == 'neuron' else 'Oligo',
+        group='{mutsig_group}',
         qualtype=lambda wildcards: 'Indel' if wildcards.qualtype == 'indel_A' else 'SNV'
     script:
         "scripts/score_cosmic_signatures.R"
@@ -89,35 +131,33 @@ rule score_cosmic_sigs:
 # Use scores to decide which COSMIC signatures to keep
 rule select_cosmic_sigs:
     input:
-        expand("mutsigs/cosmic_signature_inclusion/{celltype}___signature_scores___{{qualtype}}.csv",
-            celltype=celltypes_to_compute)
+        expand("mutsigs/ad_hoc_signature_selection/cosmic_signature_inclusion/{mutsig_group}___signature_scores___{{qualtype}}.csv",
+            mutsig_group=config['mutsig_groups_for_signature_inclusion'])
     output:
-        csv="mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv"
+        csv="mutsigs/ad_hoc_signature_selection/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv"
     resources:
         mem_mb=1000
     log:
-        "mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.log"
+        "mutsigs/ad_hoc_signature_selection/cosmic_signature_inclusion/all___signature_selection___{qualtype}.log"
     script:
         "scripts/select_cosmic_sigs.R"
 
 
-# Use output of fig2_select_cosmic_sigs to make a COSMIC table with only
-# the selected signatures.
 # N.B. the reduced COSMIC table contains signatures present in any of
-# celltypes_to_compute. This allows direct comparisons between all signatures
-# in all celltypes - if we made reduced tables specific to each celltype then
-# non-shared signatures would trivially be 0 in one celltype, making comparison
-# hard to interpret.
+# groups used to determine active signatures. This allows direct comparisons
+# between all signatures in all groups - if instead a reduced table is created
+# for each group, then non-shared signatures would trivially be 0 for many cells,
+# making comparison hard to interpret.
 rule reduce_cosmic:
     input:
-        "mutsigs/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv",
-        "mutsigs/cosmic_full___{qualtype}.csv"
+        "mutsigs/ad_hoc_signature_selection/cosmic_signature_inclusion/all___signature_selection___{qualtype}.csv",
+        "mutsigs/ad_hoc_signature_selection/cosmic_full___{qualtype}.csv"
     output:
-        "mutsigs/cosmic_reduced___{qualtype}.csv"
+        "mutsigs/ad_hoc_signature_selection/cosmic_reduced___{qualtype}.csv"
     resources:
         mem_mb=4000
     log:
-        "mutsigs/cosmic_reduced___{qualtype}.log"
+        "mutsigs/ad_hoc_signature_selection/cosmic_reduced___{qualtype}.log"
     script:
         "scripts/reduce_cosmic.R"
 
@@ -127,73 +167,301 @@ rule reduce_cosmic:
 #   - stacked barplot of relative exposure levels (i.e., all bars are 1.0 tall)
 rule cosmic_barplots:
     input:
-        "mutsigs/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
-        "aging_rates/{celltype}___mutburden___{qualtype}.csv"
+        expomat="mutsigs/{mutsig_selection_method}/cosmic_reduced/{mutsig_group}___expomat___{qualtype}.csv",
+        metadata="metadata/sample_metadata.csv"
     output:
-        svg="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.svg",
-        pdf="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.pdf",
-        csv="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.csv"
+        svg="mutsigs/{mutsig_selection_method}/cosmic_aging/{mutsig_group}___barplots___{qualtype}.svg",
+        pdf="mutsigs/{mutsig_selection_method}/cosmic_aging/{mutsig_group}___barplots___{qualtype}.pdf",
+        csv="mutsigs/{mutsig_selection_method}/cosmic_aging/{mutsig_group}___barplots___{qualtype}.csv"
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     log:
-        "mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.log"
+        "mutsigs/{mutsig_selection_method}/cosmic_aging/{mutsig_group}___barplots___{qualtype}.log"
     script:
         "scripts/plot_cosmic_barplots.R"
 
-
-# Scatter plots of per-sample age vs. signature exposure.
-# All celltypes are plotted on the same panel to allow visual comparison.
-ruleorder: model_cosmic_vs_age_all > model_cosmic_vs_age
-rule model_cosmic_vs_age_all:
-    input:
-        expomats=expand("mutsigs/cosmic_reduced/{celltype}___expomat___{{qualtype}}.csv",
-            celltype=celltypes_to_compute),
-        mutburdens=expand("aging_rates/{celltype}___mutburden___{{qualtype}}.csv",
-            celltype=celltypes_to_compute)
-    output:
-        svg="mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.svg",
-        pdf="mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.pdf",
-        csv="mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.csv"
-    resources:
-        mem_mb=4000
-    log:
-        "mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.log"
-    script:
-        "scripts/model_cosmic_vs_age.R"
-
-# Same as above but include MDA
-ruleorder: model_cosmic_vs_age_all_mda > model_cosmic_vs_age
-rule model_cosmic_vs_age_all_mda:
-    input:
-        expomats=expand("mutsigs/cosmic_reduced/{celltype}___expomat___{{qualtype}}.csv",
-            celltype=celltypes_to_compute + [ 'oligo_mda' ]),
-        mutburdens=expand("aging_rates/{celltype}___mutburden___{{qualtype}}.csv",
-            celltype=celltypes_to_compute + [ 'oligo_mda' ])
-    output:
-        svg="mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.svg",
-        pdf="mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.pdf",
-        csv="mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.csv"
-    resources:
-        mem_mb=4000
-    log:
-        "mutsigs/cosmic_aging/all_mda___cosmic_models_vs_age___{qualtype}.log"
-    script:
-        "scripts/model_cosmic_vs_age.R"
 
 
 # Scatter plots of per-sample age vs. signature exposure.
 # All celltypes are plotted on the same panel to allow visual comparison.
 rule model_cosmic_vs_age:
     input:
-        expomats="mutsigs/cosmic_reduced/{celltype}___expomat___{qualtype}.csv",
-        mutburdens="aging_rates/{celltype}___mutburden___{qualtype}.csv"
+        expomats=lambda wildcards: expand("mutsigs/{{mutsig_selection_method}}/cosmic_reduced/{group}___expomat___{{qualtype}}.csv",
+            group=config['cosmic_vs_age_group'][wildcards.cosmic_vs_age_group]),
+        metadata='metadata/sample_metadata.csv',
     output:
-        svg="mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.svg",
-        pdf="mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.pdf",
-        csv="mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.csv"
+        svg="mutsigs/{mutsig_selection_method}/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.svg",
+        pdf="mutsigs/{mutsig_selection_method}/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.pdf",
+        csv="mutsigs/{mutsig_selection_method}/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.csv"
+    params:
+        groups=lambda wildcards: config['cosmic_vs_age_group'][wildcards.cosmic_vs_age_group],
+        colors=lambda wildcards: [ config['group_colors'][g] for g in config['cosmic_vs_age_group'][wildcards.cosmic_vs_age_group] ]
     resources:
         mem_mb=4000
     log:
-        "mutsigs/cosmic_aging/{celltype}___cosmic_models_vs_age___{qualtype}.log"
+        "mutsigs/{mutsig_selection_method}/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.log"
     script:
         "scripts/model_cosmic_vs_age.R"
+
+
+# For NMF, only VAF-based calls (A, indel_A) may be used
+# Our input VCFs usually contain all mutation types, but the only way to be safe
+# is to run SPMG for each of SBS and ID separately.
+rule make_sigprofilermatrixgenerator_vcf:
+    input:
+        csv="tables/all___FILTERED_mut___any.csv"
+    output:
+        vcf='mutsigs/matrices/{de_novo_group}/{nmf_spectype}/{sample}.vcf'
+    # IMPORTANT: do not create a log file in the VCF dir. SigProfilerMatrixGenerator crawls the
+    # directory and treats every file as a VCF. Log files will cause errors.
+    log:
+        'mutsigs/matrices/{de_novo_group}/{nmf_spectype}_logs/{sample}.log'
+    params:
+        samples="{sample}",
+        qualtype=lambda wildcards: 'A' if wildcards.nmf_spectype == 'SBS' else 'indel_A',
+        filter='FILTERED'   # implied by the input file, but that's OK
+    resources:
+        mem=250
+    # Just waiting for the libraries to load is ~30s per sample, need to do ~650 of these jobs.
+    #localrule: True
+    script:
+        "scripts/scan2_table_to_vcf.R"
+
+
+rule generate_matrix_snv:
+    input:
+        vcfs=lambda wildcards: expand('mutsigs/matrices/{{de_novo_group}}/{{nmf_spectype}}/{sample}.vcf',
+            sample=config['mutsig_groups_for_de_novo'][wildcards.de_novo_group])
+    output:
+        # the name "matrix" must match the first argument of matGen.SigProfilerMatrixGeneratorFunc()
+        sbs96="mutsigs/matrices/{de_novo_group}/matrix.{nmf_spectype}96.txt",
+        sbs384="mutsigs/matrices/{de_novo_group}/matrix.{nmf_spectype}384.txt",
+        sbs1536="mutsigs/matrices/{de_novo_group}/matrix.{nmf_spectype}1536.txt"
+    params:
+        # must be a param because copy_vcfs must have previously put all VCFs here
+        working_dir="mutsigs/matrices/{de_novo_group}/{nmf_spectype}/",
+    localrule: True
+    resources:
+        mem=3000,
+        localjob=1
+    run:
+        # SigProfilerMatrixGenerator creates output/SBS/matrix* files in its working directory
+        from os import rename
+        from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
+        matGen.SigProfilerMatrixGeneratorFunc('matrix', 'GRCh37', params.working_dir)
+        # Note the output files have extension ".all"
+        os.rename(params.working_dir + "/output/SBS/matrix.SBS96.all", output.sbs96)
+        os.rename(params.working_dir + "/output/SBS/matrix.SBS384.all", output.sbs384)
+        os.rename(params.working_dir + "/output/SBS/matrix.SBS1536.all", output.sbs1536)
+
+
+rule generate_matrix_indel:
+    input:
+        vcfs=lambda wildcards: expand('mutsigs/matrices/{{de_novo_group}}/ID/{sample}.vcf',
+            sample=config['mutsig_groups_for_de_novo'][wildcards.de_novo_group])
+    output:
+        # the name "matrix" must match the first argument of matGen.SigProfilerMatrixGeneratorFunc()
+        id83="mutsigs/matrices/{de_novo_group}/matrix.ID83.txt",
+        id415="mutsigs/matrices/{de_novo_group}/matrix.ID415.txt"
+    params:
+        # must be a param because copy_vcfs must have previously put all VCFs here
+        working_dir="mutsigs/matrices/{de_novo_group}/ID/",
+    localrule: True
+    resources:
+        mem=3000,
+        localjob=1
+    run:
+        # SigProfilerMatrixGenerator creates output/SBS/matrix* files in its working directory
+        from os import rename
+        from SigProfilerMatrixGenerator.scripts import SigProfilerMatrixGeneratorFunc as matGen
+        matGen.SigProfilerMatrixGeneratorFunc('matrix', 'GRCh37', params.working_dir)
+        # Note the output files have extension ".all"
+        os.rename(params.working_dir + "/output/ID/matrix.ID83.all", output.id83)
+        os.rename(params.working_dir + "/output/ID/matrix.ID415.all", output.id415)
+
+
+rule correct_scan2_id83_matrix:
+    input:
+        mat="mutsigs/matrices/{de_novo_group}/matrix.ID83.txt",
+        scan2_id83_correction='resources/SCAN2_PTA_ID83_correction_factors.csv'
+    output:
+        mat="mutsigs/matrices/{de_novo_group}/matrix_corrected.ID83.txt"
+    log:
+        "mutsigs/matrices/{de_novo_group}/matrix_corrected.ID83.log"
+    localrule: True
+    resources:
+        mem=1000,
+        localjob=1
+    script:
+        "scripts/correct_id83_for_scan2_sensitivity.R"
+
+
+rule run_sigprofilerextractor:
+    input:
+        matrix=lambda wildcards: "mutsigs/matrices/{de_novo_group}/matrix" + ('_corrected' if wildcards.sigprofiler_spectype == 'ID83' else '') + ".{sigprofiler_spectype}.txt"
+    output:
+        outdir=directory('mutsigs/sigprofilerextractor/{de_novo_group}/{sigprofiler_spectype}/'),
+        selection_plot='mutsigs/sigprofilerextractor/{de_novo_group}/{sigprofiler_spectype}/{sigprofiler_spectype}/{sigprofiler_spectype}_selection_plot.pdf',
+        selection_stats='mutsigs/sigprofilerextractor/{de_novo_group}/{sigprofiler_spectype}/{sigprofiler_spectype}/All_solutions_stat.csv',
+        # SigProfilerExtractor's version of ___expomat___ for its selected set of active COSMIC signatures
+        cosmic_decomp='mutsigs/sigprofilerextractor/{de_novo_group}/{sigprofiler_spectype}/{sigprofiler_spectype}/Suggested_Solution/COSMIC_{sigprofiler_spectype}_Decomposed_Solution/Activities/COSMIC_{sigprofiler_spectype}_Activities.txt',
+        # The set of active COSMIC signatures (with their spectra, one per column).
+        # WARNING! These are not in sbs96 order, need to be converted.
+        cosmic_sigset='mutsigs/sigprofilerextractor/{de_novo_group}/{sigprofiler_spectype}/{sigprofiler_spectype}/Suggested_Solution/COSMIC_{sigprofiler_spectype}_Decomposed_Solution/Signatures/COSMIC_{sigprofiler_spectype}_Signatures.txt',
+        denovo_exposures='mutsigs/sigprofilerextractor/{de_novo_group}/{sigprofiler_spectype}/{sigprofiler_spectype}/Suggested_Solution/{sigprofiler_spectype}_De-Novo_Solution/Activities/{sigprofiler_spectype}_De-Novo_Activities_refit.txt',
+        # The set of extractd de novo signatures with spectra, one per column. Same as above: order is not sbs96
+        denovo_sigset='mutsigs/sigprofilerextractor/{de_novo_group}/{sigprofiler_spectype}/{sigprofiler_spectype}/Suggested_Solution/{sigprofiler_spectype}_De-Novo_Solution/Signatures/{sigprofiler_spectype}_De-Novo_Signatures.txt'
+    params:
+        nmf_replicates=100,
+        minimum_signatures=1,
+        maximum_signatures=6,
+        context_type='{sigprofiler_spectype}'
+    log:
+        'mutsigs/sigprofilerextractor/{de_novo_group}/{sigprofiler_spectype}/log.txt'
+    benchmark:
+        'mutsigs/sigprofilerextractor/{de_novo_group}/{sigprofiler_spectype}/benchmark.txt'
+    threads: 16
+    resources:
+        mem_mb=lambda wildcards, threads: threads*5000
+    run:
+        from SigProfilerExtractor import sigpro as sig
+        sig.sigProfilerExtractor(
+            "matrix",                                           # input type: VCF or matrix
+            output.outdir,                                      # output directory
+            input.matrix,                                       # input file
+            reference_genome="GRCh37",
+            minimum_signatures=params.minimum_signatures,
+            maximum_signatures=params.maximum_signatures,
+            nmf_replicates=params.nmf_replicates,
+            cpu=threads,
+            context_type=params.context_type,
+            cosmic_version="3.3")
+
+
+# Old SigProfiler rules. SigProfiler predated SigProfilerExtractor
+'''
+rule convert_matrix_snv:
+    input:
+        mat="nmf/{nmf_runtype}/matrix_generator/SBS/output/SBS/matrix.SBS96.all"
+    output:
+        converted_mat='nmf/{nmf_runtype}/matrix_generator/SBS/converted_matrix.txt'
+    log:
+        'nmf/{nmf_runtype}/matrix_generator/SBS/converted_matrix.log'
+    resources:
+        mem=3000
+    script:
+        "scripts/nmf_make_input_sbs96.R"
+
+
+rule convert_matrix_indel:
+    input:
+        mat="nmf/{nmf_runtype}/matrix_generator/ID/output/ID/matrix.ID83.all",
+        correction="resources/SCAN2_PTA_ID83_correction_factors.csv"
+    output:
+        converted_mat='nmf/{nmf_runtype}/matrix_generator/ID/converted_matrix.txt'
+    log:
+        'nmf/{nmf_runtype}/matrix_generator/ID/converted_matrix.log'
+    resources:
+        mem=3000
+    script:
+        "scripts/nmf_make_input_id83.R"
+
+
+
+# nmf_* jobs refer to the older version of SigProfilerExactor, SigProfiler.
+# we previously used SigProfiler to perform non-negative matrix factorization (NMF),
+# but this is now included in SigProfilerExtractor.
+
+rule nmf_scatter_setup:
+    input:
+        txt='nmf/{nmf_runtype}/matrix_generator/{nmf_spectype}/converted_matrix.txt',
+        sigprofiler_source='external_data/SigProfiler_2_5_1_7/source',
+        runone_source='external_data/SigProfiler_2_5_1_7/run_one.m'
+    output:
+        csv="nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/input.csv",
+        runone="nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/run_one.m",
+        input_dir=directory("nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/input"),
+        source_dir=directory("nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/source")
+    params:
+        out_dir="nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/"
+    resources:
+        mem_mb=100,
+        localjob=1
+    localrule: True
+    shell:
+        """
+        cp {input.txt} {output.csv}
+        mkdir -p {output.input_dir}
+        cp -r {input.sigprofiler_source} {params.out_dir}
+        cp {input.runone_source} {params.out_dir}
+        """
+
+
+rule nmf_scatter:
+    input:
+        csv='nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/input.csv',
+        runone='nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/run_one.m'
+    output:
+        'nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/full/res__full_signatures_{n}.mat',
+        'nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/skinny/res__skinny_signatures_{n}.mat',
+        'nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/summary/res__summary.mat',
+        'nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/text/res__signature_activities_for_{n}_sigs.csv',
+        'nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/text/res__signature_patterns_for_{n}_sigs.csv'
+    log:
+        'nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/log.txt'
+    params:
+        n='{n}',
+        ctx=lambda wildcards: '96' if wildcards.nmf_spectype == 'SBS' else 'indels',
+        iters=1000,
+        working_dir='nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}'
+    benchmark:
+        'nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/benchmark.tsv'
+    resources:
+        mem_mb=6000
+    shell:
+        """
+        cd {params.working_dir}
+        matlab -nodisplay -nosplash -nodesktop -batch \
+            "run_one({params.n}, '{params.ctx}', {params.iters}, './', './', './source')"
+        """
+
+
+rule plot_nmf_sigs_and_exposures:
+    input:
+        mat='nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/nsigs{n}/skinny/res__skinny_signatures_{n}.mat'
+    output:
+        pdf='nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/signatures_{n}.pdf',
+        expo_csv='nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/exposures_{n}.csv',
+        proc_csv='nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/processes_{n}.csv'
+    params:
+        muttype="{nmf_spectype}"
+    log:
+        'nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/signatures_{n}.log'
+    localrule: True
+    resources:
+        mem=1000,
+        localjob=1
+    script:
+        "scripts/nmf_plot_sigs_and_exposures.R"
+
+
+rule plot_selection_criteria:
+    input:
+        summaries=expand('nmf/{{nmf_runtype}}/sigprofiler/{{nmf_spectype}}/nsigs{n}/summary/res__summary.mat',
+                n=config['nmf_sig_ns']),
+        skinny=expand('nmf/{{nmf_runtype}}/sigprofiler/{{nmf_spectype}}/nsigs{n}/skinny/res__skinny_signatures_{n}.mat',
+                n=config['nmf_sig_ns'])
+    output:
+        pdf='nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/selection_criteria.pdf',
+        csv='nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/selection_criteria.csv'
+    log:
+        'nmf/{nmf_runtype}/sigprofiler/{nmf_spectype}/selection_criteria.log'
+    localrule: True
+    resources:
+        mem=1000,
+        localjob=1
+    script:
+        "scripts/nmf_plot_selection_criteria.R"
+'''

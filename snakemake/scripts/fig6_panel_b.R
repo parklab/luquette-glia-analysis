@@ -47,12 +47,9 @@ suppressMessages(library(GenomicRanges))
 suppressMessages(library(pheatmap))
 suppressMessages(library(data.table))
 suppressMessages(library(mutenrich))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(grid))
 suppressMessages(library(gridExtra))
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 
 gr2 <- function (bed, seqinfo = NULL, add.chr.prefix = FALSE) {
@@ -86,11 +83,16 @@ colnames(atac.mat) <- unname(sapply(atac, function(x) x$value))
 str(atac.mat)
 str(cancer.mat)
 
-# Discard the lower 2.5th percentile of ATAC sites (=top 2.5% after 1/x xform)
+# Discard the lower 2.5th percentile of ATAC sites (no longer doing this, see comment below)
 fit.cancer.to.atac <- function(cancer, atac, atac.eps=1e-3, cancer.eps=1e-7) {
-    data <- data.frame(atac=1/(atac+atac.eps), cancer=(cancer+cancer.eps))
-    atac.q <- quantile(data$atac, prob=1-0.025, na.rm=T)
-    data <- data[tiles$keep & data$atac < atac.q,]
+    # IMPORTANT: multiply atac by -1 so that the 1/x xform does not invert
+    # the relationship between ATAC signal and mutation density.
+    data <- data.frame(atac=-1/(atac+atac.eps), cancer=(cancer+cancer.eps))
+    # Removing outlier ATAC regions is no longer necessary since we are using
+    # keep=TRUE tiles.
+    #atac.q <- quantile(data$atac, prob=0.025, na.rm=T)
+    #data <- data[tiles$keep & data$atac >= atac.q,]
+    data <- data[tiles$keep,]
 
     lm(cancer ~ atac, data=data)
 }
@@ -107,12 +109,30 @@ m <- t(sapply(colnames(cancer.mat), function(cn) {
 
 str(m)
 
+# Get the (signed) correlation values rather than R^2
+m.cor <- t(sapply(colnames(cancer.mat), function(cn) {
+    sapply(colnames(atac.mat)[-3], function(an) {
+        x <- fit.cancer.to.atac(cancer.mat[,cn], atac.mat[,an])
+        cor(x$model$cancer, x$model$atac)
+    })
+}))
+
+str(m.cor)
+
+
 # Just reorder for plotting
 m <- m[,c('OPC','oligo','excitatory_neuron','inhibitory_neuron','astrocyte','microglia')]
 # Use prettier column names
 colnames(m) <- c('OPC', 'Oligodendrocyte',
       'Excitatory-Neuron', 'Inhibitory-Neuron',
       'Astrocyte', 'Microglia')
+
+# Just reorder for plotting
+m.cor <- m.cor[,c('OPC','oligo','excitatory_neuron','inhibitory_neuron','astrocyte','microglia')]
+colnames(m.cor) <- paste0(c('OPC', 'Oligodendrocyte',
+      'Excitatory-Neuron', 'Inhibitory-Neuron',
+      'Astrocyte', 'Microglia'), ' correlation')
+
 
 # Match the colors from the UMAP plot
 colors <- setNames(c('#f5c710', '#61d04f', 'black', '#28e2e5', '#cd0bbc', '#FF0000', '#9e9e9e', 'black'),
@@ -149,7 +169,8 @@ for (i in 1:2) {
     save_pheatmap(x, dev=devs[[i]], filename=outs[i], width=2, height=4, pointsize=5)
 }
 
-fwrite(m[order(m[,'OPC'], decreasing=TRUE),], file=out.csv)
+# both m and m.cor are ordered by the same order(m)
+fwrite(cbind(m[order(m[,'OPC'], decreasing=TRUE),], m.cor[order(m[,'OPC'], decreasing=TRUE),]), file=out.csv)
 
 if ('snakemake' %in% ls()) {
     sink()

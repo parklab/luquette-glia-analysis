@@ -10,7 +10,11 @@ if ('snakemake' %in% ls()) {
 
     # tags come from params
     commandArgs <- function(...) unlist(c(
-        snakemake@input[1:2], snakemake@output[1:3]
+        snakemake@input['expomat'],
+        snakemake@input['metadata'],
+        snakemake@output['svg'],
+        snakemake@output['pdf'],
+        snakemake@output['csv']
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
@@ -18,11 +22,11 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 5) {
-    stop("usage: plot_cosmic_barplots.R expomat.csv mutburden.csv out.svg out.pdf out.csv")
+    stop("usage: plot_cosmic_barplots.R expomat.csv metadata.csv out.svg out.pdf out.csv")
 }
 
 expomat.csv <- args[1]
-mutburden.csv <- args[2]
+metadata.csv <- args[2]
 out.svg <- args[3]
 out.pdf <- args[4]
 out.csv <- args[5]
@@ -33,22 +37,24 @@ if (file.exists(out.pdf))
     stop(paste('output file', out.pdf, 'already exists, please delete it first'))
 
 suppressMessages(library(data.table))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
-
+# (signatures X samples) matrix
 E <- fread(expomat.csv)
 head(E)
-m <- fread(mutburden.csv)  # needed for age/sorting
+m <- fread(metadata.csv)[sample %in% colnames(E)]  # needed for age/sorting
+setkey(m, sample)
+m <- m[order(age)]
 
-# Reorder E by increasing age
+str(E)
+str(m)
+
 signames <- E$Sig
 E <- E[,-1] # get rid of signature name column
-colorder <- order(m$age)
-E <- E[,..colorder]
+# Reorder E by increasing age
+cols.ordered.by.age <- m$sample
+E <- E[,..cols.ordered.by.age]
 
 
 # handle up to 12 signatures
@@ -86,7 +92,7 @@ for (i in 1:2) {
     layout(1:2)
     par(mar=c(xheight,4,1,1))
     barplot(as.matrix(E), col=sigcols, las=3, border=NA, ylab='Number of mutations', cex.names=3/4)
-    legend('topleft', legend=signames, fill=sigcols)
+    legend('topleft', legend=signames, fill=sigcols, bty='n')
 
     x <- apply(E, 2, function(col) col/sum(col))
     barplot(x, col=sigcols, las=3, border=NA, ylab='Fraction of mutations', cex.names=3/4)

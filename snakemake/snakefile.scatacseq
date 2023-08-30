@@ -19,9 +19,9 @@ wildcard_constraints:
 
 rule scatacseq_extract_mapfile:
     input:
-        "input/any___scatacseq_umap___none.csv"
+        "scatacseq/umap.csv"
     output:
-        "data/scatacseq/auxiliary/sample_to_cell_map.txt"
+        "scatacseq/sample_to_cell_map.txt"
     resources:
         mem_mb=1000
     shell:
@@ -32,8 +32,8 @@ rule scatacseq_extract_mapfile:
 
 rule scatacseq_frags_to_beds:
     input:
-        frags="input/any___scatacseq_frags___none.tsv",
-        mapfile="data/scatacseq/auxiliary/sample_to_cell_map.txt"
+        frags="scatacseq/fragments.tsv",
+        mapfile="scatacseq/sample_to_cell_map.txt"
     output:
         expand("data/scatacseq/bed/transpositions.library{libid}_{atac_celltype}.bed",
             libid=libraries, atac_celltype=atac_celltypes)
@@ -51,7 +51,7 @@ rule scatacseq_frags_to_beds:
 rule scatacseq_bedgraph_to_bigwig:
     input:
         bed="data/scatacseq/bed/transpositions.library{libid}_{atac_celltype}.bed",
-        genome="input/any___hg19_genome_withXYM___none.genome"
+        genome="resources/hg19.withXYM.chrprefix.genome"
     output:
         tmp=temp("data/scatacseq/bigwig/transpositions.library{libid}_{atac_celltype}.tmp"),
         bw="data/scatacseq/bigwig/transpositions.library{libid}_{atac_celltype}.bigwig"

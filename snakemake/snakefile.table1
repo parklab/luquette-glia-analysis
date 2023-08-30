@@ -1,0 +1,19 @@
+# vim: syntax=python
+
+rule make_table1_parts:
+    input:
+        meta="metadata/sample_metadata.csv",
+        metrics="suppfigX/metrics.csv"
+    output:
+        cells="table1/{amptype}_cells.csv",
+        muts="table1/{amptype}_muts.csv"
+    log:
+        muts="table1/{amptype}.log"
+    params:
+        samples=lambda wildcards: list(config['scan2_rescue_groups'][wildcards.amptype + '_neuron'].values()) + list(config['scan2_rescue_groups'][wildcards.amptype + '_oligo'].values())
+    threads: 1
+    resources:
+        mem_mb=1000,
+        localjobs=1
+    script:
+        "scripts/table1.R"

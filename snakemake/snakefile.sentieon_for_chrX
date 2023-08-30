@@ -69,7 +69,8 @@ rule make_arg_file:
         gatk_chunks=len(gatk_regions)
     localrule: True
     resources:
-        mem_mb=200
+        mem_mb=200,
+        localjob=1
     shell:
         """
         for i in `seq 1 {params.gatk_chunks}`; do

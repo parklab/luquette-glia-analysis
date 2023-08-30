@@ -4,6 +4,8 @@
 #SBATCH -t 12:00:00
 #SBATCH --mem=7000
 
+set -eo pipefail
+
 if [ $# -ne 3 ]; then
     echo "usage: $0 in.bigwig temporar.out.bedgraph out.bigwig"
     exit 1

@@ -2,33 +2,78 @@
 
 rule indel_spectrum:
     input:
-        "mutsigs/raw_spectra/neuron___raw_spectrum___indel_A.csv",
-        "mutsigs/raw_spectra/oligo___raw_spectrum___indel_A.csv",
+        "mutsigs/raw_spectra/pta_neuron___raw_spectrum___indel_A.csv",
+        "mutsigs/raw_spectra/pta_oligo___raw_spectrum___indel_A.csv",
     output:
-        "fig3/panel_a_spectrum.svg",
-        "fig3/panel_a_spectrum.pdf",
-        "fig3/panel_a_spectrum.csv"
+        "fig3/panel_a.svg",
+        "fig3/panel_a.pdf",
+        "fig3/panel_a.csv"
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     log:
-        "fig3/panel_a_spectrum.log"
+        "fig3/panel_a.log"
     script:
-        "scripts/fig2_panel_e.R"
+        "scripts/fig3_panel_a.R"
+
+
+rule raw_spectrum_indel:
+    input:
+        csv="mutsigs/raw_spectra/{group}___raw_spectrum___indel_A.csv",
+        pdf="mutsigs/raw_spectra/{group}___raw_spectrum___indel_A.pdf"
+    output:
+        csv="fig3/panel_a_raw_spectrum_{group}_indel_A.csv",
+        pdf="fig3/panel_a_raw_spectrum_{group}_indel_A.pdf"
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    shell:
+        """
+        cp {input.csv} {output.csv}
+        cp {input.pdf} {output.pdf}
+        """
 
 
 rule cosmic_indel_barplots:
     input:
-        svg="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.svg",
-        pdf="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.pdf",
-        csv="mutsigs/cosmic_aging/{celltype}___barplots___{qualtype}.csv"
+        svg="mutsigs/ad_hoc_signature_selection/cosmic_aging/{group}___barplots___{qualtype}.svg",
+        pdf="mutsigs/ad_hoc_signature_selection/cosmic_aging/{group}___barplots___{qualtype}.pdf",
+        csv="mutsigs/ad_hoc_signature_selection/cosmic_aging/{group}___barplots___{qualtype}.csv"
     output:
-        svg="fig3/panel_b___{celltype}___{qualtype}.svg",
-        pdf="fig3/panel_b___{celltype}___{qualtype}.pdf",
-        csv="fig3/panel_b___{celltype}___{qualtype}.csv"
+        svg="fig3/panel_b___{group}___{qualtype}.svg",
+        pdf="fig3/panel_b___{group}___{qualtype}.pdf",
+        csv="fig3/panel_b___{group}___{qualtype}.csv"
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
+    localrule: True
     log:
-        "fig3/panel_b___{celltype}___{qualtype}.log"
+        "fig3/panel_b___{group}___{qualtype}.log"
+    shell:
+        """
+        cp -n {input.svg} {output.svg}
+        cp -n {input.pdf} {output.pdf}
+        cp -n {input.csv} {output.csv}
+        """
+
+
+rule cosmic_indel_barplots_sigprofilerextractor:
+    input:
+        svg="mutsigs/sigprofilerextractor/cosmic_aging/{group}___barplots___{qualtype}.svg",
+        pdf="mutsigs/sigprofilerextractor/cosmic_aging/{group}___barplots___{qualtype}.pdf",
+        csv="mutsigs/sigprofilerextractor/cosmic_aging/{group}___barplots___{qualtype}.csv"
+    output:
+        svg="fig3_sigprofilerextractor/panel_b___{group}___{qualtype}.svg",
+        pdf="fig3_sigprofilerextractor/panel_b___{group}___{qualtype}.pdf",
+        csv="fig3_sigprofilerextractor/panel_b___{group}___{qualtype}.csv"
+    resources:
+        mem_mb=4000,
+        localjob=1
+    localrule: True
+    log:
+        "fig3_sigprofilerextractor/panel_b___{group}___{qualtype}.log"
     shell:
         """
         cp -n {input.svg} {output.svg}
@@ -39,17 +84,41 @@ rule cosmic_indel_barplots:
 
 rule cosmic_indel_vs_age_plots:
     input:
-        svg='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.svg',
-        pdf='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.pdf',
-        csv='mutsigs/cosmic_aging/all___cosmic_models_vs_age___{qualtype}.csv'
+        svg='mutsigs/ad_hoc_signature_selection/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.svg',
+        pdf='mutsigs/ad_hoc_signature_selection/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.pdf',
+        csv='mutsigs/ad_hoc_signature_selection/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.csv'
     output:
-        svg="fig3/panel_c_{qualtype}.svg",
-        pdf="fig3/panel_c_{qualtype}.pdf",
-        csv="fig3/panel_c_{qualtype}.csv"
+        svg="fig3/panel_c_{cosmic_vs_age_group}_{qualtype}.svg",
+        pdf="fig3/panel_c_{cosmic_vs_age_group}_{qualtype}.pdf",
+        csv="fig3/panel_c_{cosmic_vs_age_group}_{qualtype}.csv"
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
+    localrule: True
     log:
-        "fig3/panel_c_{qualtype}.log"
+        "fig3/panel_c_{cosmic_vs_age_group}_{qualtype}.log"
+    shell:
+        """
+        cp -n {input.svg} {output.svg}
+        cp -n {input.pdf} {output.pdf}
+        cp -n {input.csv} {output.csv}
+        """
+
+rule cosmic_indel_vs_age_plots_sigprofilerextractor:
+    input:
+        svg='mutsigs/sigprofilerextractor/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.svg',
+        pdf='mutsigs/sigprofilerextractor/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.pdf',
+        csv='mutsigs/sigprofilerextractor/cosmic_aging/{cosmic_vs_age_group}___cosmic_models_vs_age___{qualtype}.csv'
+    output:
+        svg="fig3_sigprofilerextractor/panel_c_{cosmic_vs_age_group}_{qualtype}.svg",
+        pdf="fig3_sigprofilerextractor/panel_c_{cosmic_vs_age_group}_{qualtype}.pdf",
+        csv="fig3_sigprofilerextractor/panel_c_{cosmic_vs_age_group}_{qualtype}.csv"
+    resources:
+        mem_mb=4000,
+        localjob=1
+    localrule: True
+    log:
+        "fig3_sigprofilerextractor/panel_c_{cosmic_vs_age_group}_{qualtype}.log"
     shell:
         """
         cp -n {input.svg} {output.svg}

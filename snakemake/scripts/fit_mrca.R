@@ -11,11 +11,11 @@ if ('snakemake' %in% ls()) {
     commandArgs <- function(...) unlist(c(
         snakemake@input['object1'],
         snakemake@input['object2'],
+        snakemake@input['metadata'],
         snakemake@input['cosmic'],
         snakemake@input['sigb'],
         snakemake@input['aging_model'],
         snakemake@input['aging_model_sigs'],
-        snakemake@params['amptype'],
         snakemake@output['muts'],
         snakemake@output['fits']
     ))
@@ -25,22 +25,20 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 9) {
-    stop('usage: fit_mrca.R scan2_object1 scan2_object2 cosmic.csv sigb.csv aging_model.csv aging_model_sigs.csv {mda|pta} output.muts.csv output.fits.csv')
+    cat("WARNING!! MRCA estimates only apply to oligo-oligo pairs! Only pta_oligo aging rates for total mutation burden and SBS1 are used!\n")
+    stop('usage: fit_mrca.R scan2_object1 scan2_object2 sample_metadata.csv cosmic.csv sigb.csv aging_model.csv aging_model_sigs.csv output.muts.csv output.fits.csv')
 }
 
 
 results1.rda <- args[1]
 results2.rda <- args[2]
-cosmic.csv <- args[3]
-sigb.csv <- args[4]
-aging.burden.model.csv <- args[5]
-aging.burden.model.sigs.csv <- args[6]
-amptype <- args[7]
+metadata.csv <- args[3]
+cosmic.csv <- args[4]
+sigb.csv <- args[5]
+aging.burden.model.csv <- args[6]
+aging.burden.model.sigs.csv <- args[7]
 out.muts.csv <- args[8]
 out.fits.csv <- args[9]
-
-if (amptype != 'mda' & amptype != 'pta')
-    stop("amptype must be either 'mda' or 'pta', case sensitive")
 
 for (f in c(out.muts.csv, out.fits.csv)) {
     if (file.exists(f))
@@ -70,24 +68,21 @@ combine.dfs <- function(s1, s2) {
     d1
 }
 
-aging.burden.model <- fread(aging.burden.model.csv)[CellType == 'oligo']
-aging.burden.model.sigs <- fread(aging.burden.model.sigs.csv)[CellType == 'oligo' & Sig =='SBS1']
+aging.burden.model <- fread(aging.burden.model.csv)[Group == 'pta_oligo']
+aging.burden.model.sigs <- fread(aging.burden.model.sigs.csv)[Group == 'pta_oligo' & Sig =='SBS1']
+
+metadata <- fread(metadata.csv)
 
 cosmic <- fread(cosmic.csv)
-if (amptype == 'pta') {
-    data(snv.artifact.signature.v3)  
-    cosmic$PTA <- snv.artifact.signature.v3
-} else if (amptype == 'mda') {
-    lod <- fread(sigb.csv)
-    cosmic$SigB <- lod$B
-} else {
-    stop("amptype must be either 'mda' or 'pta', case sensitive")
-}
+pta.artifact <- get(data(snv.artifact.signature.v3))   # loads `snv.artifact.signature.v3`
+sigb <- fread(sigb.csv)$B
 
 cat('loading SCAN2 object 1..\n')
 r1 <- get(load(results1.rda))
+amptype1 <- metadata[sample == r1@single.cell]$amp
 cat('loading SCAN2 object 2..\n')
 r2 <- get(load(results2.rda))
+amptype2 <- metadata[sample == r2@single.cell]$amp
 cat('memory usage:\n')
 gc()
 
@@ -113,12 +108,15 @@ get.sbs1 <- function(tab) {
 # WARNING!!! muttab and hsnptab MUST be subsampled to pass==TRUE for the
 # cell corresponding to `object`!!
 # override n.shared and n.private to do SBS1 modeling
-f <- function(object, muttab, hsnptab, model.intercept, model.rate, remove.sigb=FALSE,
+# this.cosmic is the global cosmic plus either the PTA artifact signature or MDA artifact signature (sigB)
+f <- function(object, amptype, this.cosmic, muttab, hsnptab, model.intercept, model.rate, remove.sigb=FALSE,
     n.shared.fn=nrow, n.private.fn=nrow)
 {
     sample <- object@single.cell
     burden <- object@mutburden$snv[2,]$burden
+print('a')
     n.shared <- n.shared.fn(muttab[shared == TRUE])
+print('b')
     n.private <- n.private.fn(muttab[private == TRUE])
 
     # Quantity is: number of shareds misclassified as a function of total shared count.
@@ -136,7 +134,7 @@ f <- function(object, muttab, hsnptab, model.intercept, model.rate, remove.sigb=
     # shared (mostly) are not affected by sig B.
     sigb <- 0
     if (remove.sigb) {
-        fit <- setNames(lsqnonneg(as.matrix(cosmic[,-1]), as.vector(table(sbs96(muttab[private == TRUE]$mutsig))))$x, colnames(cosmic)[-1])
+        fit <- setNames(lsqnonneg(as.matrix(this.cosmic[,-1]), as.vector(table(sbs96(muttab[private == TRUE]$mutsig))))$x, colnames(this.cosmic)[-1])
         sigb <- fit['SigB'] / sum(fit)
     }
     n.private.adj2 <- n.private.adj * (1 - sigb)
@@ -165,23 +163,44 @@ f <- function(object, muttab, hsnptab, model.intercept, model.rate, remove.sigb=
 # are the number of shared AND called sites in a specific sample. this is
 # the relevant value for extrapolating since sensitivity is relatively well
 # approximated for single-sample somatic calling with SCAN2.
+
+pta.cosmic <- cbind(cosmic, PTA=pta.artifact)
+mda.cosmic <- cbind(cosmic, SigB=sigb)
+cosmics <- list(PTA=pta.cosmic, MDA=mda.cosmic)
+
 total.mut <- data.frame(model='Total burden', all.shared=sum(muttab$shared),
-    rbind(f(r1, muttab[pass1 == TRUE], hsnptab[pass1 == TRUE],
+    rbind(f(object=r1,
+            amptype=amptype1,
+            this.cosmic=cosmics[[amptype1]],
+            muttab=muttab[pass1 == TRUE],
+            hsnptab=hsnptab[pass1 == TRUE],
             model.intercept=aging.burden.model[Variable=='(Intercept)', Estimate],
             model.rate=aging.burden.model[Variable=='age', Estimate],
-            remove.sigb=amptype == 'mda'),
-        f(r2, muttab[pass2 == TRUE], hsnptab[pass2 == TRUE],
+            remove.sigb=amptype1 == 'MDA'),
+        f(object=r2,
+            amptype=amptype2,
+            this.cosmic=cosmics[[amptype2]],
+            muttab=muttab[pass2 == TRUE],
+            hsnptab=hsnptab[pass2 == TRUE],
             model.intercept=aging.burden.model[Variable=='(Intercept)', Estimate],
             model.rate=aging.burden.model[Variable=='age', Estimate],
-            remove.sigb=amptype == 'mda')))
+            remove.sigb=amptype2 == 'MDA')))
 
 # Date MRCA based on SBS1
 sbs1.mut <- data.frame(model='SBS1 burden', all.shared=NA,
-    rbind(f(r1, muttab[pass1 == TRUE], hsnptab[pass1 == TRUE],
+    rbind(f(object=r1,
+            amptype=amptype1,
+            this.cosmic=cosmics[[amptype1]],
+            muttab=muttab[pass1 == TRUE],
+            hsnptab=hsnptab[pass1 == TRUE],
             model.intercept=aging.burden.model.sigs[Variable == '(Intercept)', Estimate],
             model.rate=aging.burden.model.sigs[Variable == 'age', Estimate],
             n.shared.fn=get.sbs1, n.private.fn=get.sbs1),
-        f(r2, muttab[pass2 == TRUE], hsnptab[pass2 == TRUE],
+        f(object=r2,
+            amptype=amptype2,
+            this.cosmic=cosmics[[amptype2]],
+            muttab=muttab[pass2 == TRUE],
+            hsnptab=hsnptab[pass2 == TRUE],
             model.intercept=aging.burden.model.sigs[Variable == '(Intercept)', Estimate],
             model.rate=aging.burden.model.sigs[Variable == 'age', Estimate],
             n.shared.fn=get.sbs1, n.private.fn=get.sbs1)))

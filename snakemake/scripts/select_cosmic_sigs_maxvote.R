@@ -42,12 +42,7 @@ if (file.exists(out.csv))
     stop(paste('outut file', out.csv, 'already exists, please delete it first'))
 
 suppressMessages(library(data.table))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the
- appropriate path?")
 
 n <- fread(nscore.csv)
 g <- fread(gscore.csv)

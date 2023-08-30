@@ -9,8 +9,8 @@ if ('snakemake' %in% ls()) {
     sink(con, type='message')
 
     commandArgs <- function(...) unlist(c(
-        snakemake@params[1],    # binsize
-        snakemake@output[1],    # out.bed
+        snakemake@params['binsize'],
+        snakemake@output['bed'],
         snakemake@input['metadata'],
         snakemake@input['rdas'] # variable length list of per-chromosome RDA digest files
     ))
@@ -34,7 +34,9 @@ if (file.exists(out.bed))
 
 suppressMessages(library(data.table))
 
-meta <- fread(metacsv)
+# Only use PTA amplified cells to determine the fraction of the genome that
+# should be analyzed.
+meta <- fread(metacsv)[amp == 'PTA']
 sample.ids <- meta$sample
 print(sample.ids)
 

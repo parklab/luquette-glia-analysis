@@ -2,17 +2,17 @@
 
 rule gtex_expression:
     input:
-        "enrichment/gtex_expression_mc08/quantile/{celltype}___{qualtype}.10quantiles.csv"
+        "enrichment/gtex_expression_mc02/quantile/{group}___{qualtype}.10quantiles.csv"
     output:
-        "suppfig3/panel_a_gtex_expression_{celltype}___{qualtype}.svg",
-        "suppfig3/panel_a_gtex_expression_{celltype}___{qualtype}.pdf",
-        "suppfig3/panel_a_gtex_expression_{celltype}___{qualtype}.csv"
+        "suppfig3/panel_a_gtex_expression_{group}___{qualtype}.svg",
+        "suppfig3/panel_a_gtex_expression_{group}___{qualtype}.pdf",
+        "suppfig3/panel_a_gtex_expression_{group}___{qualtype}.csv"
     params:
         ignore='BINSIZE=10000,BINSIZE=100000,BINSIZE=1000000',
         group='datasource',
         highlight='group=Brain'
     log:
-        "suppfig3/panel_a_gtex_expression_{celltype}___{qualtype}.log"
+        "suppfig3/panel_a_gtex_expression_{group}___{qualtype}.log"
     resources:
         mem_mb=4000
     script:
@@ -21,8 +21,8 @@ rule gtex_expression:
 
 rule repliseq_individual_cell_lines:
     input:
-        neuron_repliseq="enrichment/repliseq/quantile/neuron___{qualtype}.10quantiles.csv",
-        oligo_repliseq="enrichment/repliseq/quantile/oligo___{qualtype}.10quantiles.csv"
+        neuron_repliseq="enrichment/repliseq/quantile/pta_neuron___{qualtype}.10quantiles.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/pta_oligo___{qualtype}.10quantiles.csv"
     output:
         pdf="suppfig3/panel_b_repliseq___{qualtype}.pdf",
         svg="suppfig3/panel_b_repliseq___{qualtype}.svg",
@@ -39,8 +39,8 @@ rule repliseq_individual_cell_lines:
 # put them side by side and match axes.
 rule chromhmm_tssa_helper:
     input:
-        neuron="enrichment/roadmap_chromhmm_brain/bed_regions/neuron___AB.csv",
-        oligo="enrichment/roadmap_chromhmm_brain/bed_regions/oligo___AB.csv"
+        neuron="enrichment/roadmap_chromhmm_brain/bed_regions/pta_neuron___AB.csv",
+        oligo="enrichment/roadmap_chromhmm_brain/bed_regions/pta_oligo___AB.csv"
     output:
         "suppfig3/chromhmm_tss_complete_table.csv"
     resources:
@@ -72,3 +72,21 @@ rule chromhmm_tssa:
         mem_mb=4000
     script:
         "scripts/plot_enrichment.R"
+
+
+rule plot_qbed_sensitivity_by_group:
+    input:
+        sens_summary_files=lambda wildcards: expand("enrichment/sensitivity/quantile/{group}.summary.txt",
+            group=config['aging_groups_to_model'][wildcards.aging_group])
+    output:
+        csv="suppfig3/quantile_sensitivity.{aging_group}.csv",
+        pdf="suppfig3/quantile_sensitivity.{aging_group}.pdf",
+        svg="suppfig3/quantile_sensitivity.{aging_group}.svg"
+    log:
+        "suppfig3/quantile_sensitivity.{aging_group}.log"
+    threads: 1
+    resources:
+        mem_mb=1000,
+        localjobs=1
+    script:
+        "scripts/suppfig3_quantile_sensitivity.R"

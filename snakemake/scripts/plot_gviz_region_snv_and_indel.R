@@ -41,10 +41,7 @@ for (f in c(out.csv)) {
 suppressMessages(library(Gviz))
 suppressMessages(library(scan2))
 suppressMessages(library(mutenrich))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 
 get.annots <- function(chrom, from, to) {

@@ -32,12 +32,8 @@ if (file.exists(out.pdf))
 if (file.exists(out.jpeg))
     stop(paste('output file', out.jpeg, 'already exists, please delete it first'))
 
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(data.table))
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 cat("Reading", in.csv, "\n")
 d <- fread(in.csv)

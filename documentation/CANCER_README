@@ -17,12 +17,16 @@ Data sources
 ------------------------------------------------------------------------------------
 Cancer somatic mutations come from the ICGC portal:
 
-https://dcc.icgc.org/releases/PCAWG/consensus_snv_indel
+    https://dcc.icgc.org/releases/PCAWG/consensus_snv_indel
 
-The ICGC public MAF file is directly downloadable from 
+The ICGC public MAF file is automatically downloaded from
 
-https://dcc.icgc.org/api/v1/download?fn=/PCAWG/consensus_snv_indel/final_consensus_passonly.snv_mnv_indel.icgc.public.maf.gz
+    https://dcc.icgc.org/api/v1/download?fn=/PCAWG/consensus_snv_indel/final_consensus_passonly.snv_mnv_indel.icgc.public.maf.gz
 
-but the TCGA MAF file is protected. The user must download this file manually (via the following command, copied from the above web portal). The file must then be listed in manifests/INPUT_MANIFEST on the "cancer_tcga" line.
+but the TCGA MAF file is protected. The user must download this file manually (via the following command, copied from the above web portal).
 
-aws --profile pdc --endpoint-url https://bionimbus-objstore-cs.opensciencedatacloud.org s3 cp s3://pcawg-tcga/consensus_snv_indel/final_consensus_passonly.snv_mnv_indel.tcga.controlled.maf.gz
+    aws --profile pdc --endpoint-url https://bionimbus-objstore-cs.opensciencedatacloud.org s3 cp s3://pcawg-tcga/consensus_snv_indel/final_consensus_passonly.snv_mnv_indel.tcga.controlled.maf.gz
+
+Once downloaded, the gzipped file must be placed in
+
+    data/pcawg/final_consensus_passonly.snv_mnv_indel.tcga.controlled.maf.gz

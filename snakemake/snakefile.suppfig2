@@ -1,51 +1,58 @@
 # vim: syntax=python
 
-rule fig1_indel_size_analysis:
+rule suppfig2_indel_size_analysis:
     input:
-        "input/neuron___mut___indel_A.rda",
-        "input/oligo___mut___indel_A.rda"
+        "tables/pta_neuron___FILTERED_mut___indel_A.csv",
+        "tables/pta_oligo___FILTERED_mut___indel_A.csv"
     output:
         "suppfig2/panel_b_indelsize.svg",
         "suppfig2/panel_b_indelsize.pdf",
         "suppfig2/panel_b_indelsize.csv"
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     log:
         "suppfig2/panel_b_indelsize.log"
     script:
-        "scripts/plot_indel_sizes.R"
+        "scripts/suppfig2_plot_indel_sizes.R"
 
 
 rule genic_distribution_mda: #_elderly:
     input:
-        oligo_snv_pta="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
-        oligo_snv_mda="enrichment/gencode_simplified/bed_regions/{mdatype}_{ageclass}___AB/bedenrich/SUMMARY.rda",
+        oligo_snv_pta="enrichment/gencode_simplified/bed_regions/pta_oligo___AB/bedenrich/SUMMARY.rda",
+        # XXX: FIXME: this must become mda_oligo_elderly
+        oligo_snv_mda="enrichment/gencode_simplified/bed_regions/{mdatype}___AB/bedenrich/SUMMARY.rda",
     output:
-        svg="suppfig2/panel_c_{mdatype}_{ageclass}.svg",
-        pdf="suppfig2/panel_c_{mdatype}_{ageclass}.pdf",
-        csv="suppfig2/panel_c_{mdatype}_{ageclass}.csv"
+        svg="suppfig2/panel_c_{mdatype}.svg", #_{ageclass}.svg",
+        pdf="suppfig2/panel_c_{mdatype}.pdf", #_{ageclass}.pdf",
+        csv="suppfig2/panel_c_{mdatype}.csv"  #_{ageclass}.csv"
     params:
         signal_to_plot='datasource=gencode_simplified',
         features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     log:
-        "suppfig2/panel_c_{mdatype}_{ageclass}.log"
+        "suppfig2/panel_c_{mdatype}.log" #_{ageclass}.log"
     script:
         "scripts/suppfig2_panel_c.R"
 
 
 rule individual_gene_enrichment:
     input:
-        neuron="enrichment/gtex_genes/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
-        oligo="enrichment/gtex_genes/bed_regions/oligo___AB/bedenrich/SUMMARY.rda"
+        neuron="enrichment/gtex_genes/bed_regions/pta_neuron___AB/bedenrich/SUMMARY.rda",
+        oligo="enrichment/gtex_genes/bed_regions/pta_oligo___AB/bedenrich/SUMMARY.rda"
     output:
         csv="suppfig2/panel_d_genes.csv",
         pdf="suppfig2/panel_d_genes.pdf",
         svg="suppfig2/panel_d_genes.svg",
         jpeg="suppfig2/panel_d_genes.jpeg"
+    localrule: True
     resources:
-        mem_mb=8000
+        mem_mb=8000,
+        localjob=1
     log:
         "suppfig2/panel_d_genes.log"
     script:

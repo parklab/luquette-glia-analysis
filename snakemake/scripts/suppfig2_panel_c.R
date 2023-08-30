@@ -46,13 +46,9 @@ if (file.exists(outcsv))
 
 suppressMessages(library(GenomicRanges))
 suppressMessages(library(data.table))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(mutenrich))
 
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 load(gpfile)
 gp <- es
@@ -156,7 +152,8 @@ for (i in 1:2) {
     plot.one(point.ests=list(setNames(eslist[[1]]$enr, rownames(eslist[[1]])), eslist[[2]]$enr),
         bars=lapply(eslist[1:2], function(es) es[, c("enr.boot.0.95.lb", "enr.boot.0.95.ub")]),
         cols=c('red', 'purple'),
-        ylim=ylim, family='Arial', main=paste0('OL sSNVs\n', signal_to_plot_string))
+        #ylim=ylim, family='Arial', main=paste0('OL sSNVs\n', signal_to_plot_string))
+        ylim=ylim, main=paste0('OL sSNVs\n', signal_to_plot_string))
 
     plot(1, pch=NA, xaxt='n', yaxt='n', xlab='', ylab='', main='', bty='n')
     legend("top", fill=c('red', 'purple'), legend=c("PTA OLs", "MDA OLs"), bty='n')

@@ -47,10 +47,7 @@ for (f in c(out.profile.csv, out.stats.csv)) {
 suppressMessages(library(scan2))
 suppressMessages(library(mutenrich))
 suppressMessages(library(MASS))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 padj.method <- 'BH'
 

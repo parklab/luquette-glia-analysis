@@ -18,7 +18,7 @@ if ('snakemake' %in% ls()) {
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) != 5) {
     cat('assumes in.rda contains only one object\n')
-    stop("usage: plot_indel_sizes.R neuron_indels.rda oligo_indels.rda out.svg out.pdf out.csv")
+    stop("usage: plot_indel_sizes.R neuron_indels.csv oligo_indels.csv out.svg out.pdf out.csv")
 }
 
 nfile <- args[1]
@@ -35,15 +35,11 @@ if (file.exists(outcsv))
     stop(paste('output file', outcsv, 'already exists, please delete it first'))
 
 suppressMessages(library(data.table))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
-
-n <- get(load(nfile))
-g <- get(load(gfile))
+n <- fread(nfile)
+g <- fread(gfile)
 nsize <- nchar(n$altnt) - nchar(n$refnt)
 gsize <- nchar(g$altnt) - nchar(g$refnt)
 

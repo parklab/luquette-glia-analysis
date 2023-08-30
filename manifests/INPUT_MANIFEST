@@ -2,11 +2,6 @@
 # This file acts as both metadata and a source file for automatically
 # generating the input copy directories.
 celltype	filetype	qualtype	fileext	filepath
-# Genome file containing contig lengths. Used by some BED analyses
-any	hg19_genome_withXYM	none	genome	/n/data1/hms/dbmi/park/jluquette/glia/figures/hg19.genome
-# COSMIC signature catalogs
-any	cosmic	indel_A	csv	metadata/COSMIC_ID_signatures.csv
-any	cosmic	A	csv	metadata/COSMIC_SBS.csv
 # Metadata
 # Same metadata is used for SNVs and indels, but there is flexibility to change later
 neuron	meta	any	csv	metadata/metadata_pta_51neurons_no_outlier.csv
@@ -109,11 +104,6 @@ mda_sox10_infant	perm	indel_AB	rda	scan2_output/permutations/mda_sox10_infant_pe
 # data object; no intention (yet) to recapitulate any real analysis here.
 any	scatacseq_umap	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/try1_manual_assignment_table_20210623.csv
 any	scatacseq_frags	none	tsv	/n/data1/hms/dbmi/park/jluquette/glia/atac/tmp/fragments.tsv
-any	scrnaseq_umap	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/snRNA_1465a_table.csv
-any	scrnaseq_mean_expression	none	csv	/n/data1/hms/dbmi/park/jluquette/glia/scrnaseq/rds/combined_mean_expr.csv
-# GTEx files for creating tissue specific expression signals
-any	gtex_gene_model	none	gtf	data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.gtf
-any	gtex_expression_tpm	none	gct	data/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct
 # Cancer somatic mutations
 # ICGC is publically downloadable, but the TCGA mutations are controlled.
 # The user must fetch these manually.

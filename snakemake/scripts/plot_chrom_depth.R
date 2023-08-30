@@ -33,12 +33,8 @@ if (file.exists(out.svg))
 if (file.exists(out.pdf))
     stop(paste('output file', out.pdf, 'already exists, please delete it first'))
 
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(GenomicRanges))
-
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 vars.loaded <- load(in.rda)
 vars.expected <- c('chrom', 'tiles', 'tiles.not.in.gatk', 'mean.mat')

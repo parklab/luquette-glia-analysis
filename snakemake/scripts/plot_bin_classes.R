@@ -45,11 +45,8 @@ suppressMessages(library(GenomicRanges))
 suppressMessages(library(GenomeInfoDb))   # For sortSeqlevels
 suppressMessages(library(BSgenome))
 suppressMessages(library(BSgenome.Hsapiens.UCSC.hg19))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 colors <- c('#df536b', '#61d04f', '#2297e6', '#28e2e5', '#cd0bbc', '#f5c710', '#9e9e9e')
 

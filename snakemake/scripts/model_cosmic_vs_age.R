@@ -13,8 +13,9 @@ if ('snakemake' %in% ls()) {
         snakemake@output['svg'],
         snakemake@output['pdf'],
         snakemake@output['csv'],
-        as.vector(rbind(snakemake@input[['expomats']],
-                        snakemake@input[['mutburdens']]))  # interleave expomats and mutburdens
+        snakemake@input['metadata'],
+        paste(snakemake@params[['colors']], collapse=','),
+        paste(snakemake@params[['groups']], snakemake@input[['expomats']], sep='=')
     ))
     cat('Got command line arguments from snakemake:\n')
     print(commandArgs())
@@ -22,18 +23,17 @@ if ('snakemake' %in% ls()) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) < 5) {
-    stop("usage: plot_cosmic_vs_age.R out.svg out.pdf out.csv expomatrix1.csv mutburden1.csv [expomatrix2.csv mutburden2.csv ... expomatrixN.csv mutburdenN.csv ]")
+    cat("colors is a comma separated string of R recognized colors. Order must match expomatrix CSV files.\n")
+    cat("`colors=table` to use the colors already present in the metadata file.\n")
+    stop("usage: model_cosmic_vs_age.R out.svg out.pdf out.csv metadata.csv colors expomatrix1.csv [ expomatrix2.csv ... expomatrixN.csv ]")
 }
 
 out.svg <- args[1]
 out.pdf <- args[2]
 out.csv <- args[3]
-emat.csvs <- args[seq(4, length(args), 2)]
-burden.csvs <- args[seq(5, length(args), 2)]
-
-if (length(emat.csvs) != length(burden.csvs)) {
-    stop('each exposure matrix file expomatN.csv must have a matching mutburdenN.csv file')
-}
+metadata.csv <- args[4]
+color.string <- args[5]
+emat.csvs <- args[-(1:5)]
 
 if (file.exists(out.svg))
     stop(paste('output file', out.svg, 'already exists, please delete it first'))
@@ -42,49 +42,63 @@ if (file.exists(out.pdf))
 if (file.exists(out.csv))
     stop(paste('output file', out.csv, 'already exists, please delete it first'))
 
+if (color.string != "table") {
+    colors <- unlist(strsplit(color.string, split=',')[[1]])
+    print(colors)
+} else {
+    colors <- color.string
+    print("colors=table, not overriding table colors")
+}
+
 suppressMessages(library(data.table))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
+# Group names are only relevant for the combined model
+group.names <- sapply(strsplit(emat.csvs, '='), head, 1)
+emat.csvs <- sapply(strsplit(emat.csvs, '='), function(x) paste(x[-1], collapse='='))
 
+meta <- fread(metadata.csv)
+meta[, group := '']
 
 signames <- NULL
-data <- lapply(1:length(emat.csvs), function(i) {
+data <- setNames(lapply(1:length(emat.csvs), function(i) {
     E <- fread(emat.csvs[i])
 
     # get rid of signature name column after saving it once
+    # implies all groups must be fit to the same set of signatures.
     if (is.null(signames))
         signames <<- E$Sig
     E <- as.matrix(E[,-1])
     rownames(E) <- signames
 
-    # Reorder E by increasing age
-    burden <- fread(burden.csvs[i])[order(age)]  # needed for age
-    colnames(burden)[colnames(burden) == 'type'] <- 'celltype'
-    sample.names <- burden$sample
-    E <- E[,sample.names] # match order of burden
-    list(E=E, burden=burden)
-})
-names(data) <- sapply(data, function(d) d$burden$celltype[1])
+    sample.names <- meta[order(age)][sample %in% colnames(E)]$sample
+    meta[sample %in% sample.names, group := group.names[i]]
+    if (colors != 'table')
+        meta[sample %in% sample.names, color := colors[i]]
+    E
+}), group.names)
+combined.data <- do.call(cbind, data)
+data <- c(data, `All groups`=list(combined.data))
 
-combined.data <- list(E=do.call(cbind, lapply(data, function(d) d$E)),
-                      burden=do.call(rbind, lapply(data, function(d) d$burden)))
+# Assumes each group has only one color in it
+if (colors == 'table') {
+    group.colors <- setNames(sapply(group.names, function(name) meta[group == name]$color[1]), group.names)
+} else {
+    group.colors <- setNames(colors, group.names)
+}
+print(group.colors)
 
-data <- c(data, `All cell types`=list(combined.data))
 
-models <- lapply(data, function(d) {
+models <- lapply(data, function(E) {
     rbindlist(lapply(signames, function(signame) {
-        data <- data.frame(donor=d$burden$donor, celltype=d$burden$celltype,
-                           age=d$burden$age, sig.burden=d$E[signame,])
-        celltype <- NA
-        if (length(unique(d$burden$celltype)) == 1) {
+        data <- meta[data.table(sample=colnames(E), sig.burden=E[signame,]),,on=.(sample)]
+        group <- NA
+        if (length(unique(data$group)) == 1) {
             model <- lm(sig.burden ~ age, data=data)
-            celltype <- d$burden$celltype[1]
+            group <- data$group[1]
         } else {
-            model <- lm(sig.burden ~ age*celltype, data=data)
-            celltype <- 'All cell types'
+            model <- lm(sig.burden ~ age*group, data=data)
+            group <- 'All groups'
         }
 
         ci <- confint(model)
@@ -98,7 +112,7 @@ models <- lapply(data, function(d) {
         slope.rows <- which(substr(rownames(coefs), 1, 3) == 'age')
         coefs[slope.rows, 'Padj'] <- p.adjust(coefs[slope.rows, 'Pvalue'])
         data.table(
-            CellType=celltype,
+            Group=group,
             Sig=signame,
             Formula=deparse(formula(model)),
             Variable=c('AgeRsquared', rownames(coefs)),
@@ -109,32 +123,34 @@ models <- lapply(data, function(d) {
     }))
 })
 
-fwrite(rbindlist(models), file=out.csv) #data.table(rbind(n.model.table, g.model.table)), file=out.csv)
+fwrite(rbindlist(models), file=out.csv)
 
-# Handle up to 16 signatures, 4x4 layout
+# Handle up to 20 signatures, 4x5 layout
 figheight <- 2.5*4
-figwidth <- 2.5*4
+figwidth <- 2.5*5
 # Loop over devices to save both pdf and svgs
 devs <- list(svglite, pdf)
 outs <- c(out.svg, out.pdf)
 for (i in 1:2) {
     devs[[i]](file=outs[i], width=figwidth, height=figheight)
-    layout(matrix(1:16, nrow=4, byrow=T))
+    layout(matrix(1:20, nrow=4, byrow=T))
     par(mar=c(4,4,2,1))
     for (signame in signames) {
         print(signame)
-        all.data <- data[[length(data)]]
-        plot(all.data$burden$age, all.data$E[signame,], pch=17,
-            col=all.data$burden$color,
+        all.E <- data[[length(data)]] # Get the exposure matrix with all samples present
+        all.data <- meta[data.table(sample=colnames(all.E), sig.burden=all.E[signame,]),,on=.(sample)]
+        plot(all.data$age, all.data$sig.burden,
+            pch=ifelse(all.data$outlier == 'NORMAL', 17, 4),
+            col=all.data$color,
             xlab='Age', ylab='Signature exposure', main=signame)
         for (i in 1:(length(models) - 1)) { # don't plot the combined model
             m <- models[[i]][Sig == signame]
             abline(coef=c(m[Variable == '(Intercept)']$Estimate,
                           m[Variable == 'age']$Estimate),
-                lwd=2, col=data[[i]]$burden$color[1])
+                lwd=2, col=group.colors[group.names[i]])
         }
         legend('topleft', pch=17, lwd=2, legend=names(models)[-length(models)],
-            col=sapply(data[-length(data)], function(d) d$burden$color[1]))
+            col=group.colors[names(models)])
     }
     dev.off()
 }

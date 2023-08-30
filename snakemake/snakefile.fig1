@@ -1,40 +1,79 @@
 # vim: syntax=python
 
-rule genic_distribution:
+
+rule consolidate_genic_distribution:
     input:
-        neuron_snv="enrichment/gencode_simplified/bed_regions/neuron___AB/bedenrich/SUMMARY.rda",
-        neuron_indel="enrichment/gencode_simplified/bed_regions/neuron___indel_AB/bedenrich/SUMMARY.rda",
-        oligo_snv="enrichment/gencode_simplified/bed_regions/oligo___AB/bedenrich/SUMMARY.rda",
-        oligo_indel="enrichment/gencode_simplified/bed_regions/oligo___indel_AB/bedenrich/SUMMARY.rda"
+        enrich_objects=lambda wildcards: "enrichment/gencode_simplified/bed_regions/{group}___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + "/bedenrich/SUMMARY.rda"
     output:
-        svg="fig1/panel_c_genic_enrichment.svg",
-        pdf="fig1/panel_c_genic_enrichment.pdf",
-        csv="fig1/panel_c_genic_enrichment.csv"
-    params:
-        signal_to_plot='datasource=gencode_simplified',
-        features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
-    resources:
-        mem_mb=1000
+        csv="fig1/panel_c_gene_regions_{group}___{muttype}.csv"
     log:
-        "fig1/panel_c_genic_enrichment.log"
+        "fig1/panel_c_gene_regions_{group}___{muttype}.log"
+    params:
+        group_tag='{group}',
+        signal='datasource=gencode_simplified',
+        features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
     script:
-        "scripts/barplot_enrich_new.R"
+        "scripts/consolidate_bed_enrichment_tables.R"
+
+
+rule plot_genic_distribution:
+    input:
+        enrich_tables=expand('fig1/panel_c_gene_regions_{group}___{{muttype}}.csv',
+            group=[ 'pta_neuron', 'pta_oligo' ])
+    output:
+        svg="fig1/panel_c_gene_regions___{muttype}.svg",
+        pdf="fig1/panel_c_gene_regions___{muttype}.pdf",
+    params:
+        colors=','.join([ config['group_colors'][g] for g in [ 'pta_neuron', 'pta_oligo' ] ])
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    log:
+        "fig1/panel_c_gene_regions___{muttype}.log"
+    script:
+        "scripts/barplot_enrich_new2.R"
+
+
+rule plot_genic_distribution_all:
+    input:
+        enrich_tables=expand('fig1/panel_c_gene_regions_{group}___{{muttype}}.csv',
+            group=config['comparison_groups'])
+    output:
+        svg="fig1/panel_c_gene_regions_all_comparisons___{muttype}.svg",
+        pdf="fig1/panel_c_gene_regions_all_comparisons___{muttype}.pdf",
+    params:
+        colors=','.join([ config['group_colors'][g] for g in config['comparison_groups'] ])
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    log:
+        "fig1/panel_c_gene_regions_all_comparisons___{muttype}.log"
+    script:
+        "scripts/barplot_enrich_new2.R"
 
 
 # Just a copyover of the default files
 rule aging_rates_figure:
     input:
-        svg="aging_rates/all___mutburden_models___{qualtype}.svg",
-        pdf="aging_rates/all___mutburden_models___{qualtype}.pdf",
-        models="aging_rates/all___mutburden_models___{qualtype}.csv",
-        mutburdens="aging_rates/all___mutburden___{qualtype}.csv"
+        svg="aging_rates/pta___mutburden_models___{qualtype}.svg",
+        pdf="aging_rates/pta___mutburden_models___{qualtype}.pdf",
+        models="aging_rates/pta___mutburden_models___{qualtype}.csv",
+        mutburdens="aging_rates/pta___mutburden_combined___{qualtype}.csv"
     output:
         svg='fig1/panel_b_aging_rates_{qualtype}.svg',
         pdf='fig1/panel_b_aging_rates_{qualtype}.pdf',
         mutburdens='fig1/panel_b_aging_rates_{qualtype}_burdens.csv',
         models='fig1/panel_b_aging_rates_{qualtype}_model.csv'
+    localrule: True
     resources:
-        mem_mb=1000
+        mem_mb=1000,
+        localjob=1
     log:
         'fig1/panel_b_aging_rates_{qualtype}.log'
     shell:
@@ -46,35 +85,108 @@ rule aging_rates_figure:
         """
 
 
-rule run_snpeff_helper:
+rule aging_rates_figure_mda:
     input:
-        vcf="vcfs/{celltype}___mut___{qualtype}.vcf"
+        svg="aging_rates/all___mutburden_models___{qualtype}.svg",
+        pdf="aging_rates/all___mutburden_models___{qualtype}.pdf",
+        models="aging_rates/all___mutburden_models___{qualtype}.csv",
+        mutburdens="aging_rates/all___mutburden_combined___{qualtype}.csv"
     output:
-        vcf="snpeff/{celltype}___snpeff___{qualtype}.vcf"
-    log:
-        "snpeff/{celltype}___snpeff___{qualtype}.run_snpeff.log"
+        svg='fig1/panel_b_aging_rates_all_comparisons_{qualtype}.svg',
+        pdf='fig1/panel_b_aging_rates_all_comparisons_{qualtype}.pdf',
+        mutburdens='fig1/panel_b_aging_rates_all_comparisons_{qualtype}_burdens.csv',
+        models='fig1/panel_b_aging_rates_all_comparisons_{qualtype}_model.csv'
+    localrule: True
     resources:
-        mem_mb=8000
+        mem_mb=1000,
+        localjob=1
+    log:
+        'fig1/panel_b_aging_rates_all_comparisons_{qualtype}.log'
     shell:
         """
-        snakemake/scripts/run_snpeff.sh \
-            {input.vcf} {output.vcf} > {log} 2>&1
+        cp -n {input.svg} {output.svg}
+        cp -n {input.pdf} {output.pdf}
+        cp -n {input.models} {output.models}
+        cp -n {input.mutburdens} {output.mutburdens}
         """
 
 
-rule snpeff_analysis:
+rule aging_rates_figure_batch1vs2:
     input:
-        "snpeff/neuron___snpeff___AB.vcf",
-        "snpeff/neuron___snpeff___indel_AB.vcf",
-        "snpeff/oligo___snpeff___AB.vcf",
-        "snpeff/oligo___snpeff___indel_AB.vcf"
+        svg="aging_rates/batch1_vs_batch2___mutburden_models___{qualtype}.svg",
+        pdf="aging_rates/batch1_vs_batch2___mutburden_models___{qualtype}.pdf",
+        models="aging_rates/batch1_vs_batch2___mutburden_models___{qualtype}.csv",
+        mutburdens="aging_rates/batch1_vs_batch2___mutburden_combined___{qualtype}.csv"
     output:
-        svg="fig1/panel_d_snpeff.svg",
-        pdf="fig1/panel_d_snpeff.pdf",
-        csv="fig1/panel_d_snpeff.csv"
+        svg='fig1/panel_b_aging_rates_batch1_vs_batch2_{qualtype}.svg',
+        pdf='fig1/panel_b_aging_rates_batch1_vs_batch2_{qualtype}.pdf',
+        mutburdens='fig1/panel_b_aging_rates_batch1_vs_batch2_{qualtype}_burdens.csv',
+        models='fig1/panel_b_aging_rates_batch1_vs_batch2_{qualtype}_model.csv'
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=1000,
+        localjob=1
     log:
-        "fig1/panel_d_snpeff.log"
+        'fig1/panel_b_aging_rates_batch1_vs_batch2_{qualtype}.log'
+    shell:
+        """
+        cp -n {input.svg} {output.svg}
+        cp -n {input.pdf} {output.pdf}
+        cp -n {input.models} {output.models}
+        cp -n {input.mutburdens} {output.mutburdens}
+        """
+
+
+rule parse_snpeff:
+    input:
+        vcf=lambda wildcards: "snpeff/{group}___FILTERED___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + ".vcf"
+    output:
+        csv="fig1/panel_d_snpeff_{group}___{muttype}.csv"
+    log:
+        "fig1/panel_d_snpeff_{group}___{muttype}.log"
+    params:
+        group_tag="{group}"
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
     script:
-        "scripts/plot_snpeff.R"
+        "scripts/parse_snpeff_severity.R"
+
+
+rule plot_snpeff:
+    input:
+        enrich_tables=expand('fig1/panel_d_snpeff_{group}___{{muttype}}.csv',
+            group=[ 'pta_neuron', 'pta_oligo' ])
+    output:
+        svg="fig1/panel_d_snpeff___{muttype}.svg",
+        pdf="fig1/panel_d_snpeff___{muttype}.pdf",
+    log:
+        "fig1/panel_d_snpeff___{muttype}.log"
+    params:
+        colors=','.join([ config['group_colors'][g] for g in [ 'pta_neuron', 'pta_oligo' ] ])
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/barplot_enrich_new2_noscale.R"
+
+
+rule plot_snpeff_all:
+    input:
+        enrich_tables=expand('fig1/panel_d_snpeff_{group}___{{muttype}}.csv',
+            group=config['comparison_groups'])
+    output:
+        svg="fig1/panel_d_snpeff_all_comparisons___{muttype}.svg",
+        pdf="fig1/panel_d_snpeff_all_comparisons___{muttype}.pdf",
+    params:
+        colors=','.join([ config['group_colors'][g] for g in config['comparison_groups'] ])
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    log:
+        "fig1/panel_d_snpeff_all_comparisons___{muttype}.log"
+    script:
+        "scripts/barplot_enrich_new2_noscale.R"

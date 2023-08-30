@@ -11,7 +11,6 @@ def read_manifest(filename, nrows=None):
     metadata = list(m_nofiles.columns)
     classes = m_nofiles.agg('___'.join, axis=1)
     manifest['__class__'] = classes
-    #tmp = pd.concat([ "'" + m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] + "'" \
     tmp = pd.concat([ m_nofiles.columns[i] + '=' + m_nofiles.iloc[:, i] \
         for i in range(0, m_nofiles.shape[1]) ], axis=1)
     # XXX: DIFFERENT FROM QBED ENRICHMENT, WHICH JOINS ON SPACES
@@ -44,8 +43,10 @@ rule enrichment_bed_plot:
         xgroup='datasource',
         ygroup='datasource',
         #highlight=''  # can use e.g., group=Brain to select lines to highlight
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/plot_enrichment.R"
 
@@ -60,25 +61,18 @@ rule enrichment_bed_table:
         outroot + '/{mutclass}/combined_table.log'
     benchmark:
         outroot + '/{mutclass}/combined_table.benchmark.txt'
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/make_enrichment_table.R"
 
 
-# XXX: copy of function in snakefile.enrichment - find a way to remove code duplication
-# mutclass is {celltype}___{qualtype}; e.g., neuron___AB
-# map this to an associated file: input/{celltype}___FILETYPE___{qualtype}.rda
-# FILETYPE (so far) is either: mut or perm
-def mutclass_to_file(mutclass, filetype):
-    celltype, qualtype = mutclass.split('___')
-    return("input/" + celltype + "___" + filetype + "___" + qualtype + ".rda")
-
-
 rule enrichment_bed_analysis:
     input:
-        mut=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'mut'),
-        perm=lambda wildcards: mutclass_to_file(wildcards.mutclass, 'perm'),
+        mut=lambda wildcards: config['mutclass_to_mutfile'][wildcards.mutclass],
+        perm=lambda wildcards: config['mutclass_to_permfile'][wildcards.mutclass],
         beds=expand(outroot + "/masked_bed/{signalclass}.bed",
             signalclass=signal_classes)
     output:
@@ -104,7 +98,7 @@ rule enrichment_bed_apply_mask_and_add_metadata:
     input:
         bed=lambda wildcards: list(signal_manifest.loc[signal_manifest['__class__'] == wildcards.signalclass, 'file'])[0],
         mask=config['masks']['1000'],
-        genome="input/any___hg19_genome_withXYM___none.genome"
+        genome="resources/hg19.withXYM.chrprefix.genome"
     output:
         outroot + "/masked_bed/{signalclass}.bed"
     params:

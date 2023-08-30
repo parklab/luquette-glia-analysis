@@ -1,0 +1,84 @@
+# vim: syntax=python
+
+rule qbed_sensitivity:
+    input:
+        scan2_full_object="scan2/full_objects/{sample}.rda",
+        # This should always use AB-quality tables because filtration was not done
+        # on only A-quality calls.
+        filtered_snvs=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___AB.csv",
+        filtered_indels=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___indel_AB.csv",
+        qbeds=config['quantile_beds_for_sensitivity']
+    output:
+        summary="enrichment/sensitivity/quantile/{sample}_sensitivity.txt"
+    log:
+        "enrichment/sensitivity/quantile/{sample}_sensitivity.log"
+    benchmark:
+        "enrichment/sensitivity/quantile/{sample}_sensitivity.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=13000   # max obs. 11G
+    script:
+        "scripts/enrichment_sensitivity_qbed_1kb.R"
+
+
+rule summarize_qbed_sensitivity_by_group:
+    input:
+        meta='metadata/sample_metadata.csv',
+        metrics='suppfigX/metrics.csv',
+        sens_files=lambda wildcards: expand("enrichment/sensitivity/quantile/{sample}_sensitivity.txt",
+            sample=config['scan2_rescue_groups'][wildcards.group].values())
+    output:
+        csv="enrichment/sensitivity/quantile/{group}.summary.txt"
+    log:
+        "enrichment/sensitivity/quantile/{group}.summary.log"
+    params:
+        group_tag='{group}'
+    threads: 1
+    resources:
+        mem_mb=4000,
+        localjobs=1
+    script:
+        "scripts/summarize_qbed_sensitivity.R"
+
+
+rule region_bed_sensitivity:
+    input:
+        scan2_full_object="scan2/full_objects/{sample}.rda",
+        filtered_snvs=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___AB.csv",
+        filtered_indels=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___indel_AB.csv",
+        beds=config['region_beds_for_sensitivity']
+    output:
+        full="enrichment/sensitivity/bed_regions/{sample}_sensitivity.full.txt",
+        summary="enrichment/sensitivity/bed_regions/{sample}_sensitivity.summary.txt"
+    log:
+        "enrichment/sensitivity/bed_regions/{sample}_sensitivity.log"
+    benchmark:
+        "enrichment/sensitivity/bed_regions/{sample}_sensitivity.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=30000  # mainly because the SCAN2 object is ~10G. 11 runs failed with 20G
+    script:
+        "scripts/enrichment_sensitivity_bed.R"
+
+
+rule region_bed_sensitivity_depth:
+    input:
+        yaml=lambda wildcards: 'scan2/' + config['sample_to_donor_map'][wildcards.sample] + '/scan2/scan.yaml',
+        dptab=lambda wildcards: config['scan2_depth_matrices'][config['sample_to_donor_map'][wildcards.sample]],
+        beds=config['region_beds_for_sensitivity']
+    output:
+        full="enrichment/sensitivity/bed_regions/{sample}_depth.full.txt",
+        summary="enrichment/sensitivity/bed_regions/{sample}_depth.summary.txt"
+    log:
+        "enrichment/sensitivity/bed_regions/{sample}_depth.log"
+    benchmark:
+        "enrichment/sensitivity/bed_regions/{sample}_depth.benchmark.txt"
+    params:
+        sample="{sample}",
+        bulk=lambda wildcards: list(config['bams'][config['sample_to_donor_map'][wildcards.sample]]['bulk'].keys())[0],
+        genome='hs37d5'
+    threads: 10
+    resources:
+        mem_mb=lambda wildcards, input, threads: threads*5000
+    script:
+        "scripts/enrichment_sensitivity_bed_depth.R"

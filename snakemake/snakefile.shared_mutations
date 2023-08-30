@@ -1,0 +1,102 @@
+# vim: syntax=python
+
+# these three pairs were discovered manually
+# 5657 - GliaLC-4-F11, GliaLC-4-G10 (MDA)
+# 5657 - 5657_OL4, 5657_OL6
+# 5559 - 5559-Oligo-5, 5559-Oligo-8
+rule fig2_shared_snv_analysis:
+    input:
+        object1=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-5_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-F11_scan2_object_rescue.rda'),
+        object2=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-8_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-G10_scan2_object_rescue.rda'),
+        cosmic="mutsigs/cosmic_reduced___A.csv",
+        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
+        aging_model="fig1/panel_b_aging_rates_A_model.csv",
+        aging_model_sigs="fig2/panel_c_A.csv"
+    output:
+        muts="fig2/oligo_pair_{sample_id}_mutations.csv",
+        fits="fig2/oligo_pair_{sample_id}_mrca.csv"
+    log:
+        "fig2/oligo_pair_{sample_id}.log"
+    params:
+        amptype=lambda wildcards: 'pta' if wildcards.sample_id == '5559' else 'mda'
+    resources:
+        # The SCAN2 objects are big
+        mem_mb=8000
+    script:
+        "scripts/fit_mrca.R"
+
+
+rule signature_fitting_related_oligo_pairs:
+    input:
+        cosmic="mutsigs/ad_hoc_signature_selection/cosmic_reduced___A.csv",
+        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
+        muts=expand('fig2/oligo_pair_{sample_id}_mutations.csv',
+            sample_id=[ '5559', '5657' ])
+    output:
+        pdf='fig2/panel_d.pdf',
+        svg='fig2/panel_d.svg',
+        suppl_pdf='fig2/panel_d_supplement.pdf',
+        suppl_svg='fig2/panel_d_supplement.svg',
+        spectra_csv='fig2/panel_d_spectra.csv',
+        expo_pdf='fig2/panel_d_exposures_barplot.pdf',
+        expo_svg='fig2/panel_d_exposures_barplot.svg',
+        expo_csv='fig2/panel_d_exposures_barplot.csv'
+    log:
+        'fig2/panel_d.log'
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/fig2_panel_d.R"
+
+
+rule infant_oligo_spectra:
+    input:
+        neuron_muts='tables/pta_neuron___FILTERED_mut___A.csv',
+        oligo_muts='tables/pta_oligo___FILTERED_mut___A.csv',
+        cosmic="mutsigs/ad_hoc_signature_selection/cosmic_reduced___A.csv",
+    output:
+        pdf='fig2/panel_e_infant.pdf',
+        svg='fig2/panel_e_infant.svg',
+        spectra_csv='fig2/panel_e_spectra_infant.csv',
+        expo_csv='fig2/panel_e_exposures_infant.csv'
+    log:
+        'fig2/panel_e_infant.log'
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/fig2_panel_e_infant.R"
+
+
+
+# WARNING!! MRCA estimates only apply to oligo-oligo pairs! Only pta_oligo aging rates for total mutation burden and SBS1 are used!
+# When applied to neuron-neuron or neuron-oligo pairs, the only useful information
+# is the number of shared and private mutations.  All model-based extrapolations of
+# years-to-MRCA are incorrect.
+rule fit_mrca_pair:
+    input:
+        object1="scan2/full_objects/{sample1}.rda",
+        object2="scan2/full_objects/{sample2}.rda",
+        metadata="metadata/sample_metadata.csv",
+        cosmic="mutsigs/{mutsig_selection_method}/cosmic_reduced___A.csv",
+        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
+        aging_model="aging_rates/all___mutburden_models___A.csv",
+        # The SBS1 aging rate is taken from this model. We always use the SBS1 rate estimated
+        # by the PTA model even when comparing MDA cells.
+        aging_model_sigs="mutsigs/{mutsig_selection_method}/cosmic_aging/pta___cosmic_models_vs_age___A.csv"
+    output:
+        muts="shared_mutations/{mutsig_selection_method}/{sample1}___vs___{sample2}___mutations.csv",
+        fits="shared_mutations/{mutsig_selection_method}/{sample1}___vs___{sample2}___mrca.csv"
+    log:
+        "shared_mutations/{mutsig_selection_method}/{sample1}___vs___{sample2}.log"
+    benchmark:
+        "shared_mutations/{mutsig_selection_method}/{sample1}___vs___{sample2}.benchmark.txt"
+    resources:
+        # The full SCAN2 objects are around ~9GB each now with the spatial sensitivity models.
+        # In addition, loading in a ~9GB object causes a peak memory usage of ~12.5GB.
+        mem_mb=25000
+    script:
+        "scripts/fit_mrca.R"

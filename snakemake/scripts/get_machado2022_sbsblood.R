@@ -38,11 +38,8 @@ for (f in c(out.sbsblood.csv, out.pdf, out.svg))
 
 suppressMessages(library(scan2))
 suppressMessages(library(pracma))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(rio))
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 
 rio::convert(in_file=in.xlsx, out_file=out.supptab8.csv, in_opts=list(sheet=sheet.number))

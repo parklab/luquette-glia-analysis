@@ -33,10 +33,7 @@ for (f in c(out.csv, out.pdf, out.svg))
         stop(paste0('output file ', f, ' already exists, please delete it first'))
 
 suppressMessages(library(scan2))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 
 # Read and get rid of indels

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eo pipefail
+
 if [ $# -ne 2 ]; then
     echo "usage: $0 inputvcf output"
     exit 1

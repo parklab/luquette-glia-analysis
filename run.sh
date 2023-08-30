@@ -22,7 +22,7 @@ if [ "x$?" == "x1" ]; then
 fi
 
 # $flags is always built added to, never taken from
-flags='-s=snakemake/Snakefile --dir=. --latency-wait=60 --rerun-incomplete' # --rerun-triggers=mtime'
+flags='-s=snakemake/Snakefile --dir=. --latency-wait=60 --resources localjob=1 roadmap_download=10 encode_download=10 ucsc_download=10 --rerun-incomplete'
         #--restart-times 2 \  # This is NECESSARY for some jobs that have step-up memory reqs
 jobflag='-j=10'
 kgflag=''
@@ -63,8 +63,10 @@ fi
 # I can't get $drmaaflags to substitute properly because of the internal 's
 if [ $usedrmaa == "true" ]; then
     snakemake $flags $kgflag \
-        --max-threads=12 $jobflag \
-        --drmaa=' -p priopark -A park_contrib --mem={resources.mem_mb} -c {threads} -t 24:00:00 -o cluster-logs/slurm-%A.log'
+        $jobflag \
+        --slurm --default-resources slurm_account=park_contrib slurm_partition=priopark runtime=2880
+        #--drmaa=' -p priopark -A park_contrib --mem={resources.mem_mb} -c {threads} -t 4:00:00 -o cluster-logs/slurm-%A.log'
+        #--max-threads=12 $jobflag \
 else
     echo "snakemake $flags $kgflag --max-threads=12 $jobflag"
     snakemake $flags $kgflag --max-threads=12 $jobflag

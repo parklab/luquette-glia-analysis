@@ -134,15 +134,16 @@ progressr::with_progress({
             tiles <- c()
             tiles.not.in.gatk <- c()
             mean.mat <- c()
-            cat("skipping chunk", i, "; no depth data. This is normal for heterochromatin arms like 22p.\n")
+            pc <- paste("skipping chunk", i, "; no depth data. This is normal for heterochromatin arms like 22p.\n")
             print(chunks[i])
+            p(class='sticky', amount=length(matfiles), pc)
         } else {
             tilemap <- tm$tilemap
             tiles <- tm$tiles
             tiles.not.in.gatk <- tm$tiles.not.in.gatk
             # Create a matrix of average read depth in each tile for each sample.
             mean.mats <- lapply(1:length(matfiles), function(j) {
-                pc <- perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
+                pc <- scan2::perfcheck(paste('chunk', i, 'file', j, '/', length(matfiles)), {
                     f <- matfiles[j]
                     # XXX: There is some very strange behavior in tabix that causes it to
                     # return lines outside of the requested range. I can't figure out what
@@ -166,11 +167,11 @@ progressr::with_progress({
                         ret <- dpm.basepair[,setNames(as.list(colMeans(.SD)), colnames(.SD)),by=tileid][!is.na(tileid)][, -'tileid']
                     }
                 })
+                p(class='sticky', amount=1, pc)
                 ret
             })
             mean.mat <- do.call(cbind, mean.mats)
         }
-        p(class='sticky', amount=1, pc)
         list(tiles=tiles, tiles.not.in.gatk=tiles.not.in.gatk, mean.mat=mean.mat)
     })
 }, enable=TRUE)

@@ -47,12 +47,9 @@ suppressMessages(library(GenomicRanges))
 suppressMessages(library(pheatmap))
 suppressMessages(library(data.table))
 suppressMessages(library(mutenrich))
-suppressMessages(library(extrafont))
 suppressMessages(library(svglite))
 suppressMessages(library(grid))
 suppressMessages(library(gridExtra))
-if (!("Arial" %in% fonts()))
-    stop("Arial font not detected; did you load extrafonts and run font_import() with the appropriate path?")
 
 
 gr2 <- function (bed, seqinfo = NULL, add.chr.prefix = FALSE) {

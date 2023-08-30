@@ -6,7 +6,7 @@
 enrichment_nott_config = dict(
     **{ 'output_dir': 'enrichment/nott',
         'SIGNAL_MANIFEST': 'manifests/NOTT.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_nott:
@@ -30,10 +30,10 @@ use rule sigenrichment_plot from enrichment_nott as enrichment_nott_sigenrichmen
         ignore='enrichment_grid_R_ignore_none',
         group='celltype,mark'
     output:
-        expand('enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich.{output}',
+        expand('enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles_sigenrich_{{mutsig_selection_method}}.{output}',
             output=[ 'svg', 'pdf', 'csv' ])
     log:
-        'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles_sigenrich.log'
+        'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.log'
 
 
 
@@ -44,7 +44,7 @@ use rule sigenrichment_plot from enrichment_nott as enrichment_nott_sigenrichmen
 enrichment_nott_enhprom_config = dict(
     **{ 'output_dir': 'enrichment/nott',
         'SIGNAL_MANIFEST': 'manifests/NOTT_ENHANCERS_AND_PROMOTERS.MANIFEST' },
-    **enrichment_config
+    **config['enrichment_config']
 )
 
 module enrichment_nott_enhprom:

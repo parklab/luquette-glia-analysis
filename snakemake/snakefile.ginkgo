@@ -73,7 +73,8 @@ rule ginkgo_install:
         commit_id="d7c779027f64fd22efe733d29be8b551c3e94f72"
     localrule: True
     resources:
-        mem_mb=100
+        mem_mb=100,
+        localjob=1
     shell:
         # rm -fr output.dir: hack: snakemake creates (touches?) all listed
         # output files before running the rule, creating a non-empty directory
@@ -241,7 +242,8 @@ rule ginkgo_make_cell_list:
     localrule: True
     threads: 1
     resources:
-        mem_mb=100
+        mem_mb=100,
+        localjob=1
     run:
         with open(output.cell_list, 'w') as f:
             for bed in input.beds:

@@ -10,42 +10,42 @@ scatacseq_meta = pd.read_csv('manifests/SCATACSEQ.MANIFEST')
 scrnaseq_meta = pd.read_csv('manifests/SCRNASEQ_EXPRESSION.MANIFEST')
 
 
-rule cancer_density_correlation:
+rule fig6_panel_a_twosample:
     input:
-        neuron_muts="input/neuron___mut___A.rda",
-        oligo_muts="input/oligo___mut___A.rda",
-        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
-        # quantile is ignored. raw scores used.
-        cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
-            tumor=sorted(set(cancer_meta['tumor'])))
+        cors1="enrichment/cancer_snvdens/correlation/{group1}___A.csv",
+        cors2="enrichment/cancer_snvdens/correlation/{group2}___A.csv"
     output:
-        pdf='fig6/panel_a.pdf',
-        svg='fig6/panel_a.svg',
-        csv='fig6/panel_a.csv'
+        pdf='fig6/panel_a_{group1}_vs_{group2}.pdf',
+        svg='fig6/panel_a_{group1}_vs_{group2}.svg',
+        csv='fig6/panel_a_{group1}_vs_{group2}.csv'
     log:
-        'fig6/panel_a.log'
+        'fig6/panel_a_{group1}_vs_{group2}.log'
+    params:
+        tag1='{group1}',
+        tag2='{group2}'
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/fig6_panel_a.R"
 
-# same as panel a, but adding in elderly MDA glia
-rule cancer_density_correlation_with_mda_ols:
+
+rule fig6_panel_a_onesample:
     input:
-        neuron_muts="input/neuron___mut___A.rda",
-        oligo_muts="input/{mdatype}_elderly___mut___A.rda",
-        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
-        # quantile is ignored. raw scores used.
-        cancer_qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
-            tumor=sorted(set(cancer_meta['tumor'])))
+        cors1="enrichment/cancer_snvdens/correlation/{group}___A.csv",
     output:
-        pdf='fig6/panel_a_{mdatype}_elderly_supp.pdf',
-        svg='fig6/panel_a_{mdatype}_elderly_supp.svg',
-        csv='fig6/panel_a_{mdatype}_elderly_supp.csv'
+        pdf='fig6/panel_a_{group}.pdf',
+        svg='fig6/panel_a_{group}.svg',
+        csv='fig6/panel_a_{group}.csv'
     log:
-        'fig6/panel_a_{mdatype}_elderly_supp.log'
+        'fig6/panel_a_{group}.log'
+    params:
+        tag1='{group}',
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/fig6_panel_a.R"
 
@@ -101,46 +101,35 @@ rule cancer_density_vs_scrnaseq:
     script:
         "scripts/fig6_panel_c.R"
 
-if 'make_pcawg_metadata' not in config.keys():
-    # not affected by 2 excluded samples
-    pcawg_meta = pd.read_csv('metadata/pcawg_metadata.csv')
-    pcawg_tumors = sorted(set(pcawg_meta['tumor']))
-else:
-    pcawg_tumors = []
 
 rule top_cancer_gene_enrichment:
     input:
-        cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo/{tumor}.rda", tumor=pcawg_tumors)
+        csv="cancer_genes/odds_ratios/{group1}___vs___{group2}.csv"
     output:
-        pdf="fig6/panel_d.pdf",
-        svg="fig6/panel_d.svg",
-        csv="fig6/panel_d.csv",
-        supppdf="suppfig5/cancer_gene_ors.pdf",
-        suppsvg="suppfig5/cancer_gene_ors.svg",
-        fullsupppdf="suppfig5/cancer_gene_ors_full.pdf",
-        fullsuppsvg="suppfig5/cancer_gene_ors_full.svg"
+        pdf="fig6/panel_d_{group1}_vs_{group2}.pdf",
+        svg="fig6/panel_d_{group1}_vs_{group2}.svg",
+        supppdf="suppfig5/cancer_gene_ors_{group1}_vs_{group2}.pdf",
+        suppsvg="suppfig5/cancer_gene_ors_{group1}_vs_{group2}.svg",
+        fullsupppdf="suppfig5/cancer_gene_ors_full_{group1}_vs_{group2}.pdf",
+        fullsuppsvg="suppfig5/cancer_gene_ors_full_{group1}_vs_{group2}.svg"
     log:
-        "fig6/panel_d.log"
+        "fig6/panel_d_{group1}_vs_{group2}.log"
     resources:
         mem_mb=4000
     script:
         "scripts/fig6_panel_d.R"
 
-# Same as above, but add in elderly MDA glia
-rule top_cancer_gene_enrichment_with_mda_ols:
+
+rule fig6_panel_d_copytable:
     input:
-        cancer_ors=expand("cancer_genes/odds_ratios/neuron___vs___oligo_mdapta/{tumor}.rda", tumor=pcawg_tumors)
+        "cancer_genes/odds_ratios/{group1}___vs___{group2}.csv"
     output:
-        pdf="fig6/panel_d_mdapta.pdf",
-        svg="fig6/panel_d_mdapta.svg",
-        csv="fig6/panel_d_mdapta.csv",
-        supppdf="suppfig5/cancer_gene_ors_mdapta.pdf",
-        suppsvg="suppfig5/cancer_gene_ors_mdapta.svg",
-        fullsupppdf="suppfig5/cancer_gene_ors_mdapta_full.pdf",
-        fullsuppsvg="suppfig5/cancer_gene_ors_mdapta_full.svg"
-    log:
-        "fig6/panel_d_mdapta.log"
+        "fig6/panel_d_{group1}_vs_{group2}.csv"
+    localrule: True
     resources:
-        mem_mb=4000
-    script:
-        "scripts/fig6_panel_d.R"
+        mem_mb=10,
+        localjob=1
+    shell:
+        """
+        cp {input} {output}
+        """

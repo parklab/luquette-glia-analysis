@@ -48,6 +48,54 @@ suppressMessages(library(data.table))
 suppressMessages(library(mutenrich))
 suppressMessages(library(svglite))
 
+log.y.axis <- 'y'
+#log.y.axis <- ''
+
+# this doesn't actually work, just introduces some instrumentation. always uses
+# elements 1 and 2 regardless of what groups are being plotted.
+lty.map <- c(
+`pta_neuron`='solid',
+`pta_oligo`='dashed'
+)
+
+col.map <- c(
+`Astrocytes`='#F4C013',
+`Endothelial`='#65B648',
+`Excitatory-Neurons`='#000000',
+`Inhibitory-Neurons`='#52C0CC',
+`Microglia`='#A8388C',
+`OPCs`='#929393',
+`Oligodendrocytes`='#E91D21',
+`astrocyte`='#F4C013',
+`endothelial`='#65B648',
+`excitatory_neuron`='#000000',
+`inhibitory_neuron`='#52C0CC',
+`microglia`='#A8388C',
+`OPC`='#929393',
+`oligo`='#E91D21',
+`BG02ES`="black",
+`BJ`="black",
+`GM06990`="black",
+`GM12801`="black",
+`GM12812`="black",
+`GM12813`="black",
+`GM12878`="black",
+`HUVEC`="black",
+`HeLa-S3`="black",
+`HepG2`="black",
+`IMR90`="black",
+`K562`="black",
+`MCF-7`="black",
+`NHEK`="black",
+`SK-N-SH`="black",
+`H3K27ac`='#66c2a5',
+`H3K36me3`='#fc8d62',
+`H3K4me1`='#8da0cb',
+`H3K4me3`='#e78ac3',
+`H3K9ac`='#a6d854',
+`H3K27me3`='#000000',
+`H3K9me3`='#e5c494'
+)
 
 
 # Read in tables from various genomic covariates. These can have different
@@ -103,10 +151,14 @@ consolidate.tables <- function(files, ourcell=c('neuron', 'oligo')) {
 
 
 make.panels <- function(tab, sig, colors=c(neuron=1, oligo=2), add.legend=FALSE, show.title=FALSE, show.xaxis=FALSE) {
-    #ylims <- range(pretty(tab[sigclass == sig]$enr))
+print(sig)
+print(tab[sigclass == sig & datasource != 'repliseq']$enr)
     # repliseq has one major outlier BEFORE averaging. it never defines the windows
     # in these data, so as a hack just don't use it in getting ylims.
-    ylims <- range(tab[sigclass == sig & datasource != 'repliseq']$enr)*c(0.95,1.05)
+    #ylims <- range(tab[sigclass == sig & datasource != 'repliseq']$enr)*c(0.95,1.05)
+    ylims <- range(pretty(tab[sigclass == sig & datasource != 'repliseq']$enr)) #*c(0.9,1.3)
+    if (ylims[1] == 0 & log.y.axis == 'y')
+        ylims[1] <- 0.3
 print(ylims)
 
     # scRNAseq
@@ -143,7 +195,9 @@ print(ylims)
 
 
 
-plotfn <- function(n, ylim, xlab='', ylab='', main='', typecol='lineclass', linetype=c('separate', 'average'), labtype=c('point','number'), add.legend=TRUE, col=1, yaxis=FALSE, xaxis=FALSE, neuron.col=1, oligo.col=2, show.title=FALSE, yaxt='s', xaxt='s', add=FALSE, ...) {
+# always using lty.map[1]/[2]  doesn't really allow for flexible plotting, it just
+# introduces some of the instrumentation required for that eventually.
+plotfn <- function(n, ylim, xlab='', ylab='', main='', typecol='lineclass', linetype=c('separate', 'average'), labtype=c('point','number'), add.legend=TRUE, col=1, yaxis=FALSE, xaxis=FALSE, neuron.col=1, oligo.col=2, show.title=FALSE, yaxt='s', xaxt='s', add=FALSE, lwd=2/3, group1.lty=lty.map[1], group2.lty=lty.map[2], ...) {
     labtype <- match.arg(labtype)
     linetype <- match.arg(linetype)
 
@@ -163,6 +217,13 @@ plotfn <- function(n, ylim, xlab='', ylab='', main='', typecol='lineclass', line
         ylab <- ''
     }
 
+    make.y.axis <- FALSE
+    if (yaxis == TRUE & log.y.axis == 'y') {
+        make.y.axis <- TRUE
+        yaxt <- 'n'
+    }
+        
+
     if (show.title) {
         # separate panel because it's so large
         par(mar=c(0,0,0,0))
@@ -179,11 +240,24 @@ plotfn <- function(n, ylim, xlab='', ylab='', main='', typecol='lineclass', line
         if (add == TRUE)
             plotfn <- lines
 
+        # averaging over many dataclasses (=type column), arbitrarily use the color of the first
+        t <- strsplit(n$type[1], ' ')[[1]][1]
+        group1.col <- col.map[t]
+        group2.col <- col.map[t]
+cat('average line: selecting color for type t=', t, 'color=', group1.col, '\n')
+
         plotfn(n[mutsfrom == 'neuron',.(mean(quantile), mean(enr)), by=quantile][,.(V1,V2)],
-            type='b', lwd=1/2, col=neuron.col, pch=20, xlim=xlim, ylim=ylim, bty='n', xlab=xlab, ylab=ylab, main=main, xaxt=xaxt, yaxt=yaxt, ...)
-        lines(n[mutsfrom == 'oligo',.(mean(quantile), mean(enr)), by=quantile][,.(V1,V2)],
-            type='b', lwd=1/2, col=oligo.col, pch=20, xlim=xlim, ylim=ylim, bty='n', xlab=xlab, ylab=ylab, main=main, xaxt=xaxt, yaxt=yaxt, ...)
-        abline(h=1, lty='dashed', col='grey')
+            type='l', lwd=lwd, col=group1.col, pch=20, xlim=xlim, ylim=ylim, bty='n', xlab=xlab, ylab=ylab, main=main, xaxt=xaxt, yaxt=yaxt, lty=group1.lty, log=log.y.axis, ...)
+        if (nrow(n[mutsfrom == 'oligo']) > 0) {
+            lines(n[mutsfrom == 'oligo',.(mean(quantile), mean(enr)), by=quantile][,.(V1,V2)],
+                type='l', lwd=lwd, col=group2.col, pch=20, xlim=xlim, ylim=ylim, bty='n', xlab=xlab, ylab=ylab, main=main, xaxt=xaxt, yaxt=yaxt, lty=group2.lty, log=log.y.axis, ...)
+        } else {
+            cat('skipping mutsfrom=oligo, nrow=0\n')
+        }
+        abline(h=1, lty='solid', col='black', lwd=1/2)
+        if (make.y.axis) {
+            axis(side=2, at=pretty(ylim, n=7))
+        }
         # make a blank legend just to honor the expectation of add.legend=TRUE
         if (add.legend) {
             # separate panel because it's so large
@@ -194,20 +268,37 @@ plotfn <- function(n, ylim, xlab='', ylab='', main='', typecol='lineclass', line
 
         for (i in 1:length(types)) {
             t <- types[i]
+            plot.type <- 'b'
+            group1.col <- col.map[t]
+            group2.col <- col.map[t]
+            plot.type <- 'l'   # never use the letters anymore
+cat('plotting trace for type t=', t, 'color=', group1.col, '\n')
             pf <- if (i == 1 & !add) plot else lines
             pch <- ifelse(labtype == 'point', 20, letters[i])
-            pf(n[mutsfrom == 'neuron' & type == t, .(quantile, enr)], type='b', lwd=1/2, col=neuron.col, pch=pch,
-                xlim=xlim, ylim=ylim, bty='n', xlab=xlab, ylab=ylab, main=main, xaxt=xaxt, yaxt=yaxt, ...)
-            lines(n[mutsfrom == 'oligo' & type == t, .(quantile, enr)], type='b', lwd=1/2, col=oligo.col, pch=pch,
-                xlim=xlim, ylim=ylim, bty='n', xlab=xlab, ylab=ylab, main=main, xaxt=xaxt, yaxt=yaxt, ...)
+cat('neuron -----------------------------------------------\n')
+print(n[mutsfrom == 'neuron' & type == t, .(quantile, enr)])
+cat('oligo  -----------------------------------------------\n')
+print(n[mutsfrom == 'oligo' & type == t, .(quantile, enr)])
+            pf(n[mutsfrom == 'neuron' & type == t, .(quantile, enr)], type=plot.type, lwd=lwd, col=group1.col, pch=pch,
+                xlim=xlim, ylim=ylim, bty='n', xlab=xlab, ylab=ylab, main=main, xaxt=xaxt, yaxt=yaxt, lty=group1.lty, log=log.y.axis, ...)
+            if (nrow(n[mutsfrom == 'oligo' & type == t]) > 0) {
+                lines(n[mutsfrom == 'oligo' & type == t, .(quantile, enr)], type=plot.type, lwd=lwd, col=group2.col, pch=pch,
+                    xlim=xlim, ylim=ylim, bty='n', xlab=xlab, ylab=ylab, main=main, xaxt=xaxt, yaxt=yaxt, lty=group2.lty, log=log.y.axis, ...)
+            } else {
+                cat('skipping mutsfrom=oligo type=', t, ', nrow=0\n')
+            }
         }
-        abline(h=1, lty='dashed', col='grey')
+        abline(h=1, lty='solid', col='black', lwd=1/2)
+        if (make.y.axis) {
+            axis(side=2, at=pretty(ylim, n=7))
+        }
 
         if (add.legend) {
             # separate panel because it's so large
             par(mar=c(0,0,0,0))
             plot(1, pch=NA, xlab='', ylab='', xaxt='n', yaxt='n', bty='n')
-            legend('topleft', pch=letters[1:length(types)], legend=types, bty='n')
+            legend('center', fill=col.map[types], legend=types, border=col.map[types], bty='n')
+            #legend('topleft', pch=letters[1:length(types)], legend=types, bty='n')
         }
     }
 }
@@ -227,24 +318,16 @@ outs=c(out.pdf, out.svg)
 for (i in 1:2) {
     devs[[i]](width=6.5, height=(6.5/5)*4+0.1, pointsize=5, file=outs[i])
 
-layout(rbind(matrix(1:10, nrow=2), 10+1:5, 15+matrix(1:10,nrow=2)), height=c(1,5,5,5,5))
-#make.panels(tab=all.data[mutsfrom=='oligo'], sig=sigs.to.plot[1], show.title=TRUE, show.xaxis=FALSE)
-make.panels(tab=all.data, sig=sigs.to.plot[1], show.title=TRUE, show.xaxis=FALSE)
-make.panels(tab=all.data[mutsfrom=='neuron'], sig=sigs.to.plot[2], show.title=FALSE, show.xaxis=FALSE)
-make.panels(tab=all.data, sig=sigs.to.plot[3], show.title=FALSE, show.xaxis=TRUE, add.legend=TRUE)
-dev.off()
-    #ncols=length(neuron.fs)
-    #nrows=length(sigs.to.plot) + 1  # +1 for extra row of legends
-    #layout(matrix(1:(ncols*nrows), nrow=nrows, byrow=T))
-    #par(mar=c(5,2,3,0.1))
-    #for (sig in sigs.to.plot) {
-        #print(sig)
-        #make.panels(tab=all.data, sig=sig,
-            #show.title=sig == head(sigs.to.plot, 1),
-            #show.xaxis=sig == tail(sigs.to.plot, 1))
-    #}
-    #dev.off()
+    layout(rbind(matrix(1:10, nrow=2), 10+1:5, 15+matrix(1:10,nrow=2)), height=c(1,5,5,5,5))
+    #make.panels(tab=all.data[mutsfrom=='oligo'], sig=sigs.to.plot[1], show.title=TRUE, show.xaxis=FALSE)
+    make.panels(tab=all.data, sig=sigs.to.plot[1], show.title=TRUE, show.xaxis=FALSE)
+    make.panels(tab=all.data[mutsfrom=='neuron'], sig=sigs.to.plot[2], show.title=FALSE, show.xaxis=FALSE)
+    #make.panels(tab=all.data, sig=sigs.to.plot[2], show.title=FALSE, show.xaxis=FALSE)
+    make.panels(tab=all.data, sig=sigs.to.plot[3], show.title=FALSE, show.xaxis=TRUE, add.legend=TRUE)
+    dev.off()
 }
+
+warnings()
 
 if ('snakemake' %in% ls()) {
     sink()

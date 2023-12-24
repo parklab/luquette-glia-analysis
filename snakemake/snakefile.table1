@@ -12,8 +12,9 @@ rule make_table1_parts:
     params:
         samples=lambda wildcards: list(config['scan2_rescue_groups'][wildcards.amptype + '_neuron'].values()) + list(config['scan2_rescue_groups'][wildcards.amptype + '_oligo'].values())
     threads: 1
+    localrule: True
     resources:
         mem_mb=1000,
-        localjobs=1
+        localjob=1
     script:
         "scripts/table1.R"

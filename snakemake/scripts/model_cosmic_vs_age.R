@@ -94,10 +94,10 @@ models <- lapply(data, function(E) {
         data <- meta[data.table(sample=colnames(E), sig.burden=E[signame,]),,on=.(sample)]
         group <- NA
         if (length(unique(data$group)) == 1) {
-            model <- lm(sig.burden ~ age, data=data)
+            model <- lm(sig.burden ~ age, data=data[outlier == 'NORMAL'])
             group <- data$group[1]
         } else {
-            model <- lm(sig.burden ~ age*group, data=data)
+            model <- lm(sig.burden ~ age*group, data=data[outlier == 'NORMAL'])
             group <- 'All groups'
         }
 
@@ -126,13 +126,17 @@ models <- lapply(data, function(E) {
 fwrite(rbindlist(models), file=out.csv)
 
 # Handle up to 20 signatures, 4x5 layout
-figheight <- 2.5*4
-figwidth <- 2.5*5
+#figheight <- 2.5*4
+figheight <- 1.4*4 #ceiling(length(signames)/5)  # layout always lays out 20 plots
+#figwidth <- 2.5*5
+figwidth <- 6.75
+print(figheight)
+print(figwidth)
 # Loop over devices to save both pdf and svgs
 devs <- list(svglite, pdf)
 outs <- c(out.svg, out.pdf)
 for (i in 1:2) {
-    devs[[i]](file=outs[i], width=figwidth, height=figheight)
+    devs[[i]](file=outs[i], width=figwidth, height=figheight, pointsize=8)
     layout(matrix(1:20, nrow=4, byrow=T))
     par(mar=c(4,4,2,1))
     for (signame in signames) {
@@ -141,7 +145,7 @@ for (i in 1:2) {
         all.data <- meta[data.table(sample=colnames(all.E), sig.burden=all.E[signame,]),,on=.(sample)]
         plot(all.data$age, all.data$sig.burden,
             pch=ifelse(all.data$outlier == 'NORMAL', 17, 4),
-            col=all.data$color,
+            col=all.data$color, bty='l',
             xlab='Age', ylab='Signature exposure', main=signame)
         for (i in 1:(length(models) - 1)) { # don't plot the combined model
             m <- models[[i]][Sig == signame]
@@ -149,8 +153,10 @@ for (i in 1:2) {
                           m[Variable == 'age']$Estimate),
                 lwd=2, col=group.colors[group.names[i]])
         }
-        legend('topleft', pch=17, lwd=2, legend=names(models)[-length(models)],
-            col=group.colors[names(models)])
+        if (signame == signames[1]) {
+            legend('topleft', pch=17, lwd=2, legend=names(models)[-length(models)],
+                col=group.colors[names(models)])
+        }
     }
     dev.off()
 }

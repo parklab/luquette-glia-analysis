@@ -1,0 +1,185 @@
+# vim: syntax=python
+
+# these three pairs were discovered by manual inspection of the number
+# of shared mutations per pair.
+#
+# 5657 - GliaLC-4-F11, GliaLC-4-G10 (MDA)
+# 5657 - 5657_OL4, 5657_OL6
+# 5559 - 5559-Oligo-5, 5559-Oligo-8
+rule signature_fitting_related_oligo_pairs:
+    input:
+        #cosmic="mutsigs/ad_hoc_signature_selection/cosmic_reduced___A.csv",
+        cosmic="mutsigs/sigprofilerextractor/cosmic_reduced___A.csv",
+        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
+        # N.B. yes, it would be ideal if sigprofilerextractor was used here instead of
+        # ad_hoc_signature_selection; HOWEVER, we ultimately do not use the results of
+        # the ad_hoc fitting. This was only used to provide an alternate estimate of
+        # time to MRCA based on SBS1, which we ignore.  In this rule, we are showing
+        # COSMIC signature contributions to pre- and post-MRCA mutations, which we
+        # recompute in this script.
+        #muts=expand('shared_mutations/ad_hoc_signature_selection/{oligo_pair}___mutations.csv',
+        muts=expand('shared_mutations/sigprofilerextractor/{oligo_pair}___mutations.csv',
+            oligo_pair=[ 'GliaLC-4-F11___vs___GliaLC-4-G10',
+                         '5657_OL4___vs___5657_OL6',
+                         '5559-Oligo-5___vs___5559-Oligo-8' ])
+    output:
+        pdf='figX/panel_b.pdf',
+        svg='figX/panel_b.svg',
+        suppl_pdf='figX/panel_b_supplement.pdf',
+        suppl_svg='figX/panel_b_supplement.svg',
+        spectra_csv='figX/panel_b_spectra.csv',
+        expo_pdf='figX/panel_b_exposures_barplot.pdf',
+        expo_svg='figX/panel_b_exposures_barplot.svg',
+        expo_csv='figX/panel_b_exposures_barplot.csv',
+        spectrum_early_vs_late_pdf='figX/panel_c_early_vs_late_spectrum.pdf',
+        spectrum_early_vs_late_csv='figX/panel_c_early_vs_late_spectrum.csv'
+    log:
+        'figX/panels_bc.log'
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/figX_panels_bc.R"
+
+
+rule estimate_final_timings_mrca:
+    input:
+        metadata='metadata/sample_metadata.csv',
+        mrcas=expand('shared_mutations/sigprofilerextractor/{oligo_pair}___mrca.csv',
+            oligo_pair=[ 'GliaLC-4-F11___vs___GliaLC-4-G10',
+                         '5657_OL4___vs___5657_OL6',
+                         '5559-Oligo-5___vs___5559-Oligo-8' ])
+    output:
+        mrca_timings='figX/panel_a_mrca_timings.csv'
+    log:
+        'figX/panel_a_mrca_timings.log'
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/finalize_mrca_timings.R"
+
+
+rule mrca_cartoon:
+    input:
+        csv='figX/panel_a_mrca_timings.csv'
+    output:
+        pdf="figX/panel_a.pdf"
+    log:
+        "figX/panel_a.log"
+    localrule: True
+    resources:
+        mem_mb=250,
+        localjob=1
+    script:
+        "scripts/figX_panel_a.R"
+
+
+rule rescore_infant_cells:
+    input:
+        rda="scan2/full_objects/{sample}.rda"
+    output:
+        csv="figX/rescored_fdr{fdr}/{sample}.csv"
+        #csv="scan2/rescored_fdr{fdr}_full_objects/{sample}.csv"
+    log:
+        "figX/rescored_fdr{fdr}/{sample}.log"
+    benchmark:
+        "figX/rescored_fdr{fdr}/{sample}.benchmark.txt"
+    params:
+        fdr="{fdr}"
+    threads: 1
+    resources:
+        mem_mb=12000
+    script:
+        "scripts/change_scan2_fdr.R"
+
+
+print(list(config['any_group_to_samples']['pta_neuron_infant']) + list(config['any_group_to_samples']['pta_oligo_infant']))
+rule infant_digest_adapter:
+    input:
+        csvs=expand("figX/rescored_fdr{{fdr}}/{sample}.csv",
+            sample=list(config['any_group_to_samples']['pta_neuron_infant']) + list(config['any_group_to_samples']['pta_oligo_infant']))
+    output:
+        csv="figX/all_infant_mutations_fdr{fdr}_before_digest.csv"
+    log:
+        "figX/all_infant_mutations_fdr{fdr}_before_digest.log"
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/combine_infant_muts_for_digest.R"
+
+
+rule digest_infant_muts:
+    input:
+        scan2_dir='scan2/SCAN2_specific_commit',
+        muts="figX/all_infant_mutations_fdr{fdr}_before_digest.csv",
+        metadata='metadata/sample_metadata.csv'
+    output:
+        unfiltered="figX/all_infant_mutations_fdr{fdr}.UNFILTERED.txt",
+        filtered="figX/all_infant_mutations_fdr{fdr}.FILTERED.txt"
+    params:
+        column_name="donor",
+        filter_column="16"
+    log:
+        "figX/all_infant_mutations_fdr{fdr}_digested.log"
+    threads: 1
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    shell:
+        """
+        {input.scan2_dir}/bin/digest_calls.R \
+            --muts {input.muts} \
+            --metadata {input.metadata} \
+            --individual-column {params.column_name} \
+            {output.unfiltered} &> {log}
+
+        awk -F, 'NR == 1 || ${params.filter_column} == "FALSE"' {output.unfiltered} > {output.filtered}
+        """
+
+
+# Show the SBS spectrum of infant OLs and neurons. The OL spectrum, in particular,
+# should resemble the SBS spectrum of pre-MRCA mutations in our 3 related OL pairs.
+rule infant_spectra:
+    input:
+        # this is FDR=0.01
+        #muts='tables/pta_neuron___FILTERED_mut___A.csv',
+        muts='figX/all_infant_mutations_fdr0.001.FILTERED.txt',
+        meta='metadata/sample_metadata.csv',
+        cosmic="mutsigs/sigprofilerextractor/cosmic_reduced___A.csv"
+    output:
+        pdf='figX/panel_d_infant.pdf',
+        svg='figX/panel_d_infant.svg',
+        spectra_csv='figX/panel_d_spectra_infant.csv',
+        expo_csv='figX/panel_d_exposures_infant.csv'
+    log:
+        'figX/panel_d_infant.log'
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/figX_panel_d_infant.R"
+
+
+rule maybe_number_shared_snvs_panel:
+    input:
+        meta='metadata/sample_metadata.csv',
+        csvs=expand('shared_mutations/sigprofilerextractor/{donor}.csv',
+            donor=config['all_donors'])
+    output:
+        pdf="figX/maybe_number_shared_snvs_panel.pdf"
+    log:
+        "figX/maybe_number_shared_snvs_panel.log"
+    localrule: True
+    resources:
+        mem_mb=500,
+        localjob=1
+    script:
+        #"scripts/fig3_maybe_number_shared_snvs.R"
+        "scripts/figX_number_snvs.R"

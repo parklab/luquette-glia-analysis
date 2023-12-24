@@ -56,7 +56,7 @@ for (i in 1:2) {
 
     #xlim <- range(c(gsize, nsize))
     xlim <- c(-30, 30)
-    gdens <- density(gsize)
+    gdens <- density(gsize, adjust=4.5)  # R's default bandwidth essentially reduces to a integer barplot. need a bigger smoothing window
     ndens <- density(nsize)
     ylim <- range(pretty(range(c(0, ndens$y, gdens$y))))
     plot(ndens, col=1, ylim=ylim, xlim=xlim,

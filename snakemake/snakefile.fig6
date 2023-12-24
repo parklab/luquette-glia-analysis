@@ -12,17 +12,17 @@ scrnaseq_meta = pd.read_csv('manifests/SCRNASEQ_EXPRESSION.MANIFEST')
 
 rule fig6_panel_a_twosample:
     input:
-        cors1="enrichment/cancer_snvdens/correlation/{group1}___A.csv",
-        cors2="enrichment/cancer_snvdens/correlation/{group2}___A.csv"
+        cors1="enrichment/cancer_snvdens/correlation/{any_group1}___A{dot}{corrected}.csv",
+        cors2="enrichment/cancer_snvdens/correlation/{any_group2}___A{dot}{corrected}.csv"
     output:
-        pdf='fig6/panel_a_{group1}_vs_{group2}.pdf',
-        svg='fig6/panel_a_{group1}_vs_{group2}.svg',
-        csv='fig6/panel_a_{group1}_vs_{group2}.csv'
+        pdf='fig6{underscore}{corrected}/panel_a_{any_group1}_vs_{any_group2}.{corrected}{dot}pdf',
+        svg='fig6{underscore}{corrected}/panel_a_{any_group1}_vs_{any_group2}.{corrected}{dot}svg',
+        csv='fig6{underscore}{corrected}/panel_a_{any_group1}_vs_{any_group2}.{corrected}{dot}csv'
     log:
-        'fig6/panel_a_{group1}_vs_{group2}.log'
+        'fig6{underscore}{corrected}/panel_a_{any_group1}_vs_{any_group2}.{corrected}{dot}log'
     params:
-        tag1='{group1}',
-        tag2='{group2}'
+        tag1='{any_group1}',
+        tag2='{any_group2}'
     localrule: True
     resources:
         mem_mb=4000,
@@ -33,15 +33,15 @@ rule fig6_panel_a_twosample:
 
 rule fig6_panel_a_onesample:
     input:
-        cors1="enrichment/cancer_snvdens/correlation/{group}___A.csv",
+        cors1="enrichment/cancer_snvdens/correlation/{any_group}___A.{corrected}{dot}csv",
     output:
-        pdf='fig6/panel_a_{group}.pdf',
-        svg='fig6/panel_a_{group}.svg',
-        csv='fig6/panel_a_{group}.csv'
+        pdf='fig6{underscore}{corrected}/panel_a_{any_group}.{corrected}{dot}pdf',
+        svg='fig6{underscore}{corrected}/panel_a_{any_group}.{corrected}{dot}svg',
+        csv='fig6{underscore}{corrected}/panel_a_{any_group}.{corrected}{dot}csv'
     log:
-        'fig6/panel_a_{group}.log'
+        'fig6{underscore}{corrected}/panel_a_{any_group}.{corrected}{dot}log'
     params:
-        tag1='{group}',
+        tag1='{any_group}',
     localrule: True
     resources:
         mem_mb=4000,

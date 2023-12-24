@@ -22,7 +22,7 @@ rule download_specific_scan2_rpkg_version:
         # library that are necessary for scripts in this project, but do not affect
         # the SCAN2 mutation calling pipeline. Since the mutation caller is unaffected,
         # it wouldn't make sense to rerun all calling to use the latest commit.
-        # commit_id="a3d90e715628d34b03862947f43981cc2e62cab"
+        # commit_id="aa3d90e715628d34b03862947f43981cc2e62cab"
     localrule: True
     threads: 1
     resources:

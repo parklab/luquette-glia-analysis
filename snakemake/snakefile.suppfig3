@@ -2,35 +2,39 @@
 
 rule gtex_expression:
     input:
-        "enrichment/gtex_expression_mc02/quantile/{group}___{qualtype}.10quantiles.csv"
+        "enrichment/gtex_expression_mc02/quantile/{group}___{qualtype}.10quantiles{dot}{corrected}.csv"
     output:
-        "suppfig3/panel_a_gtex_expression_{group}___{qualtype}.svg",
-        "suppfig3/panel_a_gtex_expression_{group}___{qualtype}.pdf",
-        "suppfig3/panel_a_gtex_expression_{group}___{qualtype}.csv"
+        "suppfig3{underscore}{corrected}/panel_a_gtex_expression_{group}___{qualtype}{dot}{corrected}.svg",
+        "suppfig3{underscore}{corrected}/panel_a_gtex_expression_{group}___{qualtype}{dot}{corrected}.pdf",
+        "suppfig3{underscore}{corrected}/panel_a_gtex_expression_{group}___{qualtype}{dot}{corrected}.csv"
     params:
         ignore='BINSIZE=10000,BINSIZE=100000,BINSIZE=1000000',
         group='datasource',
         highlight='group=Brain'
     log:
-        "suppfig3/panel_a_gtex_expression_{group}___{qualtype}.log"
+        "suppfig3{underscore}{corrected}/panel_a_gtex_expression_{group}___{qualtype}{dot}{corrected}.log"
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/plot_enrichment_grid.R"
 
 
 rule repliseq_individual_cell_lines:
     input:
-        neuron_repliseq="enrichment/repliseq/quantile/pta_neuron___{qualtype}.10quantiles.csv",
-        oligo_repliseq="enrichment/repliseq/quantile/pta_oligo___{qualtype}.10quantiles.csv"
+        neuron_repliseq="enrichment/repliseq/quantile/pta_neuron___{qualtype}.10quantiles{dot}{corrected}.csv",
+        oligo_repliseq="enrichment/repliseq/quantile/pta_oligo___{qualtype}.10quantiles{dot}{corrected}.csv"
     output:
-        pdf="suppfig3/panel_b_repliseq___{qualtype}.pdf",
-        svg="suppfig3/panel_b_repliseq___{qualtype}.svg",
-        csv="suppfig3/panel_b_repliseq___{qualtype}.csv"
+        pdf="suppfig3{underscore}{corrected}/panel_b_repliseq___{qualtype}{dot}{corrected}.pdf",
+        svg="suppfig3{underscore}{corrected}/panel_b_repliseq___{qualtype}{dot}{corrected}.svg",
+        csv="suppfig3{underscore}{corrected}/panel_b_repliseq___{qualtype}{dot}{corrected}.csv"
     log:
-        "suppfig3/panel_b_repliseq___{qualtype}.log"
+        "suppfig3{underscore}{corrected}/panel_b_repliseq___{qualtype}{dot}{corrected}.log"
+    localrule: True
     resources:
-        mem_mb=4000
+        mem_mb=4000,
+        localjob=1
     script:
         "scripts/suppfig3_panel_b.R"
 
@@ -39,10 +43,10 @@ rule repliseq_individual_cell_lines:
 # put them side by side and match axes.
 rule chromhmm_tssa_helper:
     input:
-        neuron="enrichment/roadmap_chromhmm_brain/bed_regions/pta_neuron___AB.csv",
-        oligo="enrichment/roadmap_chromhmm_brain/bed_regions/pta_oligo___AB.csv"
+        neuron="enrichment/roadmap_chromhmm_brain/bed_regions/pta_neuron___AB{dot}{corrected}.csv",
+        oligo="enrichment/roadmap_chromhmm_brain/bed_regions/pta_oligo___AB{dot}{corrected}.csv"
     output:
-        "suppfig3/chromhmm_tss_complete_table.csv"
+        "suppfig3{underscore}{corrected}/chromhmm_tss_complete_table{dot}{corrected}.csv"
     resources:
         mem_mb=1000
     shell:
@@ -74,19 +78,38 @@ rule chromhmm_tssa:
         "scripts/plot_enrichment.R"
 
 
-rule plot_qbed_sensitivity_by_group:
+rule plot_quantile_sensitivity_and_covariates:
     input:
-        sens_summary_files=lambda wildcards: expand("enrichment/sensitivity/quantile/{group}.summary.txt",
-            group=config['aging_groups_to_model'][wildcards.aging_group])
+        neuron_sens="enrichment/sensitivity/pta_neuron.summary.txt",
+        oligo_sens="enrichment/sensitivity/pta_oligo.summary.txt"
     output:
-        csv="suppfig3/quantile_sensitivity.{aging_group}.csv",
-        pdf="suppfig3/quantile_sensitivity.{aging_group}.pdf",
-        svg="suppfig3/quantile_sensitivity.{aging_group}.svg"
+        pdf='suppfig3_corrected/quantile_sensitivity_panels.pdf'
     log:
-        "suppfig3/quantile_sensitivity.{aging_group}.log"
+        'suppfig3_corrected/quantile_sensitivity_panels.log'
     threads: 1
+    localrule: True
     resources:
         mem_mb=1000,
-        localjobs=1
+        localjob=1
     script:
-        "scripts/suppfig3_quantile_sensitivity.R"
+        "scripts/suppfig3_quantile_sensitivity.2.R"
+
+
+rule plot_bed_sensitivity_and_covariates:
+    input:
+        sens=expand("enrichment/sensitivity/{group}.summary.txt",
+            group=[ 'pta_neuron', 'pta_oligo' ])
+    output:
+        pdf='suppfig3_corrected/bed_sensitivity_panels.pdf'
+    params:
+        datasources='roadmap,nott_enhprom',  # roadma=chromhmm
+        group_colors=','.join(g + "=" + config['group_colors'][g] for g in ['pta_neuron', 'pta_oligo'])
+    log:
+        'suppfig3_corrected/bed_sensitivity_panels.log'
+    threads: 1
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/suppfig3_bed_sensitivity.R"

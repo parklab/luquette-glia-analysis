@@ -58,9 +58,14 @@ samples <- list(`PTA neuron`=meta[amp=='PTA' & type=='neuron' & outlier == 'NORM
     `MDA GFAP`=meta[amp=='MDA' & type=='mixed' & outlier == 'NORMAL']$sample)
 
 metrics <- rbindlist(lapply(metrics.files, fread))
-metrics[muttype == 'snv', fps := analyzable.basepairs/1e6 * fpr.snv]
-metrics[muttype == 'indel', fps := analyzable.basepairs/1e6 * fpr.indel]
-metrics[, fdr := fps / (fps+calls.vafonly+calls.rescue)]
+# pmin: the estimated number of FPs should not exceed the actual number of calls
+# Note that a single FPR for all mutation burdens is used, but this only an
+# approximation. A more ideal estimate would adjust FPR for mutation burden,
+# since cells with fewer true mutations use less permissive calling parameters
+# and thus likely commit fewer FPs.
+metrics[muttype == 'snv', fps := pmin(calls.vafonly+calls.rescue, analyzable.basepairs/1e6 * fpr.snv)]
+metrics[muttype == 'indel', fps := pmin(calls.vafonly+calls.rescue, analyzable.basepairs/1e6 * fpr.indel)]
+metrics[, fdr := ifelse(calls.vafonly+calls.rescue == 0, 0, fps / (calls.vafonly+calls.rescue))]
 fwrite(metrics, file=out.csv)
 
 # For both mean.deth and mapd, muttype=snv or indel does not matter. The same value
@@ -85,17 +90,19 @@ vafonly.sens.indels <- lapply(samples, function(s) metrics[muttype=='indel' & sa
 rescue.sens.ub.snvs <- lapply(samples, function(s) metrics[muttype=='snv' & sample %in% s & calls.vafonly > 0]$rescue.sensitivity.upper.bound)
 rescue.sens.ub.indels <- lapply(samples, function(s) metrics[muttype=='indel' & sample %in% s & calls.vafonly > 0]$rescue.sensitivity.upper.bound)
 
-fdr.snvs <- lapply(samples, function(s) fps <- metrics[muttype=='snv' & sample %in% s]$fdr)
-fdr.indels <- lapply(samples, function(s) fps <- metrics[muttype=='indel' & sample %in% s]$fdr)
+fdr.snvs <- lapply(samples, function(s) metrics[muttype=='snv' & sample %in% s]$fdr)
+fdr.indels <- lapply(samples, function(s) metrics[muttype=='indel' & sample %in% s]$fdr)
 
-weighted.fdr.snvs <- sapply(samples, function(s) fps <- metrics[muttype=='snv' & sample %in% s & !is.na(fps), sum(fps)/(sum(fps) + sum(calls.vafonly) + sum(calls.rescue))])
-weighted.fdr.indels <- sapply(samples, function(s) fps <- metrics[muttype=='indel' & sample %in% s & !is.na(fps), sum(fps)/(sum(fps) + sum(calls.vafonly) + sum(calls.rescue))])
+weighted.fdr.snvs <- sapply(samples, function(s) metrics[muttype=='snv' & sample %in% s & !is.na(fps), sum(fps)/sum(calls.vafonly + calls.rescue)])
+weighted.fdr.indels <- sapply(samples, function(s) metrics[muttype=='indel' & sample %in% s & !is.na(fps), sum(fps)/sum(calls.vafonly + calls.rescue)])
 
 print(unlist(weighted.fdr.snvs))
 print(unlist(weighted.fdr.indels))
 
 
 box.and.strip <- function(x, ylim=range(x), ...) {
+print(x)
+#print(ylab)
     boxplot(x,
         las=3,
         col=c('#444444', '#DE556E', 'orange', 'purple'),

@@ -1,0 +1,2 @@
+datasource,dataclass,file
+gene_panels,overlapping_peaks,external_data/combined_4_panels.just_panel_id.bed

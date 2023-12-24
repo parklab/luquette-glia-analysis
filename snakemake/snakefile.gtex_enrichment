@@ -42,6 +42,17 @@ use rule enrichment_plot from enrichment_gtex_expression_mc02 as enrichment_gtex
     log:
         'enrichment/gtex_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+use rule enrichment_plot_corrected from enrichment_gtex_expression_mc02 as enrichment_gtex_expression_mc02_enrichment_plot_corrected with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource',
+        highlight='group=Brain'
+    output:
+        expand('enrichment/gtex_expression_mc02/quantile/{{mutclass}}.{{nquantiles}}quantiles.corrected.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/gtex_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.corrected.log'
+
 
 use rule sigenrichment_plot from enrichment_gtex_expression_mc02 as enrichment_gtex_expression_mc02_sigenrichment_plot with:
     params:

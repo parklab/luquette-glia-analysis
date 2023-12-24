@@ -1,0 +1,19 @@
+# vim: syntax=python
+
+rule transcribed_strand_bias:
+    input:
+        meta='metadata/sample_metadata.csv',
+        matrix='mutsigs/matrices/pta/matrix.SBS384.txt'
+    output:
+        panel_a_csv='suppfig4/panel_a.csv',
+        panel_a_pdf='suppfig4/panel_a.pdf',
+        panel_b_csv='suppfig4/panel_b.csv',
+        panel_b_pdf='suppfig4/panel_b.pdf'
+    log:
+        'suppfig4/panels_ab.log'
+    localrule: True
+    resources:
+        mem_mb=1000,
+        local_job=1
+    script:
+        "scripts/suppfig4_panels_ab.R"

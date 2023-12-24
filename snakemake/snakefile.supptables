@@ -2,28 +2,49 @@
 
 rule supptable1:
     input:
-        neuron="input/neuron___meta___any.csv",
-        oligo="input/oligo___meta___any.csv",
-        mda="input/mda_all___meta___any.csv"
-    resources:
-        mem_mb=100
+        "metadata/sample_metadata.csv"
     output:
         "supptables/SuppTable1.csv"
+    localrule: True
+    resources:
+        mem_mb=100,
+        localjob=1
     shell:
         """
-        (cat {input.neuron} ; tail -n +2 {input.oligo} ; tail -n +2 {input.mda}) > {output}
+        cp {input} {output}
         """
+
+'''
+# Old way. tables/all___UNFILTERED_mut___any.csv is more appropriate.
+rule supptable2:
+    input:
+        neuron="scan2/pta_neuron_mutations.UNFILTERED.txt",
+        oligo="scan2/pta_oligo_mutations.UNFILTERED.txt",
+        mda_oligo="scan2/mda_sox10_mutations.UNFILTERED.txt",
+        mda_gfap="scan2/mda_gfap_mutations.UNFILTERED.txt"
+    output:
+        "supptables/SuppTable2.csv"
+    localrule: True
+    resources:
+        mem_mb=100,
+        localjob=1
+    shell:
+        """
+        (cat {input.neuron} ; tail -n +2 {input.oligo} ; tail -n +2 {input.mda_sox10}; tail -n +2 {input.mda_gfap}) > {output}
+        """
+'''
 
 rule supptable2:
     input:
-        neuron="input/neuron___unfiltered_mut___any.csv",
-        oligo="input/oligo___unfiltered_mut___any.csv",
-        mda_all="input/mda_all___mut___any.csv"
+        muts="tables/all___UNFILTERED_mut___any.csv",
+        meta="metadata/sample_metadata.csv"
     output:
-        "supptables/SuppTable2.csv"
+        csv="supptables/SuppTable2.csv"
+    log:
+        "supptables/SuppTable2.log"
+    localrule: True
     resources:
-        mem_mb=100
-    shell:
-        """
-        (cat {input.neuron} ; tail -n +2 {input.oligo} ; tail -n +2 {input.mda_all}) > {output}
-        """
+        mem_mb=100,
+        localjob=1
+    script:
+        "scripts/supptable2.R"

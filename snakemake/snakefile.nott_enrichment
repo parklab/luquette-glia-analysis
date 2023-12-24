@@ -25,6 +25,18 @@ use rule enrichment_plot from enrichment_nott as enrichment_nott_enrichment_plot
     log:
         'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+
+use rule enrichment_plot_corrected from enrichment_nott as enrichment_nott_enrichment_plot_corrected with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype,mark'
+    output:
+        expand('enrichment/nott/quantile/{{mutclass}}.{{nquantiles}}quantiles.corrected.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/nott/quantile/{mutclass}.{nquantiles}quantiles.corrected.log'
+
+
 use rule sigenrichment_plot from enrichment_nott as enrichment_nott_sigenrichment_plot with:
     params:
         ignore='enrichment_grid_R_ignore_none',

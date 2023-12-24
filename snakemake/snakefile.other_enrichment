@@ -92,6 +92,17 @@ use rule enrichment_plot from enrichment_roadmap_histone_signal as enrichment_ro
         'enrichment/roadmap_histone_signal_brain/quantile/{mutclass}.{nquantiles}quantiles.log'
 
 
+use rule enrichment_plot_corrected from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_enrichment_plot_corrected with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='mark'
+    output:
+        expand('enrichment/roadmap_histone_signal_brain/quantile/{{mutclass}}.{{nquantiles}}quantiles.corrected.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/roadmap_histone_signal_brain/quantile/{mutclass}.{nquantiles}quantiles.corrected.log'
+
+
 use rule sigenrichment_plot from enrichment_roadmap_histone_signal as enrichment_roadmap_histone_signal_sigenrichment_plot with:
     params:
         ignore='enrichment_grid_R_ignore_none',
@@ -177,6 +188,17 @@ use rule enrichment_plot from enrichment_repliseq as enrichment_repliseq_enrichm
     log:
         'enrichment/repliseq/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+
+use rule enrichment_plot_corrected from enrichment_repliseq as enrichment_repliseq_enrichment_plot_corrected with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='datasource'
+    output:
+        expand('enrichment/repliseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.corrected.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/repliseq/quantile/{mutclass}.{nquantiles}quantiles.corrected.log'
+
 use rule sigenrichment_plot from enrichment_repliseq as enrichment_repliseq_sigenrichment_plot with:
     params:
         ignore='enrichment_grid_R_ignore_none',
@@ -260,6 +282,17 @@ use rule enrichment_plot from enrichment_scatacseq as enrichment_scatacseq_enric
             output=[ 'svg', 'pdf', 'csv' ])
     log:
         'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles.log'
+
+
+use rule enrichment_plot_corrected from enrichment_scatacseq as enrichment_scatacseq_enrichment_plot_corrected with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='celltype',
+    output:
+        expand('enrichment/scatacseq/quantile/{{mutclass}}.{{nquantiles}}quantiles.corrected.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/scatacseq/quantile/{mutclass}.{nquantiles}quantiles.corrected.log'
 
 use rule sigenrichment_plot from enrichment_scatacseq as enrichment_scatacseq_sigenrichment_plot with:
     params:

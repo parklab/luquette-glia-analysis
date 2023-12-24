@@ -70,6 +70,8 @@ minp <- pmin(combined$neuron.pval, combined$oligo.pval)
 xlim <- combined[, range(pretty(range(-log10(neuron.pval) * sign(log(neuron.enr)), na.rm=TRUE)))]
 ylim <- combined[, range(pretty(range(-log10(oligo.pval) * sign(log(oligo.enr)), na.rm=TRUE)))]
 
+p.cutoff <- 0.01
+
 devs=list(pdf, svglite, jpeg)
 outs=c(out.pdf, out.svg, out.jpeg)
 for (i in 1:3) {
@@ -84,11 +86,11 @@ for (i in 1:3) {
         xlab='Neuron -log10(enrichment P-value)',
         ylab='Oligo -log10(enrichment P-value)',
         main='Negative value: under-mutated, Positive value: over-mutated',
-        col=ifelse(minp < 0.05, 'black', 'grey'), xlim=xlim, ylim=ylim)
+        col=ifelse(minp < p.cutoff, 'black', 'grey'), xlim=xlim, ylim=ylim)
 
-    basicPlotteR::addTextLabels(xCoords=combined[minp < 0.05, -log10(neuron.pval)*sign(log(neuron.enr))],
-                                yCoords=combined[minp < 0.05, -log10(oligo.pval)*sign(log(oligo.enr))],
-        labels=combined[minp < 0.05]$gene, col.line=1, col.label=1, cex.label=0.9)
+    basicPlotteR::addTextLabels(xCoords=combined[minp < p.cutoff, -log10(neuron.pval)*sign(log(neuron.enr))],
+                                yCoords=combined[minp < p.cutoff, -log10(oligo.pval)*sign(log(oligo.enr))],
+        labels=combined[minp < p.cutoff]$gene, col.line=1, col.label=1, cex.label=0.9)
 
     dev.off()
 }

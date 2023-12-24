@@ -71,6 +71,32 @@ data <- results@spatial.sensitivity$data[!is.na(snv.n.training.neighborhood)]
 gdata <- GRanges(seqnames=data$chr, ranges=IRanges(start=data$start, end=data$end),
     seqinfo=autosome.seqinfo)
 
+# Need to re-score germline het SNP sensitivity only on sites with sufficient DP.
+# This allows differentiation of sensitivity due to lack of DP with other reasons.
+# In particular, this is important for correcting our enrichment analyses for
+# sensitivity since some regions are very skewed for low DP (e.g., the "excluded"
+# region is often ~33% > min.dp while others are >=80-90%). Using all hSNPs mixes
+# the effect of low DP and 0 DP sensitivity; the majority of the latter case (0 DP)
+# is in unassembled genomic regions where there are *ALSO* no hSNPs to score.
+for (mt in c('snv', 'indel')) {
+    dp.cutoff <- results@static.filter.params[[mt]]$min.sc.dp
+    g <- count.germline.sites.for.sens(grs=gdata,
+        # XXX: As is the case for BED file sensitivity analysis, it would be ideal to
+        # require dp >= min.sc.dp & bulk.dp >= min.bulk.dp, but our %bases >= cutoff
+        # only does each of these separately, not jointly.  It'd be good to fix this
+        # in the future, but even if we don't, the approximation should be very close
+        # since, in unassembled genomic regions, sc.dp=bulk.dp=0 and, in other regions,
+        # sc.dp < bulk.dp is usually the case.
+        sites=results@gatk[training.site==TRUE & muttype==mt & dp >= dp.cutoff],
+        seqinfo=seqinfo(gdata),
+        neighborhood.tiles=10)[, .(n.training, n.training.passed)]
+    colnames(g) <- paste0(mt, '.', colnames(g))
+    # Update the counts in `data`
+    for (cn in colnames(g))
+        data[[cn]] <- g[[cn]]
+}
+
+
 # IN OUR DATA, produces 1 range per chromosome, corresponds to non-NA values.
 # doesn't produce 1 range per chromosome in general.
 rgdata <- reduce(gdata)

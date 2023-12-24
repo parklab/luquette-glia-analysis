@@ -30,6 +30,17 @@ use rule enrichment_plot from enrichment_scrnaseq_expression_mc02 as enrichment_
     log:
         'enrichment/scrnaseq_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.log'
 
+
+use rule enrichment_plot_corrected from enrichment_scrnaseq_expression_mc02 as enrichment_scrnaseq_expression_mc02_enrichment_plot_corrected with:
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        group='donor,selection,celltype'
+    output:
+        expand('enrichment/scrnaseq_expression_mc02/quantile/{{mutclass}}.{{nquantiles}}quantiles.corrected.{output}',
+            output=[ 'svg', 'pdf', 'csv' ])
+    log:
+        'enrichment/scrnaseq_expression_mc02/quantile/{mutclass}.{nquantiles}quantiles.corrected.log'
+
 use rule sigenrichment_plot from enrichment_scrnaseq_expression_mc02 as enrichment_scrnaseq_expression_mc02_sigenrichment_plot with:
     params:
         ignore='enrichment_grid_R_ignore_none',

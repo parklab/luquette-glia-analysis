@@ -61,6 +61,21 @@ rule make_gtex_signal_bigwig:
         "scripts/convert_gtex_expression_to_bigwig.R"
 
 
+rule convert_seurat_object_to_table:
+    input:
+        rds='scrnaseq/{scrnaseq_object}.rds'
+    output:
+        csv='scrnaseq/{scrnaseq_object}_table.csv'
+    log:
+        'scrnaseq/{scrnaseq_object}_table.log'
+    benchmark:
+        'scrnaseq/{scrnaseq_object}_table.benchmark.txt'
+    resources:
+        mem_mb=14000
+    script:
+        "scripts/seurat_rds_to_csv.R"
+
+
 rule map_scrnaseq_to_gtex_gene_model:
     input:
         scrnaseq='scrnaseq/combined_mean_expr.csv',
@@ -302,7 +317,7 @@ rule copyover_nott_supptab5:
     output:
         "data/nott/SupplementaryTable5.xlsx"
     resources:
-        mem_mb=100
+        mem_mb=4000  # failed once at 100mb
     shell:
         "cp -n {input} {output}"
 
@@ -527,6 +542,39 @@ rule simplify_gencode_gene_regions:
             -e 's/utr5$/exonic/g' \
             -e 's/utr3$/exonic/g' \
             -e 's/intron$/intronic/g' {input} > {output}
+        """
+
+# The two previous gencode gene regions were made to allow more fine grained
+# access to UTRs, introns and exons. But:
+#   1. those regions are too small for sparse mutation types like indels
+#   2. we only make a claim about transcribed genome regions; whether they
+#      contribute to the final protein is not currently useful.
+#   3. classifying the genome from the full GTF is messy.
+rule make_gencode_transcribed_regions:
+    input:
+        bed="data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.genes_only.bed",
+        genome="resources/hg19.withXYM.chrprefix.genome"
+    output:
+        tx=temp("data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.tx.bed"),
+        utx=temp("data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.utx.bed"),
+        bed="data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.tx_or_utx.bed"
+    log:
+        "data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.tx_or_utx.log"
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    shell:
+        # important: bedtools merge to convert overlapping gene records into a single
+        # transcribed region record, or else there will be double counting.
+        """
+        bedtools sort -i {input.bed} -g {input.genome} \
+            | bedtools merge -i /dev/stdin \
+            | awk 'BEGIN {{OFS="\t";}} {{ print $1, $2+1, $3, "tx"; }}' > {output.tx}
+        bedtools sort -i {input.bed} -g {input.genome} \
+            | bedtools complement -i /dev/stdin -g {input.genome} \
+            | awk 'BEGIN {{OFS="\t";}} {{ print $1, $2+1, $3, "utx"; }}' > {output.utx}
+        cat {output.tx} {output.utx} | bedtools sort -i /dev/stdin -g {input.genome} > {output.bed}
         """
 
 

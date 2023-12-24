@@ -1,12 +1,65 @@
 # vim: syntax=python
 
+rule summarize_tile_sensitivity_by_group:
+    input:
+        sens_files=lambda wildcards: expand("enrichment/sensitivity/tiles_1000000binsize/{sample}.csv", 
+                sample=config['any_group_to_samples'][wildcards.group])
+    output:
+        csv="enrichment/sensitivity/tiles_1000000binsize/{group}.summary.txt"
+    log:
+        "enrichment/sensitivity/tiles_1000000binsize/{group}.summary.log"
+    params:
+        group_tag='{group}'
+    threads: 1
+    localrule: True
+    resources:
+        mem_mb=8000,
+        localjobs=1
+    script:
+        "scripts/summarize_tile_sensitivity.R"
+
+
+# Not really part of enrichment analysis, just get sensitivity across a
+# set of tiles.  The tile set must, however, be a properly aligned cover
+# of the set of tiles used internally by SCAN2 to create its spatial
+# sensitivity model.
+rule tile_sensitivity:
+    input:
+        scan2_full_object="scan2/full_objects/{sample}.rda",
+        # IMPORTANT: these tables are used to find which mutations are filtered due to duplication.
+        # the mutation filtration does not change for different groupings of samples, so using
+        # the specific scan2_rescue_groups_reverse lookup to map a sample to a group is NOT a problem.
+        # For the same reason, we always use the AB table: filtration was performed using the joint
+        # set of A and B calls, so it is meaningless to ask for A-only filtration.
+        filtered_snvs=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___AB.csv",
+        filtered_indels=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___indel_AB.csv",
+        scan2_tiles="alignability/genome_tiles/genome_tiles_1000binsize.bed",
+        tiles="alignability/genome_tiles/genome_tiles_{binsize}binsize.bed"
+    output:
+        csv="enrichment/sensitivity/tiles_{binsize}binsize/{sample}.csv"
+    log:
+        "enrichment/sensitivity/tiles_{binsize}binsize/{sample}.log"
+    benchmark:
+        "enrichment/sensitivity/tiles_{binsize}binsize/{sample}.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=13000   # max obs. 11G
+    script:
+        "scripts/enrichment_sensitivity_for_tiles.R"
+
+
 rule qbed_sensitivity:
     input:
         scan2_full_object="scan2/full_objects/{sample}.rda",
-        # This should always use AB-quality tables because filtration was not done
-        # on only A-quality calls.
+        # IMPORTANT: these tables are used to find which mutations are filtered due to duplication.
+        # the mutation filtration does not change for different groupings of samples, so using
+        # the specific scan2_rescue_groups_reverse lookup to map a sample to a group is NOT a problem.
+        # For the same reason, we always use the AB table: filtration was performed using the joint
+        # set of A and B calls, so it is meaningless to ask for A-only filtration.
         filtered_snvs=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___AB.csv",
         filtered_indels=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___indel_AB.csv",
+        tiles_1kb='alignability/genome_tiles/genome_tiles_1000binsize.bed',
+        tiles_1mb='alignability/genome_tiles/genome_tiles_1000000binsize.bed',
         qbeds=config['quantile_beds_for_sensitivity']
     output:
         summary="enrichment/sensitivity/quantile/{sample}_sensitivity.txt"
@@ -18,32 +71,40 @@ rule qbed_sensitivity:
     resources:
         mem_mb=13000   # max obs. 11G
     script:
-        "scripts/enrichment_sensitivity_qbed_1kb.R"
+        "scripts/enrichment_sensitivity_qbed_1kb_1mb.R"
 
 
-rule summarize_qbed_sensitivity_by_group:
+rule summarize_sensitivity_by_group:
     input:
         meta='metadata/sample_metadata.csv',
         metrics='suppfigX/metrics.csv',
-        sens_files=lambda wildcards: expand("enrichment/sensitivity/quantile/{sample}_sensitivity.txt",
-            sample=config['scan2_rescue_groups'][wildcards.group].values())
+        sens_files=lambda wildcards: expand("enrichment/sensitivity/{bedtype}/{sample}_sensitivity.txt", 
+                bedtype=[ 'bed_regions', 'quantile' ],
+                sample=config['any_group_to_samples'][wildcards.group])
     output:
-        csv="enrichment/sensitivity/quantile/{group}.summary.txt"
+        csv="enrichment/sensitivity/{group}.summary.txt"
     log:
-        "enrichment/sensitivity/quantile/{group}.summary.log"
+        "enrichment/sensitivity/{group}.summary.log"
     params:
         group_tag='{group}'
     threads: 1
+    # These jobs now take some time, so submit to cluster
+    #localrule: True
     resources:
-        mem_mb=4000,
-        localjobs=1
+        mem_mb=12000
+        #localjobs=1
     script:
-        "scripts/summarize_qbed_sensitivity.R"
+        "scripts/summarize_enrichment_sensitivity.R"
 
 
 rule region_bed_sensitivity:
     input:
         scan2_full_object="scan2/full_objects/{sample}.rda",
+        # IMPORTANT: these tables are used to find which mutations are filtered due to duplication.
+        # the mutation filtration does not change for different groupings of samples, so using
+        # the specific scan2_rescue_groups_reverse lookup to map a sample to a group is NOT a problem.
+        # For the same reason, we always use the AB table: filtration was performed using the joint
+        # set of A and B calls, so it is meaningless to ask for A-only filtration.
         filtered_snvs=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___AB.csv",
         filtered_indels=lambda wildcards: "tables/" + config['scan2_rescue_groups_reverse'][wildcards.sample] + "___FILTERED_mut___indel_AB.csv",
         beds=config['region_beds_for_sensitivity']
@@ -82,3 +143,70 @@ rule region_bed_sensitivity_depth:
         mem_mb=lambda wildcards, input, threads: threads*5000
     script:
         "scripts/enrichment_sensitivity_bed_depth.R"
+
+
+rule combine_region_bed_sensitivity_outputs:
+    input:
+        sens="enrichment/sensitivity/bed_regions/{sample}_sensitivity.summary.txt",
+        depth="enrichment/sensitivity/bed_regions/{sample}_depth.summary.txt"
+    output:
+        txt="enrichment/sensitivity/bed_regions/{sample}_sensitivity.txt"
+    log:
+        "enrichment/sensitivity/bed_regions/{sample}_combine.log"
+    threads: 1
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/combine_enrichment_sensitivity_bed_outputs.R"
+    
+
+rule apply_sensitivity_correction:
+    input:
+        rda="enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/{filename}.FULL.rda",
+        sens="enrichment/sensitivity/{group}.summary.txt"
+    output:
+        full_rda="enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/{filename}.FULL.corrected.rda",
+        summary_rda="enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/{filename}.SUMMARY.corrected.rda"
+    log:
+        "enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/{filename}.apply_correction.log"
+    benchmark:
+        "enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/{filename}.apply_correction.benchmark.txt"
+    params:
+        group="{group}",
+        muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel_') else 'snv',
+        passtype=lambda wildcards: 'AB' if wildcards.qualtype.endswith('AB') else 'A'
+    threads: 1
+    resources:
+        mem_mb=6000   # Need enough for two copies of the 'e' object, which can be large
+    script:
+        "scripts/apply_sensitivity_correction.R"
+
+
+# Unfortunate copy/paste: in the rule above, Snakemake does not seem to be able
+# to handle the case where "{filename}" is "". For bedenrich outputs, the file is
+# named
+#   path/to/bedenrich/FULL.rda
+# while other analyses are named by the binsize and number of quantiles:
+#   path/to/qbedenrich/tiled_{binsize}binsize_{nquantiles}quantiles.FULL.rda
+rule apply_sensitivity_correction_bedenrich:
+    input:
+        rda="enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/FULL.rda",
+        sens="enrichment/sensitivity/{group}.summary.txt"
+    output:
+        full_rda="enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/FULL.corrected.rda",
+        summary_rda="enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/SUMMARY.corrected.rda"
+    log:
+        "enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/apply_correction.log"
+    benchmark:
+        "enrichment/{datasource}/{sigtype}/{group}___{qualtype}/{analysistype}/apply_correction.benchmark.txt"
+    params:
+        group="{group}",
+        muttype=lambda wildcards: 'indel' if wildcards.qualtype.startswith('indel_') else 'snv',
+        passtype=lambda wildcards: 'AB' if wildcards.qualtype.endswith('AB') else 'A'
+    threads: 1
+    resources:
+        mem_mb=6000   # Need enough for two copies of the 'e' object, which can be large
+    script:
+        "scripts/apply_sensitivity_correction.R"

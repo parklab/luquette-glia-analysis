@@ -11,17 +11,17 @@
 # utr3
 # utr5
 ########################################################################
-enrichment_gencode_gene_regions_config = dict(
-    **{ 'output_dir': 'enrichment/gencode',
+enrichment_gencode_full_gene_regions_config = dict(
+    **{ 'output_dir': 'enrichment/gencode_full',
         'SIGNAL_MANIFEST': 'manifests/GENCODE.MANIFEST' },
     **config['enrichment_config']
 )
 
-module enrichment_gencode_gene_regions:
+module enrichment_gencode_full_gene_regions:
     snakefile: "snakefile.bed_enrichment"
-    config: enrichment_gencode_gene_regions_config
+    config: enrichment_gencode_full_gene_regions_config
 
-use rule * from enrichment_gencode_gene_regions as enrichment_gencode_gene_regions_*
+use rule * from enrichment_gencode_full_gene_regions as enrichment_gencode_full_gene_regions_*
 
 
 ########################################################################
@@ -45,6 +45,26 @@ use rule * from enrichment_gencode_simplified_gene_regions as enrichment_gencode
 
 
 ########################################################################
+# Gencode v26 genes via GTEx:
+# tx = in a gene transcript defined by GTEx
+# utx = not in a gene transcript defined by GTEx
+# position in transcript doesn't matter; e.g., exons, introns, UTRs are
+# all simply "tx".
+########################################################################
+
+enrichment_gtex_genes_tx_or_utx_config = dict(
+    **{ 'output_dir': 'enrichment/gtex',
+        'SIGNAL_MANIFEST': 'manifests/GTEX_GENES_TX_OR_UTX.MANIFEST' },
+    **config['enrichment_config']
+)
+
+module enrichment_gtex_genes_tx_or_utx:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_gtex_genes_tx_or_utx_config
+
+use rule * from enrichment_gtex_genes_tx_or_utx as enrichment_gtex_genes_tx_or_utx_*
+
+########################################################################
 # Gencode v26 genes collapsed into a single transcript as used by GTEx.
 # An enrichment value is computed for each gene. Most genes are too small
 # to reach statistical significance with the number of mutations we have.
@@ -65,3 +85,20 @@ use rule * from enrichment_gtex_genes as enrichment_gtex_genes_*
 use rule enrichment_bed_analysis from enrichment_gtex_genes as enrichment_gtex_genes_enrichment_bed_analysis with:
     resources:
         mem_mb=48000
+
+
+
+########################################################################
+# Groups of genes from panels provided by Javier.
+########################################################################
+enrichment_gene_panels_config = dict(
+    **{ 'output_dir': 'enrichment/gene_panels',
+        'SIGNAL_MANIFEST': 'manifests/GENE_PANELS.MANIFEST' },
+    **config['enrichment_config']
+)
+
+module enrichment_gene_panels:
+    snakefile: "snakefile.bed_enrichment"
+    config: enrichment_gene_panels_config
+
+use rule * from enrichment_gene_panels as enrichment_gene_panels_*

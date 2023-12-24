@@ -51,6 +51,32 @@ rule enrichment_bed_plot:
         "scripts/plot_enrichment.R"
 
 
+rule enrichment_bed_plot_corrected:
+    input:
+        outroot + '/{mutclass}/combined_table.corrected.csv'
+    output:
+        expand(outroot + '/{{mutclass}}.corrected.{ext}',
+            ext=[ 'svg', 'pdf', 'csv' ])
+    log:
+        outroot + '/{mutclass}_plot.corrected.log'
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        # specify group=comma separated list of metadata names to group traces
+        # by unique metadata combinations. Default 'datasource' just causes a
+        # title to be printed. Won't work in workflows that don't have a datasource
+        # metadata column.
+        xlab='quantile',
+        xgroup='datasource',
+        ygroup='datasource',
+        #highlight=''  # can use e.g., group=Brain to select lines to highlight
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/plot_enrichment.R"
+
+
 # Final output rule
 rule enrichment_bed_table:
     input:
@@ -61,6 +87,24 @@ rule enrichment_bed_table:
         outroot + '/{mutclass}/combined_table.log'
     benchmark:
         outroot + '/{mutclass}/combined_table.benchmark.txt'
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/make_enrichment_table.R"
+
+
+# Final output rule WITH correction for sensitivity
+rule enrichment_bed_table_corrected:
+    input:
+        outroot + "/{mutclass}/bedenrich/SUMMARY.corrected.rda"
+    output:
+        outroot + '/{mutclass}/combined_table.corrected.csv'
+    log:
+        outroot + '/{mutclass}/combined_table.corrected.log'
+    benchmark:
+        outroot + '/{mutclass}/combined_table.corrected.benchmark.txt'
     localrule: True
     resources:
         mem_mb=4000,
@@ -108,6 +152,6 @@ rule enrichment_bed_apply_mask_and_add_metadata:
     shell:
         """
         ( echo "#{params.metatags}" ;
-          bedtools subtract -A -a {input.bed} -b {input.mask} -g {input.genome} ) \
+          bedtools subtract -a {input.bed} -b {input.mask} -g {input.genome} ) \
         > {output}
         """

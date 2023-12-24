@@ -48,7 +48,8 @@ rule model_aging_rates:
 rule correct_mutburdens_mda:
     input:
         mutburden="aging_rates/{generic_group}___mutburden___A.csv",
-        expomat="mutsigs/ad_hoc_signature_selection/cosmic_reduced/{generic_group}___expomat___A.csv"
+        expomat="mutsigs/sigprofilerextractor/cosmic_reduced/{generic_group}___expomat___A.csv"
+        #expomat="mutsigs/ad_hoc_signature_selection/cosmic_reduced/{generic_group}___expomat___A.csv"
     output:
         csv="aging_rates/{generic_group}___mutburden_mda_corrected___A.csv"
     log:

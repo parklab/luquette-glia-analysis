@@ -79,20 +79,25 @@ colors[c('CNS-GBM', 'CNS-Medullo', 'CNS-Oligo', 'CNS-PiloAstro')] <-
 devs=list(pdf, svglite)
 outs=c(out.pdf, out.svg)
 for (i in 1:2) {
+    # for computing y axis range
+    all.vals <- c(npv$Correlation)
     if (do.two) {
         devs[[i]](width=6.5, height=2, pointsize=5, file=outs[i])
         layout(t(1:2))
+        all.vals <- c(all.vals, opv$Correlation)
     } else {
         # decrease width
         devs[[i]](width=3.25, height=2, pointsize=5, file=outs[i])
     }
+
+    ylim <- range(pretty(all.vals))
         
     par(mar=c(8,4,3,1))
     if (do.two) {
-        barplot(opv$Correlation, col=colors[opv$Cancer], border=F, las=3, ylim=c(-0.03,0.40),
+        barplot(opv$Correlation, col=colors[opv$Cancer], border=F, las=3, ylim=ylim, #c(-0.03,0.5),
             cex.names=0.8, names.arg=opv$Cancer, ylab='Correlation')
     }
-    barplot(npv$Correlation, col=colors[npv$Cancer], border=F, las=3, ylim=c(-0.03,0.40),
+    barplot(npv$Correlation, col=colors[npv$Cancer], border=F, las=3, ylim=ylim, #c(-0.03,0.5),
         cex.names=0.8, names.arg=npv$Cancer, ylab='Correlation')
     dev.off()
 }

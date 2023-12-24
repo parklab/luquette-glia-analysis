@@ -63,7 +63,9 @@ for (i in 1:length(bed.files)) {
 }
 
 # List of all mutations that survived the various duplicate and cluster filters
-# Be sure to only keep the mutations for this sample.
+# Be sure to only keep the mutations for this sample.  This filtration is not
+# reflected in the SCAN2 object because it's performed in a post-processing script
+# that aggregates data from all single cells.
 filt.muts <- rbind(fread(in.filtered.snvs), fread(in.filtered.indels))[sample == results@single.cell]
 
 called.muts <- results@gatk[pass == TRUE | rescue == TRUE]
@@ -135,8 +137,13 @@ for (signal.name in c('abs.gp.mu', 'gp.sd', 'snv.n.training', 'snv.n.training.ne
 cat("Counting germline and somatic calls per feature\n")
 for (mt in c('snv', 'indel')) {
     cat(mt, 'germline', '\n')
+    # XXX: it would be ideal to also use the bulk cutoff, since this is used for permuting.
+    # however, our depth covariate analysis currently only collects %bases >= sc.min.dp and
+    # %bases >= bulk.min.dp separately, not %bases >= sc.min.dp & bulk.min.dp. Approximating
+    # by sc.min.dp should be very close to correct since it is rare for bulk.dp < sc.dp
+    dp.cutoff <- results@static.filter.params[[mt]]$min.sc.dp
     g <- count.germline.sites.for.sens(grs=gbed,
-        sites=results@gatk[training.site==TRUE & muttype==mt],
+        sites=results@gatk[training.site==TRUE & muttype==mt & dp >= dp.cutoff],
         seqinfo=seqinfo(gbed),
         neighborhood.tiles=10)[, .(n.training, n.training.passed)]
     colnames(g) <- paste0('sum.', mt, '.', colnames(g))

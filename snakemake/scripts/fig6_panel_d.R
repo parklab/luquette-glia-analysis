@@ -80,9 +80,9 @@ for (i in 1:2) {
     ylim <- c(0.8,max(as.matrix(odds.mat[,-1]), na.rm=T))
     plot(x=0,y=0, xlim=xlim, ylim=ylim, bty='n', pch=NA,
         xlab="Number of top genes",ylab="Odds ratio")
-    for (i in c(2:ncol(odds.mat), which(types %in% emphasize))) {
-        col <- colors[types[i]]
-        lwd <- ifelse(types[i] %in% emphasize, 2.5, 1/2)
+    for (i in c(2:ncol(odds.mat), which(colnames(odds.mat) %in% emphasize))) {
+        col <- colors[types[i-1]]
+        lwd <- ifelse(types[i-1] %in% emphasize, 2.5, 1/2)
         lines(x=xaxis, y=odds.mat[[i]], col=col, lwd=lwd)
     }
 
@@ -107,9 +107,9 @@ for (i in 1:2) {
     ylim <- c(0.5,max(as.matrix(odds.mat[,-1]), na.rm=T))
     plot(x=0,y=0, xlim=xlim, ylim=ylim, bty='n', pch=NA,
         xlab="Number of top genes",ylab="Odds ratio")
-    for (i in c(2:ncol(odds.mat), which(types %in% emphasize))) {
-        col <- colors[types[i]]
-        lwd <- ifelse(types[i] %in% emphasize, 2.5, 1/2)
+    for (i in c(2:ncol(odds.mat), which(colnames(odds.mat) %in% emphasize))) {
+        col <- colors[types[i-1]]
+        lwd <- ifelse(types[i-1] %in% emphasize, 2.5, 1/2)
         lines(x=xaxis, y=odds.mat[[i]], col=col, lwd=lwd)
     }
 

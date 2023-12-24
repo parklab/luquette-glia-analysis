@@ -3,15 +3,22 @@
 
 rule consolidate_genic_distribution:
     input:
-        enrich_objects=lambda wildcards: "enrichment/gencode_simplified/bed_regions/{group}___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + "/bedenrich/SUMMARY.rda"
+        enrich_objects=lambda wildcards: "enrichment/{datasource}/bed_regions/{group}___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + "/bedenrich/SUMMARY{dot}{corrected}.rda"
     output:
-        csv="fig1/panel_c_gene_regions_{group}___{muttype}.csv"
+        csv="fig1{underscore}{corrected}/panel_c_{datasource}_{group}___{muttype}.{corrected}{dot}csv"
     log:
-        "fig1/panel_c_gene_regions_{group}___{muttype}.log"
+        "fig1{underscore}{corrected}/panel_c_{datasource}_{group}___{muttype}.{corrected}{dot}log"
     params:
         group_tag='{group}',
-        signal='datasource=gencode_simplified',
-        features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
+        # mega hack: in snakemake we can't allow datasource=gencode because it's a substring of
+        # another datasource, datasource=gencode_simplified.  however, the bedenrich analysis for
+        # gencode_full already ran with datasource=gencode in the MANIFEST, and thus, also in
+        # the BED file.  rather than wait for a few days for that (and all downstream sensitivity
+        # analyses) to rerun, just use this hack in any case where a datasource value is specified
+        # within snakemake.  datasources that are automatically determined from the files without
+        # using a snakemake wildcard will work with no modification.
+        signal=lambda wildcards: 'datasource=' + ('gencode' if wildcards.datasource == 'gencode_full' else wildcards.datasource),
+        features=lambda wildcards: 'tx,utx' if wildcards.datasource == 'gtex' else ('upstream,utr5,cds,intron,utr3,downstream,intergenic,other' if wildcards.datasource == 'gencode_full' else "intergenic,intronic,exonic,other")   # "other" refers to transcripts without exons/introns
     localrule: True
     resources:
         mem_mb=1000,
@@ -22,11 +29,11 @@ rule consolidate_genic_distribution:
 
 rule plot_genic_distribution:
     input:
-        enrich_tables=expand('fig1/panel_c_gene_regions_{group}___{{muttype}}.csv',
+        enrich_tables=expand('fig1{{underscore}}{{corrected}}/panel_c_{{datasource}}_{group}___{{muttype}}.{{corrected}}{{dot}}csv',
             group=[ 'pta_neuron', 'pta_oligo' ])
     output:
-        svg="fig1/panel_c_gene_regions___{muttype}.svg",
-        pdf="fig1/panel_c_gene_regions___{muttype}.pdf",
+        svg="fig1{underscore}{corrected}/panel_c_{datasource}___{muttype}.{corrected}{dot}svg",
+        pdf="fig1{underscore}{corrected}/panel_c_{datasource}___{muttype}.{corrected}{dot}pdf",
     params:
         colors=','.join([ config['group_colors'][g] for g in [ 'pta_neuron', 'pta_oligo' ] ])
     localrule: True
@@ -34,18 +41,18 @@ rule plot_genic_distribution:
         mem_mb=1000,
         localjob=1
     log:
-        "fig1/panel_c_gene_regions___{muttype}.log"
+        "fig1{underscore}{corrected}/panel_c_{datasource}___{muttype}.{corrected}{dot}log"
     script:
         "scripts/barplot_enrich_new2.R"
 
 
 rule plot_genic_distribution_all:
     input:
-        enrich_tables=expand('fig1/panel_c_gene_regions_{group}___{{muttype}}.csv',
+        enrich_tables=expand('fig1{{underscore}}{{corrected}}/panel_c_{{datasource}}_{group}___{{muttype}}.{{corrected}}{{dot}}csv',
             group=config['comparison_groups'])
     output:
-        svg="fig1/panel_c_gene_regions_all_comparisons___{muttype}.svg",
-        pdf="fig1/panel_c_gene_regions_all_comparisons___{muttype}.pdf",
+        svg="fig1{underscore}{corrected}/panel_c_{datasource}_all_comparisons___{muttype}.{corrected}{dot}svg",
+        pdf="fig1{underscore}{corrected}/panel_c_{datasource}_all_comparisons___{muttype}.{corrected}{dot}pdf",
     params:
         colors=','.join([ config['group_colors'][g] for g in config['comparison_groups'] ])
     localrule: True
@@ -53,7 +60,27 @@ rule plot_genic_distribution_all:
         mem_mb=1000,
         localjob=1
     log:
-        "fig1/panel_c_gene_regions_all_comparisons___{muttype}.log"
+        "fig1{underscore}{corrected}/panel_c_{datasource}_all_comparisons___{muttype}.{corrected}{dot}log"
+    script:
+        "scripts/barplot_enrich_new2.R"
+
+
+
+rule plot_genic_distribution_pta_vs_mda:
+    input:
+        enrich_tables=expand('fig1{{underscore}}{{corrected}}/panel_c_{{datasource}}_{group}___{{muttype}}.{{corrected}}{{dot}}csv',
+            group=[ 'pta_oligo', 'mda_sox10', 'mda_gfap' ])
+    output:
+        svg="suppfig2{underscore}{corrected}/panel_c_{datasource}_pta_vs_mda___{muttype}.{corrected}{dot}svg",
+        pdf="suppfig2{underscore}{corrected}/panel_c_{datasource}_pta_vs_mda___{muttype}.{corrected}{dot}pdf",
+    params:
+        colors=','.join([ config['group_colors'][g] for g in [ 'pta_oligo', 'mda_sox10', 'mda_gfap' ] ])
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    log:
+        "suppfig2{underscore}{corrected}/panel_c_{datasource}_pta_vs_mda___{muttype}.{corrected}{dot}log"
     script:
         "scripts/barplot_enrich_new2.R"
 

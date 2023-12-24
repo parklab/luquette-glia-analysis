@@ -1,5 +1,21 @@
 # vim: syntax=python
 
+print("WARNING: rule orthogonal_tech_comparison uses an Excel spreadsheet with manually entered rates for PTA neurons. Last updated for 56-neuron dataset on 10/18/2023, but MUST be updated MANUALLY if more PTA neurons are sequenced!")
+rule suppfig2_orthogonal_tech_comparison:
+    input:
+        xlsx='external_data/NeuronDuplexSequencingComparison.xlsx'
+    output:
+        pdf='suppfig2/orthogonal_tech_comparison.pdf'
+    log:
+        'suppfig2/orthogonal_tech_comparison.log'
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/suppfig2_orthogonal_singlecell_techs.R"
+
+
 rule suppfig2_indel_size_analysis:
     input:
         "tables/pta_neuron___FILTERED_mut___indel_A.csv",
@@ -18,26 +34,44 @@ rule suppfig2_indel_size_analysis:
         "scripts/suppfig2_plot_indel_sizes.R"
 
 
-rule genic_distribution_mda: #_elderly:
+rule suppfig2_indel_aging_curves:
     input:
-        oligo_snv_pta="enrichment/gencode_simplified/bed_regions/pta_oligo___AB/bedenrich/SUMMARY.rda",
-        # XXX: FIXME: this must become mda_oligo_elderly
-        oligo_snv_mda="enrichment/gencode_simplified/bed_regions/{mdatype}___AB/bedenrich/SUMMARY.rda",
+        meta='metadata/sample_metadata.csv',
+        muts='scan2/{group}_mutations.UNFILTERED.txt'
     output:
-        svg="suppfig2/panel_c_{mdatype}.svg", #_{ageclass}.svg",
-        pdf="suppfig2/panel_c_{mdatype}.pdf", #_{ageclass}.pdf",
-        csv="suppfig2/panel_c_{mdatype}.csv"  #_{ageclass}.csv"
+        data_csv="suppfig2/panel_a_{group}_ins_del_aging_rates.csv",
+        pdf="suppfig2/panel_a_{group}_ins_del_aging_rates.pdf",
+        models_csv="suppfig2/panel_a_{group}_ins_del_aging_rates_models.csv"
     params:
-        signal_to_plot='datasource=gencode_simplified',
-        features="intergenic,intronic,exonic,other"   # "other" refers to transcripts without exons/introns
+        color=lambda wildcards: config['group_colors'][wildcards.group]
+    log:
+        "suppfig2/panel_a_{group}_ins_del_aging_rates.log"
     localrule: True
     resources:
         mem_mb=1000,
         localjob=1
-    log:
-        "suppfig2/panel_c_{mdatype}.log" #_{ageclass}.log"
     script:
-        "scripts/suppfig2_panel_c.R"
+        "scripts/suppfig2_ins_del_separate_aging_rates.R"
+
+
+rule suppfig2_plot_bed_sensitivity_and_covariates:
+    input:
+        sens=expand("enrichment/sensitivity/{group}.summary.txt",
+            group=[ 'pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap' ])
+    output:
+        pdf='suppfig2_corrected/bed_sensitivity_panels.pdf'
+    params:
+        datasources='gtex',
+        group_colors=','.join(g + "=" + config['group_colors'][g] for g in ['pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap'])
+    log:
+        'suppfig2_corrected/bed_sensitivity_panels.log'
+    threads: 1
+    localrule: True
+    resources:
+        mem_mb=1000,
+        localjob=1
+    script:
+        "scripts/suppfig3_bed_sensitivity.R"
 
 
 rule individual_gene_enrichment:

@@ -125,6 +125,27 @@ rule cancer_density_correlation:
         "scripts/qbed_correlation.R"
 
 
+rule cancer_density_correlation_corrected:
+    input:
+        muts="tables/{group}___FILTERED_mut___A.csv",
+        sens="enrichment/sensitivity/tiles_1000000binsize/{group}.summary.txt",
+        tiles="alignability/genome_tiles/genome_tiles_1000000binsize.bed",
+        # quantile is ignored. raw scores used.
+        qbeds=expand('enrichment/cancer_snvdens/quantile/qbed/cancer_snvdens___{tumor}___normdens.1000000binsize_10quantiles.qbed',
+            tumor=config['pcawg_tumors'])
+    output:
+        csv="enrichment/cancer_snvdens/correlation/{group}___A.corrected.csv"
+    log:
+        "enrichment/cancer_snvdens/correlation/{group}___A.corrected.log"
+    benchmark:
+        "enrichment/cancer_snvdens/correlation/{group}___A.corrected.benchmark.txt"
+    threads: 1
+    resources:
+        mem_mb=4000
+    script:
+        "scripts/qbed_correlation_corrected.R"
+
+
 # This text file slightly differs from VCF in format: the columns are
 # named as expected by dndscv
 rule run_dndscv_cancer:

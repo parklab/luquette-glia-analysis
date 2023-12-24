@@ -2,7 +2,7 @@
 
 rule umap_plots:
     input:
-        lambda wildcards: "scatacseq/umap.csv" if wildcards.panel_letter == 'c' else "scrnaseq/snRNA_1465a_table.csv"
+        lambda wildcards: "scatacseq/umap.csv" if wildcards.panel_letter == 'c' else "scrnaseq/All.Aggr.renamed_table.csv"
     output:
         expand("fig4/panel_{{panel_letter}}_umap_plot.{ext}",
             ext=[ 'svg', 'pdf', 'jpeg' ])
@@ -20,15 +20,15 @@ rule umap_plots:
 rule consolidate_enrichment_analyses:
     input:
         snv_indel_pairs=lambda wildcards:
-            expand('enrichment/{datasource}/quantile/{{group}}___{qualtype}.10quantiles.csv',
+            expand('enrichment/{datasource}/quantile/{{group}}___{qualtype}.10quantiles{{dot}}{{corrected}}.csv',
                 datasource=[ 'scrnaseq_expression_mc02', 'scatacseq', 'repliseq', 'roadmap_histone_signal_brain' ],
                 qualtype=[ 'A', 'indel_A' ] if 'mda' in wildcards.group else [ 'AB', 'indel_AB' ])
     output:
-        csv="fig4/{group}_consolidated_signals_10quantiles.csv"
+        csv="fig4{underscore}{corrected}/{group}_consolidated_signals_10quantiles{dot}{corrected}.csv"
     log:
-        "fig4/{group}_consolidated_signals_10quantiles.log"
+        "fig4{underscore}{corrected}/{group}_consolidated_signals_10quantiles{dot}{corrected}.log"
     benchmark:
-        "fig4/{group}_consolidated_signals_10quantiles.benchmark.txt"
+        "fig4{underscore}{corrected}/{group}_consolidated_signals_10quantiles{dot}{corrected}.benchmark.txt"
     params:
         tag="{group}"
     localrule: True
@@ -41,17 +41,21 @@ rule consolidate_enrichment_analyses:
 
 rule many_enrichment_analyses:
     input:
-        group1='fig4/{group1}_consolidated_signals_10quantiles.csv',
-        group2='fig4/{group2}_consolidated_signals_10quantiles.csv'
+        group1='fig4{underscore}{corrected}/{any_group1}_consolidated_signals_10quantiles{dot}{corrected}.csv',
+        group2='fig4{underscore}{corrected}/{any_group2}_consolidated_signals_10quantiles{dot}{corrected}.csv'
     output:
-        pdf="fig4/panels_cdefg_enrichment_analyses_{group1}_vs_{group2}.pdf",
-        svg="fig4/panels_cdefg_enrichment_analyses_{group1}_vs_{group2}.svg",
-        csv="fig4/panels_cdefg_enrichment_analyses_{group1}_vs_{group2}.csv"
+        pdf="fig4{underscore}{corrected}/panels_cdefg_enrichment_analyses_{any_group1}_vs_{any_group2}{dot}{corrected}.pdf",
+        svg="fig4{underscore}{corrected}/panels_cdefg_enrichment_analyses_{any_group1}_vs_{any_group2}{dot}{corrected}.svg",
+        csv="fig4{underscore}{corrected}/panels_cdefg_enrichment_analyses_{any_group1}_vs_{any_group2}{dot}{corrected}.csv"
     log:
-        "fig4/panels_cdefg_enrichment_analyses_{group1}_vs_{group2}.log"
+        "fig4{underscore}{corrected}/panels_cdefg_enrichment_analyses_{any_group1}_vs_{any_group2}{dot}{corrected}.log"
     params:
-        group1_color=lambda wildcards: config['group_colors'][wildcards.group1],
-        group2_color=lambda wildcards: config['group_colors'][wildcards.group2]
+        #group1_color=lambda wildcards: config['group_colors'][wildcards.any_group1],
+        #group2_color=lambda wildcards: config['group_colors'][wildcards.any_group2]
+        # col_map instead colors lines by data type and differentiates groups by solid and dashed lines
+        group1_color="col_map",
+        group2_color="col_map",
+        log_y_axis="true"
     localrule: True
     resources:
         mem_mb=1000,
@@ -62,11 +66,11 @@ rule many_enrichment_analyses:
 
 rule consolidate_chromhmm:
     input:
-        enrich_objects=lambda wildcards: "enrichment/roadmap_chromhmm_brain/bed_regions/{group}___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + "/bedenrich/SUMMARY.rda"
+        enrich_objects=lambda wildcards: "enrichment/roadmap_chromhmm_brain/bed_regions/{group}___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + "/bedenrich/SUMMARY{dot}{corrected}.rda"
     output:
-        csv="fig4/panel_h_chromhmm_{group}___{muttype}.csv"
+        csv="fig4{underscore}{corrected}/panel_h_chromhmm_{group}___{muttype}{dot}{corrected}.csv"
     log:
-        "fig4/panel_h_chromhmm_{group}___{muttype}.log"
+        "fig4{underscore}{corrected}/panel_h_chromhmm_{group}___{muttype}{dot}{corrected}.log"
     params:
         group_tag='{group}',
         signal='eid=E073',
@@ -83,13 +87,13 @@ rule consolidate_chromhmm:
 
 rule plot_chromhmm_states:
     input:
-        enrich_tables=expand("fig4/panel_h_chromhmm_{group}___{{muttype}}.csv",
+        enrich_tables=expand("fig4{{underscore}}{{corrected}}/panel_h_chromhmm_{group}___{{muttype}}{{dot}}{{corrected}}.csv",
             group=[ 'pta_neuron', 'pta_oligo' ])
     output:
-        svg="fig4/panel_h_chromhmm___{muttype}.svg",
-        pdf="fig4/panel_h_chromhmm___{muttype}.pdf"
+        svg="fig4{underscore}{corrected}/panel_h_chromhmm___{muttype}{dot}{corrected}.svg",
+        pdf="fig4{underscore}{corrected}/panel_h_chromhmm___{muttype}{dot}{corrected}.pdf"
     log:
-        "fig4/panel_h_chromhmm___{muttype}.log"
+        "fig4{underscore}{corrected}/panel_h_chromhmm___{muttype}{dot}{corrected}.log"
     params:
         colors=','.join([ config['group_colors'][g] for g in [ 'pta_neuron', 'pta_oligo' ] ])
     localrule: True
@@ -102,13 +106,13 @@ rule plot_chromhmm_states:
 
 rule plot_chromhmm_states_all:
     input:
-        enrich_tables=expand("fig4/panel_h_chromhmm_{group}___{{muttype}}.csv",
+        enrich_tables=expand("fig4{{underscore}}{{corrected}}/panel_h_chromhmm_{group}___{{muttype}}.{{corrected}}{{dot}}csv",
             group=config['comparison_groups'])
     output:
-        svg="fig4/panel_h_chromhmm_all_comparisons___{muttype}.svg",
-        pdf="fig4/panel_h_chromhmm_all_comparisons___{muttype}.pdf"
+        svg="fig4{underscore}{corrected}/panel_h_chromhmm_all_comparisons___{muttype}.{corrected}{dot}svg",
+        pdf="fig4{underscore}{corrected}/panel_h_chromhmm_all_comparisons___{muttype}.{corrected}{dot}pdf"
     log:
-        "fig4/panel_h_chromhmm_all_comparisons___{muttype}.log"
+        "fig4{underscore}{corrected}/panel_h_chromhmm_all_comparisons___{muttype}.{corrected}{dot}log"
     params:
         colors=','.join([ config['group_colors'][g] for g in config['comparison_groups'] ])
     localrule: True
@@ -121,11 +125,11 @@ rule plot_chromhmm_states_all:
 
 rule consolidate_nott_enhancers_and_promoters:
     input:
-        enrich_objects=lambda wildcards: "enrichment/nott/bed_regions/{group}___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + "/bedenrich/SUMMARY.rda"
+        enrich_objects=lambda wildcards: "enrichment/nott/bed_regions/{group}___" + config['muttype_to_passtype']['mda' if 'mda' in wildcards.group else 'pta'][wildcards.muttype] + "/bedenrich/SUMMARY{dot}{corrected}.rda"
     output:
-        csv="fig4/panel_i_nott_enhprom_{group}___{muttype}.csv"
+        csv="fig4{underscore}{corrected}/panel_i_nott_enhprom_{group}___{muttype}{dot}{corrected}.csv"
     log:
-        "fig4/panel_i_nott_enhprom_{group}___{muttype}.log"
+        "fig4{underscore}{corrected}/panel_i_nott_enhprom_{group}___{muttype}{dot}{corrected}.log"
     params:
         group_tag='{group}',
         signal='datasource=nott_enhprom',
@@ -140,13 +144,13 @@ rule consolidate_nott_enhancers_and_promoters:
 
 rule plot_nott_enhancers_and_promoters:
     input:
-        enrich_tables=expand("fig4/panel_i_nott_enhprom_{group}___{{muttype}}.csv",
+        enrich_tables=expand("fig4{{underscore}}{{corrected}}/panel_i_nott_enhprom_{group}___{{muttype}}{{dot}}{{corrected}}.csv",
             group=[ 'pta_neuron', 'pta_oligo' ])
     output:
-        svg="fig4/panel_i_nott_enhprom___{muttype}.svg",
-        pdf="fig4/panel_i_nott_enhprom___{muttype}.pdf",
+        svg="fig4{underscore}{corrected}/panel_i_nott_enhprom___{muttype}{dot}{corrected}.svg",
+        pdf="fig4{underscore}{corrected}/panel_i_nott_enhprom___{muttype}{dot}{corrected}.pdf",
     log:
-        "fig4/panel_i_nott_enhprom___{muttype}.log"
+        "fig4{underscore}{corrected}/panel_i_nott_enhprom___{muttype}{dot}{corrected}.log"
     params:
         colors=','.join([ config['group_colors'][g] for g in [ 'pta_neuron', 'pta_oligo' ] ])
     localrule: True
@@ -159,13 +163,13 @@ rule plot_nott_enhancers_and_promoters:
 
 rule plot_nott_enhancers_and_promoters_all:
     input:
-        enrich_tables=expand("fig4/panel_i_nott_enhprom_{group}___{{muttype}}.csv",
+        enrich_tables=expand("fig4{{underscore}}{{corrected}}/panel_i_nott_enhprom_{group}___{{muttype}}.{{corrected}}{{dot}}csv",
             group=config['comparison_groups'])
     output:
-        svg="fig4/panel_i_nott_enhprom_all_comparisons___{muttype}.svg",
-        pdf="fig4/panel_i_nott_enhprom_all_comparisons___{muttype}.pdf",
+        svg="fig4{underscore}{corrected}/panel_i_nott_enhprom_all_comparisons___{muttype}.{corrected}{dot}svg",
+        pdf="fig4{underscore}{corrected}/panel_i_nott_enhprom_all_comparisons___{muttype}.{corrected}{dot}pdf",
     log:
-        "fig4/panel_i_nott_enhprom_all_comparisons___{muttype}.log"
+        "fig4{underscore}{corrected}/panel_i_nott_enhprom_all_comparisons___{muttype}.{corrected}{dot}log"
     params:
         colors=','.join([ config['group_colors'][g] for g in config['comparison_groups'] ])
     localrule: True

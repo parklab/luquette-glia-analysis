@@ -1,0 +1,47 @@
+Very important for any future use of this pipeline:
+
+bedenrich.R does *NOT* require that BED intervals are disjoint *even within a
+specific record class*. This means mutations can be incorrectly double counted
+if multiple records from the same class overlap.
+
+It just so happens to be the case that none of the 4 non-QBEDs used in this
+pipeline have overlapping intervals within a class, so this behavior causes
+no issues in our analysis.
+
+For example, running these mutations
+
+   chr    pos refnt altnt
+1:   1 853262     C     G
+2:   1 930822     A     G
+
+and this BED file
+
+chr1    800000  900000  classA
+chr1    810000  910000  classA
+chr1    820000  920000  classA
+chr1    830000  930000  classB
+chr1    840000  940000  classA
+chr1    850000  950000  classB
+chr1    850001  950002  classB
+chr1    850002  950003  classC
+chr1    850003  950004  classC
+chr1    850004  950005  classA
+chr1    850005  950006  classB
+chr1    990000  991000  classA
+
+through bedenrich.R produces these counts:
+
+        obs
+classA    7
+classB    7
+classC    4
+
+because the first mutation intersects with all but the last record
+(n=5 classA, n=4 classB, n=2 classC) and the second mutation intersects
+with all but the first 4 and last record (n=2 classA, n=3 classB, n=2 classC)
+for the totals reported above.
+
+Of course, the same mis-counting will be applied to permutations.  So it is
+unclear how large of an effect this would have if, in future analyses, an
+improper BED is used.  The effect size would depend on how far from uniform
+the mutation detection sensitivity is in the region vs. outside of the region.

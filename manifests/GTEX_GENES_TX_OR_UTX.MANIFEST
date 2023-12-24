@@ -1,0 +1,2 @@
+datasource,dataclass,file
+gtex,tx_or_utx,data/gtex/gencode.v26lift37.annotation.GTEX_COLLAPSED.tx_or_utx.bed

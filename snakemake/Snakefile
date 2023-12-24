@@ -9,7 +9,7 @@ import yaml
 import pandas as pd
 
 
-# Exhaustive list of interesting comparisons for PTA, MDA, batch
+# Exhaustive list of interesting comparisons for PTA, MDA, batch and pass vs. rescue
 '''
 config['all_comparisons'] = [
      'pta_neuron___A_vs_pta_oligo___A',
@@ -24,6 +24,8 @@ config['all_comparisons'] = [
      'mda_sox10_elderly___A_vs_mda_gfap_elderly___A',
      'pta_oligo___A_vs_mda_gfap_infant___A', 'pta_oligo___A_vs_mda_gfap_elderly___A' ]
 '''
+'''
+# What is going on here? Why are these doubled up?
 config['all_comparisons'] = [
      'pta_neuron_vs_pta_oligo',
      'pta_neuron_vs_pta_oligo',
@@ -36,9 +38,30 @@ config['all_comparisons'] = [
      'mda_gfap_infant_vs_mda_gfap_elderly',
      'mda_sox10_elderly_vs_mda_gfap_elderly',
      'pta_oligo_vs_mda_gfap_infant', 'pta_oligo_vs_mda_gfap_elderly' ]
+'''
+
+config['all_comparisons'] = [
+     'pta_neuron_vs_pta_oligo',
+     'pta_neuron_vs_pta_oligo_batch1', 'pta_neuron_vs_pta_oligo_batch2',
+     'pta_oligo_batch1_vs_pta_oligo_batch2',
+     'pta_oligo_vs_mda_sox10_infant', 'pta_oligo_vs_mda_sox10_elderly',
+     'mda_sox10_infant_vs_mda_sox10_elderly',
+     'mda_gfap_infant_vs_mda_gfap_elderly',
+     'mda_sox10_elderly_vs_mda_gfap_elderly',
+     'pta_oligo_vs_mda_gfap_infant', 'pta_oligo_vs_mda_gfap_elderly' ]
+
+
+# Just the major groups of pta_neuron, pta_oligo, mda_sox10 and mda_gfap
+config['rescue_group_comparisons'] = [
+     'pta_neuron_vs_pta_oligo',
+     'pta_oligo_vs_mda_sox10',
+     'mda_sox10_vs_mda_gfap',
+     'pta_oligo_vs_mda_gfap' ]
+
 
 # Order matters
-config['comparison_groups'] = [ 'pta_neuron', 'pta_oligo', 'pta_oligo_batch1', 'pta_oligo_batch2', 'mda_sox10_infant', 'mda_sox10_elderly', 'mda_gfap_infant', 'mda_gfap_elderly' ]
+#config['comparison_groups'] = [ 'pta_neuron', 'pta_oligo', 'pta_oligo_batch1', 'pta_oligo_batch2', 'mda_sox10_infant', 'mda_sox10_elderly', 'mda_gfap_infant', 'mda_gfap_elderly' ]
+config['comparison_groups'] = [ 'pta_neuron_half1', 'pta_neuron_half2', 'pta_neuron', 'pta_oligo_half1', 'pta_oligo_half2', 'pta_oligo', 'pta_oligo_batch1', 'mda_sox10_elderly', 'mda_gfap_elderly' ]
 
 
 # Autosomes only
@@ -50,6 +73,34 @@ config['metadata'] = pd.read_csv('metadata/sample_metadata.csv')
 meta = config['metadata']  # Just for convenience within this Snakefile
 
 ageclasses = set(meta['ageclass'])
+
+# For subsampling analysis in response to reviewers.
+#
+# Ideally assignment to half1 or half2 would be in the metadata file, but changing
+# that reruns the whole pipeline. So instead, just record the assignments here.
+neuron_half1 = [ "1278BA9-B", "1278BA9-C", "5817PFC-B", "5871-Neuron-4", "5871-Neuron-5",
+    "1465BA9-B", "1465BA9-C", "5559PFC-A", "5559PFC-B", "5559PFC-C", "4643-Neuron-4",
+    "4643-Neuron-6", "5087PFC-A", "5087PFC-B", "936PFC-A", "5219-Neuron-4", "5657PFC-A",
+    "5657PFC-B", "5657PFC-C", "5823PFC-A", "5823PFC-B", "5823PFC-C", "UMB4976_E2",
+    "UMB4976_E3", "UMB5451_B5", "UMB5943_C2", "UMB5943_C5" ]
+neuron_half2 = [ "1278BA9-A", "5817PFC-A", "5817PFC-C", "5871-Neuron-6", "4638-Neuron-5",
+    "4638-Neuron-6", "1465BA9-A", "1465BA9-D", "4643-Neuron-3", "5087PFC-C", "936PFC-B",
+    "936PFC-C", "5219-Neuron-2", "5219-Neuron-5", "UMB4976_E1", "UMB5451_B2", "UMB5451_B3",
+    "UMB5572_D2", "UMB5572_D3", "UMB5572_D4", "UMB5666_F1", "UMB5666_F2", "UMB5666_F5",
+    "UMB5943_C4" ]
+oligo_half1 = [ "1278-Oligo-5", "1278-Oligo-7", "1278-Oligo-8", "5817-Oligo-6",
+    "5871-Oligo-7", "4638-Oligo-5", "1465-Oligo-5", "1465-Oligo-8", "5559-Oligo-5",
+    "4643-Oligo-8", "5087-Oligo-4", "5087-Oligo-7", "5219-Oligo-7", "5657-Oligo-3",
+    "5657-Oligo-5", "5657-Oligo-7", "5823-Oligo-8" ]
+oligo_half2 = [ "5817-Oligo-4", "5817-Oligo-7", "5871-Oligo-4", "5871-Oligo-5",
+    "4638-Oligo-4", "1465-Oligo-7", "5559-Oligo-3", "5559-Oligo-8", "4643-Oligo-5",
+    "4643-Oligo-6", "5219-Oligo-5", "5219-Oligo-6", "5823-Oligo-6", "5823-Oligo-7" ]
+
+meta['half'] = 0
+for sample_name in neuron_half1 + oligo_half1:
+    meta.loc[meta['sample'] == sample_name, 'half'] = 1
+for sample_name in neuron_half2 + oligo_half2:
+    meta.loc[meta['sample'] == sample_name, 'half'] = 2
 
 with open('metadata/bams.yaml') as yf:
     bams = yaml.load(yf, Loader=yaml.FullLoader)
@@ -93,8 +144,10 @@ generic_groups = [ 'pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap', 'pta_olig
 
 
 # All of these groups *should* be recognized in the group_from_meta() function below.
-all_groups = [ 'pta_neuron', 'pta_oligo', 'pta_oligo_batch1', 'pta_oligo_batch2', 'mda_sox10', 'mda_sox10_infant', 'mda_sox10_elderly', 'mda_gfap', 'mda_gfap_infant', 'mda_gfap_elderly' ]
+all_groups = [ 'pta_neuron', 'pta_oligo', 'pta_oligo_batch1', 'pta_oligo_batch2', 'mda_sox10', 'mda_sox10_infant', 'mda_sox10_elderly', 'mda_gfap', 'mda_gfap_infant', 'mda_gfap_elderly', 'pta_neuron_infant', 'pta_oligo_infant', 'pta_neuron_half1', 'pta_neuron_half2', 'pta_oligo_half1', 'pta_oligo_half2' ]
 config['all_groups'] = all_groups
+
+
 
 # Convenience function to recognize a few constantly used grouping criteria. Expect
 # more to be added. Should probably recognize everything listed in `generic_groups`.
@@ -106,15 +159,37 @@ def group_from_meta(group, return_color=False):
     if group == 'pta_neuron':
         subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'neuron')]
         color = list(subset['color'])[0] # 'black'
+        color = '#323232'  # not-quite-black. overriding the metadata
+    elif group == 'pta_neuron_infant':
+        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'neuron') & (meta['ageclass'] == 'infant')]
+        color = list(subset['color'])[0] # 'black'
+        color = '#323232'  # not-quite-black. overriding the metadata
+    elif group == 'pta_neuron_half1':
+        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'neuron') & (meta['half'] == 1)]
+        color = list(subset['color'])[0] # 'black'
+        color = '#888888'  # not-quite-black. overriding the metadata
+    elif group == 'pta_neuron_half2':
+        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'neuron') & (meta['half'] == 2)]
+        color = list(subset['color'])[0] # 'black'
+        color = '#cccccc'  # not-quite-black. overriding the metadata
     elif group == 'pta_oligo':
         subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'oligo')]
         color = list(subset['color'])[0] # '#DE556E'
+    elif group == 'pta_oligo_infant':
+        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'oligo') & (meta['ageclass'] == 'infant')]
+        color = list(subset['color'])[0] # '#DE556E'
+    elif group == 'pta_oligo_half1':
+        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'oligo') & (meta['half'] == 1)]
+        color = 'darkred' # list(subset['color'])[0]
+    elif group == 'pta_oligo_half2':
+        subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'oligo') & (meta['half'] == 2)]
+        color = 'maroon' # list(subset['color'])[0]
     elif group == 'pta_oligo_batch1':
         subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'oligo') & (meta['batch'] == 1)]
-        color = 'violetred'
+        color = '#c994c7' # 'violetred'  # violetred{,1} were not distinguishable enough
     elif group == 'pta_oligo_batch2':
         subset = meta[(meta['amp'] == 'PTA') & (meta['type'] == 'oligo') & (meta['batch'] == 2)]
-        color = 'violetred1'
+        color = '#e7298a' # 'violetred1'
     elif group == 'mda_sox10':
         subset = meta[(meta['amp'] == 'MDA') & (meta['selection'] == 'SOX10')]
         color = list(subset['color'])[0] # 'orange'
@@ -141,6 +216,9 @@ def group_from_meta(group, return_color=False):
     else:
         return(subset)
 
+config['any_group_to_samples'] = dict([ (g, group_from_meta(g)['sample']) for g in all_groups ])
+
+config['all_pta_cells'] = list(group_from_meta('pta_neuron')['sample']) + list(group_from_meta('pta_oligo')['sample'])
 
 config['group_colors'] = dict([ (g, group_from_meta(g, return_color=True)) for g in all_groups ])
 
@@ -166,7 +244,11 @@ config['scan2_rescue_groups'] = dict((g, rescue_group_to_scan2_objects(g)) for g
 config['scan2_rescue_groups_reverse'] = \
     dict((sample, g) for g in scan2_rescue_groups for sample in rescue_group_to_scan2_objects(g).values())
 
-synthetic_groups = [ 'pta_oligo_batch1', 'pta_oligo_batch2' ] + expand("mda_{selection}_{ageclass}", selection=[ 'gfap', 'sox10' ], ageclass=[ 'infant', 'elderly' ])
+synthetic_groups = \
+    [ 'pta_neuron_half1', 'pta_neuron_half2', 'pta_oligo_half1', 'pta_oligo_half2' ] +  \
+    [ 'pta_oligo_batch1', 'pta_oligo_batch2' ] + \
+    expand("mda_{selection}_{ageclass}",
+        selection=[ 'gfap', 'sox10' ], ageclass=[ 'infant', 'elderly' ])
 config['synthetic_groups'] = dict((g, list(group_from_meta(g)['sample'])) for g in synthetic_groups)
 
 
@@ -201,9 +283,6 @@ snv_qualtypes = [ 'A', 'AB' ]
 indel_qualtypes = [ 'indel_A', 'indel_AB' ]
 all_qualtypes = snv_qualtypes + indel_qualtypes
 
-# List of Ns to perform NMF on
-config['nmf_sig_ns'] = [ 1, 2, 3, 4, 5, 6, 7, 8 ]
-
 # Allow script to run (and presumably create this file) by specifying
 # --config make_pcawg_metadata=1 --until metadata/pcawg_metadata.csv
 #
@@ -220,8 +299,8 @@ if 'make_pcawg_metadata' not in config.keys():
 
 # Constant config variables for the enrichment pipeline
 binsizes = [ '1000' ]
-qsizes = [ 3, 5, 10, 50 ]
-qsizes_to_compute = [ 10, 50 ]
+qsizes = [ 3, 5, 10 ] #, 50 ]
+qsizes_to_compute = [ 10 ] #, 50 ]
 
 
 # Enrichment analyses are keyed by {group_name}___{qualtype}, i.e., pta_neuron___indel_A.
@@ -287,7 +366,7 @@ config['enrichment_config'] = {
 # little work).
 config['cancer_enrichment_config'] = {
     'qbed_from_bigwig_script': 'snakemake/scripts/make_qbed_from_bigwig.sh',
-    'quantiles': [ '3', '10', '50' ],
+    'quantiles': [ '3', '10' ], #, '50' ],
     # must match binsizes.
     'tiles': {
         '1000':    'alignability/genome_tiles/genome_tiles_1000binsize.bed',
@@ -303,16 +382,85 @@ config['cancer_enrichment_config'] = {
 }
 
 
+#################################################################################
+# Data sources that provide genomic covariates for enrichment analyses.
+#################################################################################
+
+# Min coverage ("mc") values 02 = 20%, 08 = 80% mean that only bins
+# covered >=20% or >=80% (these are separate analyses) by the relevant data
+# sources are included when computing
+# quantiles.  I.e., for gene expression from GTEx, genomic bins that are not
+# transcribed at all are completely excluded before calculating quantiles of
+# expression.  If these bins were included, the expression distribution would
+# have a very large spike at expression=0.
+# 
+# Min coverage values: when using very small bins (like 1kb), the exact min
+# coverage value has little effect (data not shown).  It's essentially binary
+# for =0 or >0. The value matters more for large bins like the 1 MB bins used
+# for cancer analysis. In that case, requiring 80% coverage excludes ~90% of
+# the genome.
+#
+# IMPORTANT: the average bin value we compute accounts for coverage by assigning
+# a value of 0 to any bases not covered. E.g., a bin with 450 bp covered by gene
+# G and 550 bp not transcribed would be averaged such that
+#    bin-wide average expression value = 0.45*(G's expression # level) + 0.55*0
+#
+# Sources no longer used:
+#    'encode_replichip'
+quantile_datasources = [ 'gtex_expression_mc' + x for x in [ '02', '08' ] ] + \
+                [ 'scrnaseq_expression_mc' + x for x in [ '02', '08' ] ] + \
+                [ 'nott', 'repliseq', 'conservation', 
+                  'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ]
+
+config['quantile_beds_for_sensitivity'] = []
+with open('manifests/QBEDS_FOR_SENSITIVITY_ANALYSIS.MANIFEST', 'r') as f:
+    for line in f:
+        config['quantile_beds_for_sensitivity'].append(line.strip())
+        
+
+# Some other data sources no longer used:
+#     'boca2', 'hic_tads'
+bed_region_datasources = [ 'dna_repair_hotspots',
+                            # 'gencode',   # can no longer allow this because it's a substring of gencode_simplified
+                           # requires some hackery because the datasource internally recorded in BED
+                           # files, enrichment objects, tables, etc. is "gencode", not "gencode_full".
+                           # would need to rerun (with an updated GENCODE.MANIFEST) to fix this, but
+                           # the time required to do that isn't worth the wait.
+                           'gencode_full',
+                           'gencode_simplified',
+                           'gene_panels',
+                           'gtex', 'gtex_genes', 'nott', 'roadmap_chromhmm_brain' ]
+
+config['region_beds_for_sensitivity'] = []
+with open('manifests/BEDS_FOR_SENSITIVITY_ANALYSIS.MANIFEST', 'r') as f:
+    for line in f:
+        config['region_beds_for_sensitivity'].append(line.strip())
+
+
 wildcard_constraints:
+    # snakemake seems not to match empty strings for a wildcard
+    underscore='|_',           # allow either empty string or an underscore
+    dot='|\.',                  # allow either empty string or a dot
+    corrected='|corrected',
+    datasource='|'.join(quantile_datasources + bed_region_datasources),
+    sigtype='quantile|bed_regions',
+    analysistype='bedenrich|qbedenrich|sigenrich_sigprofilerextractor|sigenrich_ad_hoc_signature_selection',
     ageclass='|'.join(ageclasses),
     mdatype='mda_gfap|mda_sox10',
     nmf_spectype='ID|SBS',
-    sigprofiler_spectype='SBS96|ID83',
+    sigprofiler_spectype='SBS96|SBS384|ID83',
     de_novo_group='|'.join(config['mutsig_groups_for_de_novo'].keys()),
     filter='FILTERED|UNFILTERED',
     generic_group='|'.join(generic_groups),
     rescue_group='|'.join(scan2_rescue_groups),
     synthetic_group='|'.join(synthetic_groups),
+    # same as above, but allows for {synthetic_group1}_vs_{synthetic_group2} style outputs
+    synthetic_group1='|'.join(synthetic_groups),  
+    synthetic_group2='|'.join(synthetic_groups),
+    any_group='|'.join(config['all_groups']),
+    # same as above
+    any_group1='|'.join(config['all_groups']),
+    any_group2='|'.join(config['all_groups']),
     rescue_or_synthetic_group='|'.join(scan2_rescue_groups + synthetic_groups),
     mutsig_group='|'.join(generic_groups),
     cosmic_vs_age_group='|'.join(config['cosmic_vs_age_group'].keys()),
@@ -322,6 +470,7 @@ wildcard_constraints:
     cancer_project='tcga|icgc',
     mutsig_selection_method='ad_hoc_signature_selection|sigprofilerextractor',
     muttype='snv|indel',
+    donor='|'.join(config['all_donors']),
     tumor='|'.join(config['pcawg_tumors'])  # Not necessary, but helps to catch errors
     #tumor='[^\.]+',  # No longer need this -[^\.]'   # Tumor codes are formatted XXXX-YYYY 
     #mutclass='|'.join(expand("{celltype}{sigclass}___{qualtype}",
@@ -394,16 +543,6 @@ rule scan2_metrics:
         expand('metrics/{sample}.{filetype}.txt',
                 sample=config['all_single_cells'],
                 filetype=[ 'metrics', 'depth' ])
-
-rule nmf:
-    input:
-        expand('mutsigs/nmf/{de_novo_group}/sigprofiler/{nmf_spectype}/signatures_{n}.pdf',
-            de_novo_group=config['mutsig_groups_for_de_novo'].keys(),
-            nmf_spectype=[ 'SBS', 'ID' ],
-            n=config['nmf_sig_ns']),
-        expand('mutsigs/nmf/{de_novo_group}/sigprofiler/{nmf_spectype}/selection_criteria.pdf',
-            de_novo_group=config['mutsig_groups_for_de_novo'].keys(),
-            nmf_spectype=[ 'SBS', 'ID' ])
 
 rule sigprofilerextractor:
     input:
@@ -499,7 +638,7 @@ rule mutsigs:
 
 # For now, "shared" only means shared by exactly two cells in the same
 # individual. Higher order
-# sharing within an individual is not yet examined.  This is independent of
+# sharing within an individual is not examined.  This is independent of
 # the sharing filters applied prior to enrichment analysis that remove
 # recurrent mutations across individuals (likely artifacts) and retain only
 # 1 mutation if it recurs across cells in a single individual (likely lineage
@@ -513,59 +652,14 @@ rule mutsigs:
 rule shared_mutations:
     input:
         expand("shared_mutations/{mutsig_selection_method}/{sample_pair}___{filetype}.csv",
-            mutsig_selection_method=[ 'ad_hoc_signature_selection' ],
+            mutsig_selection_method=[ 'sigprofilerextractor' ],
             sample_pair=[ tup[0] + "___vs___" + tup[1] for donor in bams.keys() \
                 for tup in itertools.combinations(bams[donor]['single_cell'].keys(), r=2) ],
             filetype=[ 'mutations', 'mrca' ])
 
 
 
-# Min coverage ("mc") values 02 = 20%, 08 = 80% mean that only bins
-# covered >=20% or >=80% (these are separate analyses) by the relevant data
-# sources are included when computing
-# quantiles.  I.e., for gene expression from GTEx, genomic bins that are not
-# transcribed at all are completely excluded before calculating quantiles of
-# expression.  If these bins were included, the expression distribution would
-# have a very large spike at expression=0.
-# 
-# Min coverage values: when using very small bins (like 1kb), the exact min
-# coverage value has little effect (data not shown).  It's essentially binary
-# for =0 or >0. The value matters more for large bins like the 1 MB bins used
-# for cancer analysis. In that case, requiring 80% coverage excludes ~90% of
-# the genome.
-#
-# IMPORTANT: the average bin value we compute accounts for coverage by assigning
-# a value of 0 to any bases not covered. E.g., a bin with 450 bp covered by gene
-# G and 550 bp not transcribed would be averaged such that
-#    bin-wide average expression value = 0.45*(G's expression # level) + 0.55*0
-#
-# Sources no longer used:
-#    'encode_replichip'
-quantile_datasources = [ 'gtex_expression_mc' + x for x in [ '02', '08' ] ] + \
-                [ 'scrnaseq_expression_mc' + x for x in [ '02', '08' ] ] + \
-                [ 'nott', 'repliseq', 'conservation', 
-                  'scatacseq', 'cancer_snvdens', 'roadmap_histone_signal_brain' ]
-
-config['quantile_beds_for_sensitivity'] = []
-with open('manifests/QBEDS_FOR_SENSITIVITY_ANALYSIS.MANIFEST', 'r') as f:
-    for line in f:
-        config['quantile_beds_for_sensitivity'].append(line.strip())
-        
-
-# Some other data sources no longer used:
-#     'boca2', 'hic_tads'
-bed_region_datasources = [ 'dna_repair_hotspots', 'gencode', 'gencode_simplified',
-                           'gtex_genes', 'nott', 'roadmap_chromhmm_brain' ]
-
-config['region_beds_for_sensitivity'] = []
-with open('manifests/BEDS_FOR_SENSITIVITY_ANALYSIS.MANIFEST', 'r') as f:
-    for line in f:
-        config['region_beds_for_sensitivity'].append(line.strip())
-
-
-print("MUST UPDATE: currently enrichment analysis uses all MDA cells. Must be reduced to only elderly cells.")
-print("IMPORTANT: should only use passA mutations for MDA as well because signature rescue is not designed for MDA.")
-print("MUST UPDATE: mda_oligo -> mda_oligo_elderly in suppfig2 panel c.")
+print("REMINDER: should only use passA mutations for MDA as well because signature rescue is not designed for MDA (reminder only; this is how the pipeline currently works).")
 # Enrichment analysis of total mutation burden
 rule enrichment:
     input:
@@ -587,16 +681,62 @@ rule enrichment:
 rule quantile_enrichment_sensitivity:
     input:
         expand('enrichment/sensitivity/quantile/{sample}_sensitivity.txt',
-            sample=config['all_single_cells'])
+            #sample=config['all_pta_cells'])
+            sample=config['all_single_cells'])   # try adding MDA as well
 
 rule bed_enrichment_sensitivity:
     input:
         expand('enrichment/sensitivity/bed_regions/{sample}_sensitivity.{file}.txt',
-            sample=config['all_single_cells'],
+            #sample=config['all_pta_cells'],
+            sample=config['all_single_cells'],   # try adding MDA as well
             file=[ 'full', 'summary' ]),
         expand('enrichment/sensitivity/bed_regions/{sample}_depth.{file}.txt',
-            sample=config['all_single_cells'],
+            #sample=config['all_pta_cells'],
+            sample=config['all_single_cells'],   # try adding MDA as well
             file=[ 'full', 'summary' ])
+
+rule mb_tile_sensitivity:
+    input:
+        expand('enrichment/sensitivity/tiles_1000000binsize/{sample}.csv',
+            sample=config['all_single_cells']),
+        expand('enrichment/sensitivity/tiles_1000000binsize/{group}.summary.txt',
+            group=[ 'pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap' ])
+
+
+rule summarized_sensitivity:
+    input:
+        expand('enrichment/sensitivity/{group}.summary.txt',
+            group=[ 'pta_neuron', 'pta_oligo',
+                    'mda_sox10', 'mda_gfap']),
+                    #'mda_sox10_elderly', 'mda_gfap_elderly' ])  # XXX: enable later
+        "suppfig3_corrected/quantile_sensitivity_panels.pdf"
+        
+
+# TEMPORARY: manually specify the subset of signals with sensitivity corrections
+# These tables feed into fig4 and suppfig3 rules to produce plots.
+rule correct_enrichment_analyses:
+    input:
+        expand('enrichment/{datasource}/quantile/{group}___{qualtype}.10quantiles.corrected.csv',
+                group=[ 'pta_neuron', 'pta_oligo' ],
+                datasource=[ 'gtex_expression_mc02', 'scrnaseq_expression_mc02', 'scatacseq', 'repliseq', 'roadmap_histone_signal_brain' ],
+                qualtype=[ 'A', 'indel_A', 'AB', 'indel_AB' ]),
+        expand('enrichment/{datasource}/bed_regions/{group}___{qualtype}.corrected.csv',
+                group=[ 'pta_neuron', 'pta_oligo' ],
+                datasource=[ 'roadmap_chromhmm_brain', 'nott' ],
+                qualtype=[ 'A', 'indel_A', 'AB', 'indel_AB' ]),
+        expand('enrichment/{datasource}/quantile/{group}___{qualtype}.{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.corrected.{output}',
+            datasource=quantile_datasources,
+            group=generic_groups + synthetic_groups,
+            qualtype=[ 'A', 'indel_A' ],
+            nquantiles=[ 3 ],
+            mutsig_selection_method=[ 'ad_hoc_signature_selection', 'sigprofilerextractor' ],
+            output=[ 'svg', 'pdf', 'csv' ])
+
+rule enrichment_sensitivity:
+    input:
+        rules.quantile_enrichment_sensitivity.input,
+        rules.bed_enrichment_sensitivity.input,
+        rules.correct_enrichment_analyses.input
 
 
 # Enrichment analysis of signature-specific mutation burden
@@ -636,7 +776,25 @@ rule response:
         expand("respfig1/{group}_genes{inset}.pdf",
             # MDA gene enrichments
             group=[ 'pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap', 'mda_sox10_elderly', 'mda_gfap_elderly' ],
-            inset=[ '', '_inset' ])
+            inset=[ '', '_inset' ]),
+        "respfig2/pta_neuron_half1_vs_pta_oligo_half1.corrected.pdf",
+        #"respfig2/pta_neuron_half2_vs_pta_neuron_half2.corrected.csv",
+        "respfig2/pta_neuron_half2_vs_pta_oligo_half2.corrected.pdf",
+        #"respfig2/pta_oligo_half2_vs_pta_oligo_half2.corrected.csv",
+        "respfig2/pta_neuron_vs_pta_oligo_batch1.corrected.pdf",
+        "respfig2/pta_neuron_vs_mda_sox10_elderly.corrected.pdf",
+        "respfig2/pta_neuron_vs_mda_gfap_elderly.corrected.pdf",
+        "respfig2/pta_neuron_vs_pta_oligo.corrected.pdf",
+        "respfig2/panel_h_chromhmm___snv.corrected.pdf",
+        "respfig2/panel_i_nott_enhprom___snv.corrected.pdf",
+        expand("respfig3/{donor}.pdf",
+            donor=config['all_donors']), #[ '5559', '5657' ]),
+        "respfig4/all_panels.pdf",
+        "respfig6/panels_cdefg_enrichment_analyses_pta_neuron_vs_pta_oligo.corrected.pdf",
+        "respfig6/quantile_scatter_plots.pdf",
+        "respfig6/panel_h_chromhmm___snv.corrected.pdf",
+        "respfig6/panel_i_nott_enhprom___snv.corrected.pdf"
+
 
 
 include: "snakefile.data"
@@ -668,11 +826,13 @@ include: "snakefile.fig3"
 include: "snakefile.fig4"
 include: "snakefile.fig5"
 include: "snakefile.fig6"
+include: "snakefile.figX"
 include: "snakefile.suppfig2"
 include: "snakefile.suppfig3"
+include: "snakefile.suppfig4"
 include: "snakefile.response"
 include: "snakefile.table1"
-#include: "snakefile.supptables"
+include: "snakefile.supptables"
 
 # Shortcuts to rebuild a single figure/table at a time
 
@@ -683,13 +843,20 @@ rule table1:
             amptype=[ 'pta' ], #, 'mda' ],   # mda doesn't work because it implies mda_neurons exists
             file=[ 'cells', 'muts' ])
 
+
 rule fig1:
     input:
         expand("fig1/panel_b_aging_rates_{comparison}{qualtype}{file}",
             file=[ ".pdf", "_burdens.csv", "_model.csv" ],
             qualtype=[ 'A', 'indel_A' ],
             comparison=[ '', 'all_comparisons_', 'batch1_vs_batch2_' ]),
-        expand("fig1/panel_c_gene_regions{comparison}___{muttype}.{ext}",
+        expand("fig1/panel_c_{datasource}{comparison}___{muttype}.{ext}",
+            datasource=[ 'gtex', 'gencode_simplified', 'gencode_full' ],
+            comparison=[ '', '_all_comparisons' ],
+            muttype=[ 'snv', 'indel' ],
+            ext=[ 'svg', 'pdf' ]),
+        expand("fig1_corrected/panel_c_{datasource}{comparison}___{muttype}.corrected.{ext}",
+            datasource=[ 'gtex', 'gencode_simplified', 'gencode_full' ],
             comparison=[ '', '_all_comparisons' ],
             muttype=[ 'snv', 'indel' ],
             ext=[ 'svg', 'pdf' ]),
@@ -701,14 +868,20 @@ rule fig1:
 
 rule suppfig2:
     input:
+        "suppfig2/orthogonal_tech_comparison.pdf",
+        expand("suppfig2/panel_a_{group}_ins_del_aging_rates.pdf",
+                group=[ 'pta_neuron', 'pta_oligo' ]),
         "suppfig2/panel_b_indelsize.pdf",
         "suppfig2/panel_b_indelsize.csv",
-        expand('suppfig2/panel_c_{mdatype}{ageclass}.{ext}',
-            mdatype=[ 'mda_gfap', 'mda_sox10' ],
-            # XXX: FIXME
-            #ageclass=[ '_elderly', '_infant' ],
-            ageclass=[ '' ],
+        expand('suppfig2/panel_c_{group}.{ext}',
+            group=[ 'mda_gfap', 'mda_sox10', 'mda_gfap_elderly', 'mda_gfap_infant', 'mda_sox10_elderly', 'mda_sox10_infant' ],
             ext=[ 'pdf', 'csv' ]),
+        expand('suppfig2_corrected/panel_c_{group}.{ext}',
+            group=[ 'mda_gfap', 'mda_sox10', 'mda_gfap_elderly', 'mda_gfap_infant', 'mda_sox10_elderly', 'mda_sox10_infant' ],
+            ext=[ 'corrected.pdf', 'corrected.csv' ]),
+        # Above plots are individual groups, this plots PTA OL vs. MDA OL vs. MDA GFAP
+        expand('suppfig2_corrected/panel_c_gtex_pta_vs_mda___snv.{ext}',
+            ext=[ 'corrected.pdf', 'corrected.svg' ]),
         "suppfig2/panel_d_genes.pdf",
         "suppfig2/panel_d_genes.jpeg",
         "suppfig2/panel_d_genes.csv"
@@ -716,20 +889,32 @@ rule suppfig2:
 
 rule suppfig3:
     input:
-        "suppfig3/panel_a_gtex_expression_pta_neuron___AB.pdf",
-        "suppfig3/panel_a_gtex_expression_pta_neuron___AB.csv",
-        "suppfig3/panel_a_gtex_expression_pta_oligo___AB.pdf",
-        "suppfig3/panel_a_gtex_expression_pta_oligo___AB.csv",
-        "suppfig3/panel_a_gtex_expression_pta_neuron___indel_AB.pdf",
-        "suppfig3/panel_a_gtex_expression_pta_neuron___indel_AB.csv",
-        "suppfig3/panel_a_gtex_expression_pta_oligo___indel_AB.pdf",
-        "suppfig3/panel_a_gtex_expression_pta_oligo___indel_AB.csv",
-        "suppfig3/panel_b_repliseq___AB.pdf",
-        "suppfig3/panel_b_repliseq___AB.csv",
-        "suppfig3/panel_b_repliseq___indel_AB.pdf",
-        "suppfig3/panel_b_repliseq___indel_AB.csv",
-        "suppfig3/panel_c_chromhmm_tss.pdf",
-        "suppfig3/panel_c_chromhmm_tss.csv"
+        expand('suppfig3/panel_a_gtex_expression_{group}___{muttype}.{ext}',
+            group=[ 'pta_neuron', 'pta_oligo' ],
+            muttype=[ 'AB', 'indel_AB' ],
+            ext=[ 'pdf', 'csv' ]),
+        expand('suppfig3_corrected/panel_a_gtex_expression_{group}___{muttype}.corrected.{ext}',
+            group=[ 'pta_neuron', 'pta_oligo' ],
+            muttype=[ 'AB', 'indel_AB' ],
+            ext=[ 'pdf', 'csv' ]),
+        expand("suppfig3/panel_b_repliseq___{muttype}.{ext}",
+            muttype=[ 'AB', 'indel_AB' ],
+            ext=[ 'pdf', 'csv' ]),
+        expand("suppfig3_corrected/panel_b_repliseq___{muttype}.corrected.{ext}",
+            muttype=[ 'AB', 'indel_AB' ],
+            ext=[ 'pdf', 'csv' ]),
+        "suppfig3_corrected/quantile_sensitivity_panels.pdf"
+        # Removed for space reasons
+        #"suppfig3/panel_c_chromhmm_tss.pdf",
+        #"suppfig3/panel_c_chromhmm_tss.csv"
+
+
+rule suppfig4:
+    input:
+        "suppfig4/panel_a.pdf",
+        "suppfig4/panel_a.csv",
+        "suppfig4/panel_b.pdf",
+        "suppfig4/panel_b.csv"
 
 
 rule fig2:
@@ -740,28 +925,35 @@ rule fig2:
             group=config['comparison_groups'],
             ext=[ 'pdf', 'csv' ]),
         expand("fig2{method}/panel_b___{group}___A.{ext}",
-            method=[ '', '_sigprofilerextractor' ],
+            #method=[ '', '_sigprofilerextractor' ],   # No longer necessary to do the old ad-hoc method
+            method=[ '_sigprofilerextractor' ],
             group=[ 'pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap' ],
             ext=[ 'pdf', 'csv' ]),
         expand("fig2{method}/panel_c_{comparison}_A.{ext}",
-            method=[ '', '_sigprofilerextractor' ],
+            #method=[ '', '_sigprofilerextractor' ],   # No longer necessary to do the old ad-hoc method
+            method=[ '_sigprofilerextractor' ],
             ext=[ 'pdf', 'csv' ],
             comparison=[ 'pta', 'all', 'batch1_vs_batch2' ])
 
-# To be used for new figure about oligo pairs
-'''
-        "fig2/panel_d.pdf",
-        "fig2/panel_d.svg",
-        "fig2/panel_d_supplement.pdf",
-        "fig2/panel_d_supplement.svg",
-        "fig2/panel_d_spectra.csv",
-        "fig2/panel_d_exposures_barplot.pdf",
-        "fig2/panel_d_exposures_barplot.csv",
-        "fig2/panel_e_infant.pdf",
-        "fig2/panel_e_infant.svg",
-        "fig2/panel_e_spectra_infant.csv",
-        "fig2/panel_e_exposures_infant.csv"
-'''
+
+# This should really be numbered fig3. Let's wait to make sure
+# there are no other renumberings.
+rule figX:
+    input:
+        rules.shared_mutations.input,   # require all pairs to be run even though only 3 are used
+        "figX/maybe_number_shared_snvs_panel.pdf",
+        "figX/panel_a.pdf",
+        "figX/panel_a_mrca_timings.csv",
+        "figX/panel_b.pdf",
+        "figX/panel_b_supplement.pdf",
+        "figX/panel_b_spectra.csv",
+        "figX/panel_b_exposures_barplot.csv",
+        "figX/panel_b_exposures_barplot.pdf",
+        "figX/panel_c_early_vs_late_spectrum.pdf",
+        "figX/panel_d_infant.pdf",
+        "figX/panel_d_spectra_infant.csv",
+        "figX/panel_d_exposures_infant.csv"
+
 
 rule fig3:
     input:
@@ -771,11 +963,13 @@ rule fig3:
             group=config['comparison_groups'],
             ext=[ 'pdf', 'csv' ]),
         expand("fig3{method}/panel_b___{group}___indel_A.{ext}",
-            method=[ '', '_sigprofilerextractor' ],
+            #method=[ '', '_sigprofilerextractor' ],   # No longer necessary to do the old ad-hoc method
+            method=[ '_sigprofilerextractor' ],
             group=[ 'pta_neuron', 'pta_oligo', 'mda_sox10', 'mda_gfap' ],
             ext=[ 'pdf', 'csv' ]),
         expand("fig3{method}/panel_c_{comparison}_indel_A.{ext}",
-            method=[ '', '_sigprofilerextractor' ],
+            #method=[ '', '_sigprofilerextractor' ],   # No longer necessary to do the old ad-hoc method
+            method=[ '_sigprofilerextractor' ],
             ext=[ 'pdf', 'csv' ],
             comparison=[ 'pta', 'all', 'batch1_vs_batch2' ])
 
@@ -786,18 +980,26 @@ rule fig4:
         "fig4/panel_c_umap_plot.pdf",
         expand("fig4/panels_cdefg_enrichment_analyses_{comparison}.pdf",
             comparison=config['all_comparisons']),
+        # Barplots are different from the quantile plots above: all of the
+        # comparisons can be shown in one barplot without it being too many
+        # lines to read.
+        # N.B. we don't do indel analysis on these regions because they can be
+        # much smaller than the quantile-based regions and indels are much
+        # sparser than sSNVs.
         expand("fig4/panel_h_chromhmm{comparison}___{muttype}.pdf",
             comparison=[ '', '_all_comparisons' ],  # '' = pta_neuron vs pta_oligo
-            muttype=[ 'snv', 'indel' ]),
+            muttype=[ 'snv' ]), #, 'indel' ]),
         expand("fig4/panel_i_nott_enhprom{comparison}___{muttype}.pdf",
             comparison=[ '', '_all_comparisons' ],  # '' = pta_neuron vs pta_oligo
-            muttype=[ 'snv', 'indel' ]),
-        #"fig4/suppl_boca2_peaks.pdf",
-        #"fig4/suppl_boca2_peaks.csv",
-        #"fig4/suppl_dna_repair_hotspots.pdf",
-        #"fig4/suppl_dna_repair_hotspots.csv",
-        #"fig4/suppl_hic_tads.pdf",
-        #"fig4/suppl_hic_tads.csv",
+            muttype=[ 'snv' ]), #, 'indel' ]),
+        expand("fig4_corrected/panels_cdefg_enrichment_analyses_{comparison}.corrected.pdf",
+            comparison=config['all_comparisons']),
+        expand("fig4_corrected/panel_h_chromhmm{comparison}___{muttype}.corrected.pdf",
+            comparison=[ '', '_all_comparisons' ],  # '' = pta_neuron vs pta_oligo
+            muttype=[ 'snv' ]), #, 'indel' ]),
+        expand("fig4_corrected/panel_i_nott_enhprom{comparison}___{muttype}.corrected.pdf",
+            comparison=[ '', '_all_comparisons' ],  # '' = pta_neuron vs pta_oligo
+            muttype=[ 'snv' ]), #, 'indel' ])
 
 
 rule fig5:
@@ -808,38 +1010,67 @@ rule fig5:
 
 rule fig6:
     input:
-        expand("fig6/panel_a_pta_neuron_vs_pta_oligo{batch}.{ext}",
-            batch=[ '', '_batch1', '_batch2' ],
+        expand("fig6/panel_a_{comparison}.{ext}",
+            comparison=config['all_comparisons'],
+            ext=[ 'pdf', 'csv' ]),
+        expand("fig6_corrected/panel_a_{comparison}.corrected.{ext}",
+            comparison=config['all_comparisons'],
             ext=[ 'pdf', 'csv' ]),
         expand("fig6/panel_a_{group}.{ext}",
             group=config['comparison_groups'],
             ext=[ 'pdf', 'csv' ]),
+        expand("fig6_corrected/panel_a_{group}.corrected.{ext}",
+            group=config['comparison_groups'],
+            ext=[ 'pdf', 'csv' ]),
+        # Correction does not apply to any of the following analyses. See comments.
+        # Panel b compares cancer mutations, NOT SCAN2 mutations, to scATACseq density.
+        # Nothing to correct.
         "fig6/panel_b_barplot.pdf",
         "fig6/panel_b_heatmap.pdf",
         "fig6/panel_b.csv",
+        # Panel c compares cancer mutations, NOT SCAN2 mutations, to scRNAseq density.
+        # Nothing to correct.
         "fig6/panel_c_barplot.pdf",
         "fig6/panel_c_heatmap.pdf",
         "fig6/panel_c.csv",
+        # Panel d does analyze SCAN2 mutations, so one might expect sensitivity correction.
+        # However, the statistic reported is an odds ratio between neuron and oligo mutations
+        # in the same region. Sensitivity does not change meaningfully between OLs and
+        # neurons in the same region, so there is no need for correction.
         expand("fig6/panel_d_{comparison}.{ext}",
+            # additions: normally we don't compare neurons to MDA glia
             comparison=config['all_comparisons'] + [ 'pta_neuron_vs_mda_sox10_elderly', 'pta_neuron_vs_mda_gfap_elderly' ],
             ext=[ 'pdf', 'csv' ])
 
 
 rule suppfig5:
     input:
+        # Same as panel 6d: odds ratios make sensitivity correction unnecessary.
         expand("suppfig5/cancer_gene_ors{full}_{comparison}.{ext}",
             comparison=config['all_comparisons'],
             full=[ '', '_full' ],
             ext=[ 'pdf' ])
 
 
+# Catchall
+rule misc:
+    input:
+        "scrnaseq/snRNA_1465a_table.csv",
+
 # This must be defined below all other rules to use the rules.XXX.output directive.
 rule all:
     input:
-        #"supptables/SuppTable1.csv",
-        #"supptables/SuppTable2.csv",
+        rules.misc.input,
+        rules.ginkgo.input,
+        rules.mapd.input,
+        rules.scan2_metrics.input,
+        rules.response.input,
+        rules.table1.input,
+        "supptables/SuppTable1.csv",
+        "supptables/SuppTable2.csv",
         rules.fig1.input,
         rules.fig2.input,
+        rules.figX.input,
         rules.fig3.input,
         rules.fig4.input,
         rules.fig5.input,

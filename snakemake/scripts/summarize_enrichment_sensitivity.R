@@ -41,12 +41,17 @@ metrics <- fread(metrics.file)
 sens.table <- rbindlist(lapply(sens.files, fread))
 samples <- unique(sens.table$sample)
 
+sens.table[, bedtype := ifelse(grepl(pattern='QBED_VERSION=', metaline), 'qbed', 'bed')]
+
 # Each row in sens.table contains a metadata field that contains information
 # about which signal is being measured. It is a semi-colon separated string with
 # an arbitrary number of key=value pairs.
 #
 # Every metadata field contains a 'datasource' key.
 sens.table[, datasource := sapply(strsplit(metaline, ';'), function(x) strsplit(x[grep('^datasource=', x)], '=')[[1]][2])]
+
+
+print(table(sens.table[,.(bedtype, datasource)]))
 
 # Some datasources contain subclassifications (e.g., within scRNAseq there is an
 # expression track for each cell type characterized by the scRNAseq). These fields
@@ -64,12 +69,26 @@ source.to.class <- function(datasrc) {
         key <- 'tissue'
     } else if (datasrc == 'repliseq' | datasrc == 'scatacseq' | datasrc == 'scrnaseq') {
         key <- 'celltype'
+    } else if (datasrc == 'cancer_snvdens') {
+        key <- 'tumor'
     } else {
         stop(paste('unrecognized datasource:', datasrc))
     }
     key
 }
-sens.table[, dataclass.key := sapply(datasource, source.to.class)]
+
+# for non-QBEDs, there is a dataclass=X key-value pair in the metaline
+sens.table[, dataclass.key := 'dataclass'] 
+# For QBEDs, some manual work to figure out what signal is encoded
+sens.table[bedtype == 'qbed', dataclass.key := sapply(datasource, source.to.class)]
+
+# For QBEDs, the number of quantiles into which we divide the signal is
+# stored in the metaline as QUANTILES=integer.
+sens.table[bedtype == 'qbed', n.quantiles := sapply(strsplit(metaline, ';'), function(x) strsplit(x[grep('^QUANTILES=', x)], '=')[[1]][2])]
+# Similarly, again for QBEDs only, the size of the tiles in the genomic
+# tiling used to average the signal is stored as BINSIZE=integer.
+sens.table[bedtype == 'qbed', binsize := sapply(strsplit(metaline, ';'), function(x) strsplit(x[grep('^BINSIZE=', x)], '=')[[1]][2])]
+
 sens.table[, dataclass := mapply(function(metaline, key) strsplit(metaline[grep(paste0('^', key, '='), metaline)], '=')[[1]][2], metaline=strsplit(metaline, ';'), key=dataclass.key)]
 
 # classify ENCODE ChIP-seq marks as either active or inactive:
@@ -77,60 +96,100 @@ sens.table[, dataclass := mapply(function(metaline, key) strsplit(metaline[grep(
 #           H3K27me3, H3K9me3
 #       active)
 #           H3K4me1, H3K4me3, H3K27ac, H3K36me3, H3K9ac
-sens.table[datasource == 'encode', datasource := ifelse(dataclass == 'H3K27me3' | dataclass == 'H3K9me3', 'inactive_histone_mark', 'active_histone_mark')]
+sens.table[bedtype == 'qbed' & datasource == 'encode', datasource := ifelse(dataclass == 'H3K27me3' | dataclass == 'H3K9me3', 'inactive_histone_mark', 'active_histone_mark')]
 
-# now that all relevant info has been mined from metaline, remove it
-sens.table$metaline <- NULL
-# Order quantiles 1->10 (with support for up to 100 quantiles)
-sens.table <- sens.table[feature %in% 1:100]
-sens.table <- sens.table[, quantile := as.integer(feature)]
-sens.table <- sens.table[, feature := paste0("quantile", quantile)]
+# Some manual melting:
+# Each row of sens.table contains information on passtype=(pass,rescue)
+# and muttype=(snv,indel) calls.  Want to split each row into 4 rows such
+# that one row corresponds to exactly one [passtype,muttype] combination.
+#
+# static.columns DO NOT change for different [passtype,muttype] combos. Yes, that
+# even includes "mean.snv.n.training*", which is the number of het germline
+# SNPs used to train the AB model. Indels use the same AB model as SNVs,
+# which is exclusively trained on SNP data.
+static.columns <- sens.table[, .(metaline, feature, sample, width, mean.abs.gp.mu, mean.gp.sd,
+                   mean.sc.dp, mean.bulk.dp, bedtype, n.quantiles, binsize,
+                   datasource, dataclass.key, dataclass,
+                   mean.snv.n.training, mean.snv.n.training.neighborhood)]
+sens.table2 <- rbind(
+    cbind(static.columns, sens.table[, .(muttype='snv', passtype='pass',
+                   sens=snv.sens, n.calls=sum.snv.n.pass,
+                   sum.bases.gt.sc.min.dp=sum.bases.gt.snv.sc.min.dp,
+                   sum.bases.gt.bulk.min.dp=sum.bases.gt.snv.bulk.min.dp)]),
+    # sens= calculation:
+    # Estimate an upper bound on rescue sensitivity by assuming approximately
+    # equal rates of FPs among rescued calls as among VAF-based calls.
+    # For small regions where, e.g., there are no called mutations, preserve the
+    # non-rescue estimate. Maybe a better idea would be to use the genome-wide
+    # average rescue sensitivity.
+    # Cap the maximum sensitivity at 1 since the product could exceed 1.
+    cbind(static.columns, sens.table[, .(muttype='snv', passtype='rescue',
+                   sens=pmin(1, snv.sens * ifelse(sum.snv.n.pass > 0 , (sum.snv.n.pass+sum.snv.n.rescue)/sum.snv.n.pass, 1)),
+                   n.calls=sum.snv.n.pass + sum.snv.n.rescue,
+                   sum.bases.gt.sc.min.dp=sum.bases.gt.snv.sc.min.dp,
+                   sum.bases.gt.bulk.min.dp=sum.bases.gt.snv.bulk.min.dp)]),
+    cbind(static.columns, sens.table[, .(muttype='indel', passtype='pass',
+                   sens=indel.sens, n.calls=sum.indel.n.pass,
+                   sum.bases.gt.sc.min.dp=sum.bases.gt.indel.sc.min.dp,
+                   sum.bases.gt.bulk.min.dp=sum.bases.gt.indel.bulk.min.dp)]),
+    cbind(static.columns, sens.table[, .(muttype='indel', passtype='rescue',
+                   sens=pmin(1, indel.sens * ifelse(sum.indel.n.pass > 0, (sum.indel.n.pass+sum.indel.n.rescue)/sum.indel.n.pass, 1)),
+                   n.calls=sum.indel.n.pass + sum.indel.n.rescue,
+                   sum.bases.gt.sc.min.dp=sum.bases.gt.indel.sc.min.dp,
+                   sum.bases.gt.bulk.min.dp=sum.bases.gt.indel.bulk.min.dp)])
+)
 
 
 # Get catalog-wide rates (e.g., %mutations from each sample, separate for snvs and indels)
 # This is computed only on the subset of samples specified here.
 metrics <- metrics[sample %in% samples]
 metrics[, weight := calls.vafonly/sum(calls.vafonly), by=.(muttype)]
-weights <- dcast(metrics, sample ~ muttype, value.var='weight')
-colnames(weights)[2:3] <- c('snv.weight', 'indel.weight')
 
-# Add the global weights
-sens.table <- sens.table[weights,,on=.(sample)]
+weights <- rbind(
+    metrics[, .(passtype='pass', sample, weight=calls.vafonly/sum(calls.vafonly)), by=.(muttype)],
+    metrics[, .(passtype='rescue', sample, weight=(calls.rescue+calls.vafonly)/sum(calls.rescue+calls.vafonly)), by=.(muttype)]
+)
 
-out.table <- sens.table[,
-    .(group=group.tag,
-        n.samples=length(samples),
-        width=width[1],   # not sum(width); aggregating over samples here
-        snv.pass=sum(sum.snv.n.pass),
-        snv.rescue=sum(sum.snv.n.rescue),
-        snv.unweighted.sens.vafonly=mean(snv.sens),   # just for comparison
-        snv.weighted.sens.vafonly=sum(snv.sens*snv.weight),
-        snv.weighted.mean.sc.dp=sum(mean.sc.dp*snv.weight),
-        snv.weighted.mean.bulk.dp=sum(mean.bulk.dp*snv.weight),
-        snv.weighted.mean.abs.gp.mu=sum(mean.abs.gp.mu*snv.weight),
-        snv.weighted.mean.gp.sd=sum(mean.gp.sd*snv.weight),
-        snv.weighted.mean.snv.n.training.neighborhood=sum(mean.snv.n.training.neighborhood*snv.weight),
-        snv.weighted.sum.bases.gt.snv.sc.min.dp=sum(sum.bases.gt.snv.sc.min.dp*snv.weight),
-        snv.weighted.sum.bases.gt.snv.bulk.min.dp=sum(sum.bases.gt.snv.bulk.min.dp*snv.weight),
-        snv.weighted.fraction.bases.gt.snv.sc.min.dp=sum(sum.bases.gt.snv.sc.min.dp*snv.weight)/width[1],
-        snv.weighted.fraction.bases.gt.snv.bulk.min.dp=sum(sum.bases.gt.snv.bulk.min.dp*snv.weight)/width[1],
-        #snv.weighted.sens=sum(snv.sens*(snv.n.pass+snv.n.rescue)/sum(snv.n.pass+snv.n.rescue)),
-        indel.pass=sum(sum.indel.n.pass),
-        indel.rescue=sum(sum.indel.n.rescue),
-        indel.unweighted.sens.vafonly=mean(indel.sens),
-        indel.weighted.sens.vafonly=sum(indel.sens*indel.weight)),
-        indel.weighted.mean.sc.dp=sum(mean.sc.dp*indel.weight),
-        indel.weighted.mean.bulk.dp=sum(mean.bulk.dp*indel.weight),
-        indel.weighted.mean.abs.gp.mu=sum(mean.abs.gp.mu*indel.weight),
-        indel.weighted.mean.gp.sd=sum(mean.gp.sd*indel.weight),
-        indel.weighted.mean.indel.n.training.neighborhood=sum(mean.indel.n.training.neighborhood*indel.weight),
-        indel.weighted.sum.bases.gt.indel.sc.min.dp=sum(sum.bases.gt.indel.sc.min.dp*indel.weight),
-        indel.weighted.sum.bases.gt.indel.bulk.min.dp=sum(sum.bases.gt.indel.bulk.min.dp*indel.weight),
-        indel.weighted.fraction.bases.gt.indel.sc.min.dp=sum(sum.bases.gt.indel.sc.min.dp*indel.weight)/width[1],
-        indel.weighted.fraction.bases.gt.indel.bulk.min.dp=sum(sum.bases.gt.indel.bulk.min.dp*indel.weight)/width[1],
-        #indel.weighted.sens=sum(indel.sens*(indel.n.pass+indel.n.rescue)/sum(indel.n.pass+indel.n.rescue))),
-    by=.(datasource, dataclass, quantile)]
-fwrite(out.table, file=out.csv)
+summary.table <- sens.table2[weights,,on=.(muttype, passtype, sample)][,
+    .(bedtype=bedtype[1],
+          # these are already in sens.table2
+          #n.quantiles=n.quantiles[1],
+          #binsize=binsize[1],
+          group=group.tag,
+          n.samples=length(samples),
+          width=width[1],   # not sum(width); aggregating over samples here
+          n.calls=sum(n.calls),
+          weighted.sens=sum(sens*weight),
+          weighted.mean.sc.dp=sum(mean.sc.dp*weight),
+          weighted.mean.bulk.dp=sum(mean.bulk.dp*weight),
+          weighted.mean.abs.gp.mu=sum(mean.abs.gp.mu*weight),
+          weighted.mean.gp.sd=sum(mean.gp.sd*weight),
+          # "snv" is always correct, even for muttype=indel
+          weighted.mean.snv.n.training.neighborhood=sum(mean.snv.n.training.neighborhood*weight),
+          weighted.sum.bases.gt.sc.min.dp=sum(sum.bases.gt.sc.min.dp*weight),
+          weighted.sum.bases.gt.bulk.min.dp=sum(sum.bases.gt.bulk.min.dp*weight),
+          weighted.fraction.bases.gt.sc.min.dp=sum(sum.bases.gt.sc.min.dp*weight)/width[1],
+          weighted.fraction.bases.gt.bulk.min.dp=sum(sum.bases.gt.bulk.min.dp*weight)/width[1],
+          # Weighting creates different values for snv vs. indel and pass vs. rescue
+          # because the weights reflect the numbers of snv/indel/pass/rescue calls per
+          # sample.  Weighted values are the mathematically accurate values to use for
+          # correction, however it can cause confusion when describing general properties
+          # of the genomic regions because it is natural to expect that, e.g., sequencing
+          # depth of a region does not change between SNV and indel analyses.
+          unweighted.sens=mean(sens),
+          unweighted.mean.sc.dp=mean(mean.sc.dp),
+          unweighted.mean.bulk.dp=mean(mean.bulk.dp),
+          unweighted.mean.abs.gp.mu=mean(mean.abs.gp.mu),
+          unweighted.mean.gp.sd=mean(mean.gp.sd),
+          unweighted.mean.snv.n.training.neighborhood=mean(mean.snv.n.training.neighborhood),
+          unweighted.sum.bases.gt.sc.min.dp=mean(as.numeric(sum.bases.gt.sc.min.dp)),
+          unweighted.sum.bases.gt.bulk.min.dp=mean(as.numeric(sum.bases.gt.bulk.min.dp)),
+          unweighted.fraction.bases.gt.sc.min.dp=mean(sum.bases.gt.sc.min.dp)/width[1],
+          unweighted.fraction.bases.gt.bulk.min.dp=mean(sum.bases.gt.bulk.min.dp)/width[1]),
+    by=.(datasource, dataclass, n.quantiles, binsize, feature, muttype, passtype)]
+
+fwrite(summary.table, file=out.csv)
+print(gc())
 
 if ('snakemake' %in% ls()) {
     sink()

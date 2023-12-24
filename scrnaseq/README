@@ -1,0 +1,17 @@
+conda environment used:
+
+    conda activate seurat
+
+
+snRNA_1465a.rds - used for supp. fig 1. purpose: multiple sorts of the same brain to show
+    what cell types are recovered by the various sorting strategies.
+
+    N.B. the current snRNA_1465a.rds object does not appear to contain a tSNE reduction.
+    Must be applied.
+
+
+All.Aggr.renamed.rds - used for main figure 4 UMAP plots. purpose: contains all snRNA-seq
+    data used in this study.
+
+The rds_to_csv.R script was used to convert All.Aggr.renamed.rds into a table of UMAP
+coords.  It could be used in principle to generate 1465_table.csv, but wasn't.

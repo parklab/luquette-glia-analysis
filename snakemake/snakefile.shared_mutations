@@ -1,78 +1,8 @@
 # vim: syntax=python
 
-# these three pairs were discovered manually
-# 5657 - GliaLC-4-F11, GliaLC-4-G10 (MDA)
-# 5657 - 5657_OL4, 5657_OL6
-# 5559 - 5559-Oligo-5, 5559-Oligo-8
-rule fig2_shared_snv_analysis:
-    input:
-        object1=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-5_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-F11_scan2_object_rescue.rda'),
-        object2=lambda wildcards: 'scan2_output/full_objects/' + ('5559-Oligo-8_scan2_object_rescue.rda' if wildcards.sample_id == '5559' else '5657-GliaLC-4-G10_scan2_object_rescue.rda'),
-        cosmic="mutsigs/cosmic_reduced___A.csv",
-        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
-        aging_model="fig1/panel_b_aging_rates_A_model.csv",
-        aging_model_sigs="fig2/panel_c_A.csv"
-    output:
-        muts="fig2/oligo_pair_{sample_id}_mutations.csv",
-        fits="fig2/oligo_pair_{sample_id}_mrca.csv"
-    log:
-        "fig2/oligo_pair_{sample_id}.log"
-    params:
-        amptype=lambda wildcards: 'pta' if wildcards.sample_id == '5559' else 'mda'
-    resources:
-        # The SCAN2 objects are big
-        mem_mb=8000
-    script:
-        "scripts/fit_mrca.R"
 
-
-rule signature_fitting_related_oligo_pairs:
-    input:
-        cosmic="mutsigs/ad_hoc_signature_selection/cosmic_reduced___A.csv",
-        sigb="external_data/Lodato2018_SignatureData_Aging.csv",
-        muts=expand('fig2/oligo_pair_{sample_id}_mutations.csv',
-            sample_id=[ '5559', '5657' ])
-    output:
-        pdf='fig2/panel_d.pdf',
-        svg='fig2/panel_d.svg',
-        suppl_pdf='fig2/panel_d_supplement.pdf',
-        suppl_svg='fig2/panel_d_supplement.svg',
-        spectra_csv='fig2/panel_d_spectra.csv',
-        expo_pdf='fig2/panel_d_exposures_barplot.pdf',
-        expo_svg='fig2/panel_d_exposures_barplot.svg',
-        expo_csv='fig2/panel_d_exposures_barplot.csv'
-    log:
-        'fig2/panel_d.log'
-    localrule: True
-    resources:
-        mem_mb=4000,
-        localjob=1
-    script:
-        "scripts/fig2_panel_d.R"
-
-
-rule infant_oligo_spectra:
-    input:
-        neuron_muts='tables/pta_neuron___FILTERED_mut___A.csv',
-        oligo_muts='tables/pta_oligo___FILTERED_mut___A.csv',
-        cosmic="mutsigs/ad_hoc_signature_selection/cosmic_reduced___A.csv",
-    output:
-        pdf='fig2/panel_e_infant.pdf',
-        svg='fig2/panel_e_infant.svg',
-        spectra_csv='fig2/panel_e_spectra_infant.csv',
-        expo_csv='fig2/panel_e_exposures_infant.csv'
-    log:
-        'fig2/panel_e_infant.log'
-    localrule: True
-    resources:
-        mem_mb=4000,
-        localjob=1
-    script:
-        "scripts/fig2_panel_e_infant.R"
-
-
-
-# WARNING!! MRCA estimates only apply to oligo-oligo pairs! Only pta_oligo aging rates for total mutation burden and SBS1 are used!
+# WARNING!! MRCA estimates only apply to oligo-oligo pairs! Only pta_oligo aging rates
+# for total mutation burden and SBS1 are used!
 # When applied to neuron-neuron or neuron-oligo pairs, the only useful information
 # is the number of shared and private mutations.  All model-based extrapolations of
 # years-to-MRCA are incorrect.
@@ -100,3 +30,23 @@ rule fit_mrca_pair:
         mem_mb=25000
     script:
         "scripts/fit_mrca.R"
+
+
+# write out a table of all shared mutation counts, after subtracting filtered sites
+# (which isn't used in MRCA time estimates because the aging trend lines were estimated
+# without removing filtered sites).
+rule number_shared_snvs:
+    input:
+        unfilt="tables/all___UNFILTERED_mut___any.csv",  # Filter status for all mutations
+        muts=lambda wildcards: [ 'shared_mutations/' + wildcards.mutsig_selection_method + '/' + tup[0] + "___vs___" + tup[1] + "___mutations.csv" for tup in itertools.combinations(config['bams'][wildcards.donor]['single_cell'].keys(), r=2) ]
+    output:
+        pdf="shared_mutations/{mutsig_selection_method}/{donor}.pdf",
+        csv="shared_mutations/{mutsig_selection_method}/{donor}.csv"
+    params:
+        donor_id="{donor}"
+    log:
+        "shared_mutations/{mutsig_selection_method}/{donor}.log"
+    resources:
+        mem_mb=4000
+    script:
+        "scripts/number_shared_snvs.R"

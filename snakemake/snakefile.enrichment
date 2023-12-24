@@ -75,6 +75,30 @@ rule enrichment_plot:
         "scripts/plot_enrichment_grid.R"
 
 
+rule enrichment_plot_corrected:
+    input:
+        outroot + '/{mutclass}/{nquantiles}quantiles.corrected.csv'
+    output:
+        expand(outroot + '/{{mutclass}}/{{nquantiles}}quantiles.corrected.{ext}',
+            ext=[ 'svg', 'pdf', 'csv2' ])
+    log:
+        outroot + '/{mutclass}/{nquantiles}quantiles.corrected.log'
+    params:
+        ignore='enrichment_grid_R_ignore_none',
+        # specify group=comma separated list of metadata names to group traces
+        # by unique metadata combinations. Default 'datasource' just causes a
+        # title to be printed. Won't work in workflows that don't have a datasource
+        # metadata column.
+        group='datasource',
+        #highlight=''  # can use e.g., group=Brain to select lines to highlight
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/plot_enrichment_grid.R"
+
+
 rule sigenrichment_plot:
     input:
         outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_adapted_{mutsig_selection_method}.csv'
@@ -131,6 +155,24 @@ rule sigenrichment_table:
         "scripts/make_enrichment_table.R"
 
 
+rule sigenrichment_table_corrected:
+    input:
+        expand(outroot + "/{{mutclass}}/sigenrich_{{mutsig_selection_method}}/tiled_{binsize}binsize_{{nquantiles}}quantiles.SUMMARY.corrected.rda",
+            # signature enrichment is only done on 1kb bins
+            binsize='1000')
+            #binsize=config['tiles'].keys())
+    output:
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.corrected.csv'
+    log:
+        outroot + '/{mutclass}/{nquantiles}quantiles_sigenrich_{mutsig_selection_method}.corrected.log'
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/make_enrichment_table.R"
+
+
 # Final output rule
 rule enrichment_table:
     input:
@@ -140,6 +182,23 @@ rule enrichment_table:
         outroot + '/{mutclass}/{nquantiles}quantiles.csv'
     log:
         outroot + '/{mutclass}/{nquantiles}quantiles.log'
+    localrule: True
+    resources:
+        mem_mb=4000,
+        localjob=1
+    script:
+        "scripts/make_enrichment_table.R"
+
+
+# Final output rule WITH correction for sensitivity
+rule enrichment_table_corrected:
+    input:
+        expand(outroot + "/{{mutclass}}/qbedenrich/tiled_{binsize}binsize_{{nquantiles}}quantiles.SUMMARY.corrected.rda",
+            binsize=config['tiles'].keys())
+    output:
+        outroot + '/{mutclass}/{nquantiles}quantiles.corrected.csv'
+    log:
+        outroot + '/{mutclass}/{nquantiles}quantiles.corrected.log'
     localrule: True
     resources:
         mem_mb=4000,

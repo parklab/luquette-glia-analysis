@@ -1,6 +1,7 @@
 scan2_output/full_objects/*.rda
 scan2_output/depth_profiles/*.tab.gz
 fig*/
+respfig*/
 suppfig*/
 supptables/
 aging_rates/
@@ -17,3 +18,13 @@ tables/
 not_used_maybe_useful/
 old_but_still_useful/
 snpeff/
+bams/
+chrX/
+ginkgo/*/
+mapd/
+metrics/
+respfig1/
+table1/
+vcfs/
+shared_mutations/
+manual_igv_plots_for_fig1/

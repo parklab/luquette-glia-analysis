@@ -1,0 +1,8 @@
+Donor ID 190106 shows up as either CON1901106 (donor ID) or CON11901106 (for single cells).
+These typos were corrected after processing, but remain in the metadata files here.
+
+"CON" prefixes for both donor and sample IDs are internal only and were removed post-analysis.
+
+"UMB" prefixes are applicable to all donor IDs except 190106 and 301159, but only appear on
+a subset of donors in the metadata supplied here. When referred to in most text and figures,
+the "UMB" prefixes are dropped for brevity.

@@ -1,8 +1,0 @@
-datasource,dataclass,donor,selection,celltype,file
-scrnaseq_foldchange,expression,combined,combined,Oligodendrocytes,
-scrnaseq_foldchange,expression,combined,combined,Astrocytes,
-scrnaseq_foldchange,expression,combined,combined,OPCs,
-scrnaseq_foldchange,expression,combined,combined,Microglia,
-scrnaseq_foldchange,expression,combined,combined,Excitatory-Neurons,
-scrnaseq_foldchange,expression,combined,combined,Inhibitory-Neurons,
-scrnaseq_foldchange,expression,combined,combined,Endothelial,

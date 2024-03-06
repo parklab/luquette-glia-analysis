@@ -1,3 +1,0 @@
-datasource,track,file
-ucsc_track,phastCons,data/ucsc/conservation/hg19.100way.phastCons.bw
-ucsc_track,phyloP100way,data/ucsc/conservation/hg19.100way.phyloP100way.bw
